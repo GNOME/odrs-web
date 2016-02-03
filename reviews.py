@@ -60,43 +60,41 @@ def index():
     """
     return render_template('index.html')
 
-@reviews.route('/app/<appid>', methods=['GET', 'POST'])
+@reviews.route('/app', methods=['POST'])
+def review_add():
+    """
+    Either return details about an application or add a new review.
+    """
+    # add a new review
+    try:
+        item = json.loads(request.data)
+    except ValueError as e:
+        return json_error(str(e))
+    required_fields = ['appid', 'locale', 'summary', 'description',
+                       'user_id', 'version', 'distro']
+    for key in required_fields:
+        if not key in item:
+            return json_error('invalid data, expected %s' % key)
+    try:
+        db = ReviewsDatabase(os.environ)
+        if db.has_reviewed(item):
+            return json_error('already reviewed this app')
+        db.add_app(item, _get_client_address())
+    except CursorError as e:
+        return json_error(str(e))
+    return json_success()
+
+@reviews.route('/app/<appid>')
 def review_app(appid):
     """
     Either return details about an application or add a new review.
     """
     # get reviews
-    if request.method == 'GET':
-        try:
-            db = ReviewsDatabase(os.environ)
-            reviews = db.get_reviews_for_appid(appid)
-        except CursorError as e:
-            return error_internal(str(e))
-    else:
-        # add a new review
-        item = json.loads(request.data)
-        if not 'appid' in item:
-            return error_internal('invalid data, expected appid')
-        if not 'locale' in item:
-            return error_internal('invalid data, expected locale')
-        if not 'summary' in item:
-            return error_internal('invalid data, expected summary')
-        if not 'description' in item:
-            return error_internal('invalid data, expected description')
-        if not 'user_id' in item:
-            return error_internal('invalid data, expected user_id')
-        if not 'version' in item:
-            return error_internal('invalid data, expected version')
-        if not 'distro' in item:
-            return error_internal('invalid data, expected distro')
-        try:
-            db = ReviewsDatabase(os.environ)
-            db.add_app(item, _get_client_address())
-        except CursorError as e:
-            return json_error(str(e))
-        reviews = [item]
-
-    # return reviews
+    try:
+        db = ReviewsDatabase(os.environ)
+        reviews = db.get_reviews_for_appid(appid)
+    except CursorError as e:
+        return json_error(str(e))
     dat = json.dumps(reviews, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
@@ -122,7 +120,7 @@ def review_delete(dbid):
     """
     Delete a review.
     """
-    # fixme: implement
+    # FIXME: implement
     return json_success('deleted #%i' % dbid)
 
 @reviews.route('/db/<int:dbid>/upvote')
@@ -130,9 +128,13 @@ def review_upvote(dbid):
     """
     Up-votes a review.
     """
+    #FIXME: read from POST
+    user_id = 'testvalue2'
     try:
         db = ReviewsDatabase(os.environ)
-        reviews = db.vote(dbid, 1)
+        if db.has_voted(dbid, user_id):
+            return json_error('already voted on this review')
+        reviews = db.vote(dbid, 1, user_id)
     except CursorError as e:
         return json_error(str(e))
     return json_success('incremented #%i' % dbid)
@@ -142,9 +144,13 @@ def review_downvote(dbid):
     """
     Down-votes a review.
     """
+    #FIXME: read from POST
+    user_id = 'testvalue2'
     try:
         db = ReviewsDatabase(os.environ)
-        reviews = db.vote(dbid, -1)
+        if db.has_voted(dbid, user_id):
+            return json_error('already voted on this review')
+        reviews = db.vote(dbid, -1, user_id)
     except CursorError as e:
         return json_error(str(e))
     return json_success('decremented #%i' % dbid)

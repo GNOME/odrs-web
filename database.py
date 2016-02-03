@@ -53,7 +53,7 @@ class ReviewsDatabase(object):
             print("Error %d: %s" % (e.args[0], e.args[1]))
         assert self._db
 
-        # test table exists
+        # test ratings table exists
         try:
             cur = self._db.cursor()
             cur.execute("SELECT * FROM reviews LIMIT 1;")
@@ -71,6 +71,22 @@ class ReviewsDatabase(object):
                   version TEXT DEFAULT NULL,
                   distro TEXT DEFAULT NULL,
                   karma INT DEFAULT 0,
+                  UNIQUE KEY id (id)
+                ) CHARSET=utf8;
+            """
+            cur.execute(sql_db)
+
+        # test user table exists
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT * FROM voted LIMIT 1;")
+        except mdb.Error, e:
+            sql_db = """
+                CREATE TABLE voted (
+                  id INT NOT NULL AUTO_INCREMENT,
+                  date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  user_id TEXT DEFAULT NULL,
+                  dbid INT,
                   UNIQUE KEY id (id)
                 ) CHARSET=utf8;
             """
@@ -115,11 +131,39 @@ class ReviewsDatabase(object):
             items.append(_create_review_item(e))
         return items
 
-    def vote(self, dbid, val):
+    def has_reviewed(self, item):
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT id FROM reviews WHERE appid=%s AND user_id=%s;",
+                        (item['appid'], item['user_id'],))
+        except mdb.Error, e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if res is not None:
+            return True
+        return False
+
+    def has_voted(self, dbid, user_id):
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT date_created "
+                        "FROM voted WHERE dbid=%s AND user_id=%s;",
+                        (dbid, user_id,))
+        except mdb.Error, e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if res is not None:
+            return True
+        return False
+
+    def vote(self, dbid, val, user_id):
+        """ Votes on a specific review and add to the voted database """
         try:
             cur = self._db.cursor()
             cur.execute("UPDATE reviews SET karma = karma + %s WHERE id = %s;",
                         (val, dbid,))
+            cur.execute("INSERT INTO voted (user_id, dbid) VALUES (%s, %s);",
+                        (user_id, dbid,))
         except mdb.Error, e:
             raise CursorError(cur, e)
 
