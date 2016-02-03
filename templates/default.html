@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+
+<!-- Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+     Licensed under the GNU General Public License Version 2 -->
+<html lang="en">
+<head>
+<title>{% block title %}{% endblock %}</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<link rel="stylesheet" href="/style.css" type="text/css" media="screen"/>
+<link rel="shortcut icon" href="/favicon.ico"/>
+</head>
+<body>
+
+{% block page_header %}{% endblock %}
+
+<!-- any flashed messages -->
+<div id="messages">
+  {% for category, msg in get_flashed_messages(with_categories=true) %}
+    <p class="message flash-{{ category }}">{{ msg }}</p>
+  {% endfor %}
+</div>
+
+{% block content %}{% endblock %}
+{% block dyncontent %}{% endblock %}
+
+<p class="footer">
+ Copyright <a href="mailto:richard@hughsie.com">Richard Hughes 2016</a>
+</p>
+</body>
+</html>

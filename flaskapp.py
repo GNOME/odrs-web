@@ -4,36 +4,31 @@
 # Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
 # Licensed under the GNU General Public License Version 3
 
-import json
+import os
+from flask import Flask, flash, render_template, send_from_directory
+from reviews import reviews
 
-# http://reviews-xdgapp.rhcloud.com/api/reviews/gnome-terminal.desktop
+app = Flask(__name__)
+app.config.from_pyfile('flaskapp.cfg')
+app.register_blueprint(reviews, url_prefix='/1.0/reviews')
 
-# id: 80
-# application: gnome-terminal.desktop
-# locale: es
-# date_created: 2016-01-01 00:00:00
-# date_deleted: null
-# summary: Awesome program
-# description: Awesome program, but sometimes forgets my settings
-# user_id: `sha1sum nonce + /etc/machine-id`
-# user_ip: 192.168.1.1
-# karma: -1
-# version: 3.18.1
-# distro: fedora
+@app.errorhandler(404)
+def error_page_not_found(msg=None):
+    """ Error handler: File not found """
+    flash(msg)
+    return render_template('error.html'), 404
 
-def main():
-    apps = []
+@app.route('/')
+def fwupd_index():
+    """ start page """
+    return render_template('index.html')
 
-    app = {}
-    app['id'] = 80
-    app['application'] = 'gnome-terminal.desktop'
-    apps.append(app)
+@app.route('/<path:resource>')
+def static_resource(resource):
+    """ Return a static image or resource """
+    return send_from_directory('static/', resource)
 
-    txt = json.dumps(apps, sort_keys=True, indent=4, separators=(',', ': '))
-    print txt
-    
-    apps = json.loads(txt)
-    print apps
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    if not 'OPENSHIFT_APP_DNS' in os.environ:
+        app.debug = True
+    app.run()

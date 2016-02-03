@@ -1,0 +1,16 @@
+body {
+  background: #fefeff;
+  color: #000000;
+  font-family: "Open Sans", Sans-Serif;
+  font-weight: 300;
+  max-width: 50em;
+  margin: 0em auto;
+  padding: 0 2em;
+  line-height: 150%;
+}
+
+h1, h2, h3 {
+  color: #000000;
+  font-family: "Open Sans", Sans-Serif;
+  font-weight: 300;
+}
