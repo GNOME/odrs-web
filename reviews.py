@@ -7,10 +7,16 @@
 from flask import Blueprint, Response, request, flash, render_template
 import json
 import os
+import hashlib
 
 from database import ReviewsDatabase, CursorError
 
 reviews = Blueprint('reviews', __name__, url_prefix='/reviews')
+
+def _get_user_key(user_id, app_id):
+    #FIXME: this salt needs to be sekret
+    salt = 'xdgapp'
+    return hashlib.sha1(salt + user_id + app_id).hexdigest()
 
 def _get_client_address():
     """ Gets user IP address """
@@ -61,7 +67,7 @@ def index():
     return render_template('index.html')
 
 @reviews.route('/app', methods=['POST'])
-def review_add():
+def add():
     """
     Either return details about an application or add a new review.
     """
@@ -84,10 +90,11 @@ def review_add():
         return json_error(str(e))
     return json_success()
 
+@reviews.route('/app/<appid>/<user_id>')
 @reviews.route('/app/<appid>')
-def review_app(appid):
+def get_app(appid, user_id=None):
     """
-    Either return details about an application or add a new review.
+    Return details about an application.
     """
     # get reviews
     try:
@@ -95,13 +102,20 @@ def review_app(appid):
         reviews = db.get_reviews_for_appid(appid)
     except CursorError as e:
         return json_error(str(e))
+
+    # the user specified a user_id
+    if user_id:
+        for item in reviews:
+            item['user_key'] = _get_user_key(user_id, item['appid'])
+
     dat = json.dumps(reviews, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
                     mimetype="application/json")
 
-@reviews.route('/app/reviews')
-def review_all():
+@reviews.route('/all/<user_id>')
+@reviews.route('/all')
+def get_all(user_id=None):
     """
     Return all the reviews on the server as a JSON object.
     """
@@ -110,47 +124,74 @@ def review_all():
         reviews = db.get_reviews()
     except CursorError as e:
         return json_error(str(e))
+
+    # the user specified a user_id
+    if user_id:
+        for item in reviews:
+            item['user_key'] = _get_user_key(user_id, item['appid'])
+
     dat = json.dumps(reviews, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
                     mimetype="application/json")
 
-@reviews.route('/db/<int:dbid>/delete')
-def review_delete(dbid):
+@reviews.route('/moderate/<user_id>')
+def moderate(user_id):
     """
-    Delete a review.
+    Return all the reviews on the server the user can moderate.
     """
-    # FIXME: implement
-    return json_success('deleted #%i' % dbid)
-
-@reviews.route('/db/<int:dbid>/upvote')
-def review_upvote(dbid):
-    """
-    Up-votes a review.
-    """
-    #FIXME: read from POST
-    user_id = 'testvalue2'
     try:
         db = ReviewsDatabase(os.environ)
-        if db.has_voted(dbid, user_id):
-            return json_error('already voted on this review')
-        reviews = db.vote(dbid, 1, user_id)
+        reviews = db.get_reviews()
     except CursorError as e:
         return json_error(str(e))
-    return json_success('incremented #%i' % dbid)
 
-@reviews.route('/db/<int:dbid>/downvote')
-def review_downvote(dbid):
+    # only return reviews the user has not already voted on
+    reviews_new = []
+    for item in reviews:
+        if not db.has_voted(item['dbid'], user_id):
+            item['user_key'] = _get_user_key(user_id, item['appid'])
+            reviews_new.append(item)
+
+    dat = json.dumps(reviews_new, sort_keys=True, indent=4, separators=(',', ': '))
+    return Response(response=dat,
+                    status=200, \
+                    mimetype="application/json")
+
+def vote(val):
     """
-    Down-votes a review.
+    Up or downvote an existing review by @val karma points.
     """
-    #FIXME: read from POST
-    user_id = 'testvalue2'
+    try:
+        item = json.loads(request.data)
+    except ValueError as e:
+        return json_error(str(e))
+    required_fields = ['dbid', 'appid', 'user_id', 'user_key']
+    for key in required_fields:
+        if not key in item:
+            return json_error('invalid data, required %s' % key)
+    if item['user_key'] != _get_user_key(item['user_id'], item['appid']):
+        print "expected user_key of %s", _get_user_key(item['user_id'], item['appid'])
+        return json_error('invalid user_key')
     try:
         db = ReviewsDatabase(os.environ)
-        if db.has_voted(dbid, user_id):
-            return json_error('already voted on this review')
-        reviews = db.vote(dbid, -1, user_id)
+        if db.has_voted(item['dbid'], item['user_id']):
+            return json_error('already reviewed this app')
+        db.vote(item['dbid'], val, item['user_id'])
     except CursorError as e:
         return json_error(str(e))
-    return json_success('decremented #%i' % dbid)
+    return json_success('voted #%i %i' % (item['dbid'], val))
+
+@reviews.route('/upvote', methods=['POST'])
+def upvote():
+    """
+    Upvote an existing review by one karma point.
+    """
+    return vote(1)
+
+@reviews.route('/downvote', methods=['POST'])
+def downvote():
+    """
+    Downvote an existing review by one karma point.
+    """
+    return vote(-1)
