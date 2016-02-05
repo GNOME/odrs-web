@@ -14,3 +14,24 @@ h1, h2, h3 {
   font-family: "Open Sans", Sans-Serif;
   font-weight: 300;
 }
+
+table.history {
+  width: 100%;
+}
+
+.history th {
+  font-weight: 300;
+  font-size: 120%;
+  white-space: nowrap;
+  padding-right: 1em;
+  text-align: left;
+}
+
+.history td {
+  padding: .5em .5em .5em 0;
+  font-size: 70%;
+}
+
+td.history:last-child {
+  width: 100%;
+}

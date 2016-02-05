@@ -31,4 +31,9 @@ def static_resource(resource):
 if __name__ == '__main__':
     if not 'OPENSHIFT_APP_DNS' in os.environ:
         app.debug = True
+
+    # we need this
+    if not 'XDGAPP_REVIEWS_SECRET' in os.environ:
+        print 'NO XDGAPP_REVIEWS_SECRET DEFINED, WE ARE INSECURE'
+
     app.run()
