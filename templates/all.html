@@ -1,0 +1,25 @@
+{% extends "default.html" %}
+{% block title %}All Reviews{% endblock %}
+
+{% block page_header %}
+<h1>All Reviews</h1>
+{% endblock %}
+
+{% block content %}
+
+<table class="history">
+<tr>
+<th>Timestamp</th>
+<th>Application</th>
+<th>Version</th>
+<th>Karma</th>
+<th>Distro</th>
+<th>User</th>
+<th>Name</th>
+<th>Summary</th>
+<th>Description</th>
+</tr>
+{% endblock %}
+
+<!-- dynamic content -->
+{% block dyncontent %}{{dyncontent|safe}}{% endblock %}

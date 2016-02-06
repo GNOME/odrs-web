@@ -1,0 +1,18 @@
+{% extends "default.html" %}
+{% block title %}Statistics{% endblock %}
+
+{% block page_header %}
+<h1>Service Statistics</h1>
+{% endblock %}
+
+{% block content %}
+
+<table class="history">
+<tr>
+<th>Event</th>
+<th>Value</th>
+</tr>
+{% endblock %}
+
+<!-- dynamic content -->
+{% block dyncontent %}{{dyncontent|safe}}{% endblock %}
