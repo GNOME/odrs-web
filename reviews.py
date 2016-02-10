@@ -307,6 +307,15 @@ def api_fetch():
         review['score'] = _get_review_score(review, item)
         reviews_new.append(review)
 
+    # fake something so the user can get the user_key
+    if len(reviews_new) == 0:
+        review = {}
+        review['score'] = 0
+        review['appid'] = item['appid']
+        review['user_id'] = item['user_id']
+        review['user_key'] = _get_user_key(item['user_id'], review['appid'])
+        reviews_new.append(review)
+
     # sort and cut to limit
     sorted(reviews_new, key=lambda item: item['score'])
     reviews_new = reviews_new[:item['limit']]
