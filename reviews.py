@@ -120,14 +120,15 @@ def api_add():
             return json_error('invalid data, expected %s' % key)
 
     # check fields for markup and length
-    if len(item['summary']) > 40:
+    if not item['appid'].endswith('.desktop'):
+        return json_error('only applications can be reviewed at this time')
+    if len(item['summary']) > 70:
         return json_error('summary is too long')
-    if len(item['description']) > 10240:
+    if len(item['description']) > 3000:
         return json_error('description is too long')
     for key in ['summary', 'description']:
         if not _check_str(item[key]):
             return json_error('%s is not a valid string' % key)
-
     try:
         db = ReviewsDatabase(os.environ)
         if db.review_exists(item):
