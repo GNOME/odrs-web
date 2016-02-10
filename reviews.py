@@ -220,11 +220,18 @@ def html_all():
         html += '<tr>'
         tmp = datetime.datetime.fromtimestamp(item['date_created']).strftime('%Y-%m-%d %H:%M:%S')
         html += '<td class="history">%s</td>' % tmp
+        if 'date_deleted' in item:
+            tmp = datetime.datetime.fromtimestamp(item['date_deleted']).strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            tmp = 'n/a'
+        html += '<td class="history">%s</td>' % tmp
         html += '<td class="history">%s</td>' % item['appid'].replace('.desktop','')
         html += '<td class="history">%s</td>' % item['version']
-        stars = '&#9734;' * (5 - item['karma'])
-        stars += '&#9733;' * item['karma']
+        nr_stars = item['rating'] / 20
+        stars = '&#9733;' * nr_stars
+        stars += '&#9734;' * (5 - nr_stars)
         html += '<td class="history">%s</td>' % stars
+        html += '<td class="history">%s</td>' % item['karma']
         html += '<td class="history">%s</td>' % item['distro']
         html += '<td class="history">%s&hellip;</td>' % item['user_id'][:8]
         html += '<td class="history">%s</td>' % item['user_display']
@@ -270,8 +277,7 @@ def api_fetch():
         item = json.loads(request.data)
     except ValueError as e:
         return json_error(str(e))
-    required_fields = ['appid', 'user_id', 'locale', 'karma', 'distro', 'limit', 'version']
-    for key in required_fields:
+    for key in ['appid', 'user_id', 'locale', 'karma', 'distro', 'limit', 'version']:
         if not key in item:
             return json_error('invalid data, expected %s' % key)
 
@@ -292,7 +298,7 @@ def api_fetch():
         # limit to user specified karma
         if review['karma'] < item['karma']:
             continue
-        review['user_key'] = _get_user_key(review['user_id'], review['appid'])
+        review['user_key'] = _get_user_key(item['user_id'], review['appid'])
         review['score'] = _get_review_score(review, item)
         reviews_new.append(review)
 
@@ -360,8 +366,7 @@ def vote(val):
         item = json.loads(request.data)
     except ValueError as e:
         return json_error(str(e))
-    required_fields = ['dbid', 'appid', 'user_id', 'user_key']
-    for key in required_fields:
+    for key in ['dbid', 'appid', 'user_id', 'user_key']:
         if not key in item:
             return json_error('invalid data, required %s' % key)
 
@@ -430,6 +435,36 @@ def api_report():
     Report a review for abuse.
     """
     return vote(0)
+
+@reviews.route('/api/remove', methods=['POST'])
+def api_remove():
+    """
+    Remove a review.
+    """
+    try:
+        item = json.loads(request.data)
+    except ValueError as e:
+        return json_error(str(e))
+    for key in ['dbid', 'appid', 'user_id', 'user_key']:
+        if not key in item:
+            return json_error('invalid data, required %s' % key)
+
+    # connect to database early
+    try:
+        db = ReviewsDatabase(os.environ)
+    except CursorError as e:
+        return json_error(str(e))
+    if item['user_key'] != _get_user_key(item['user_id'], item['appid']):
+        db.event_add(_get_client_address(), item['user_id'],
+                     "invalid user_key of %s" % item['user_key'])
+        return json_error('invalid user_key')
+    try:
+        # the user already has a review
+        db.review_remove(item['dbid'], item['user_id'])
+        db.event_add(_get_client_address(), item['user_id'], "removed review")
+    except CursorError as e:
+        return json_error(str(e))
+    return json_success('removed review #%i' % item['dbid'])
 
 @reviews.route('/api/ratings/<appid>')
 def api_ratings(appid):

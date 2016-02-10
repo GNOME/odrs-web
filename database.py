@@ -30,6 +30,9 @@ def _create_review_item(e):
     item['karma'] = _combine_karma(int(e[8]), int(e[9]))
     item['user_id'] = e[10]
     item['user_display'] = e[11]
+    item['rating'] = int(e[12])
+    if e[13]:
+        item['date_deleted'] = int(e[13].strftime("%s"))
     return item
 
 def _create_event_item(e):
@@ -86,6 +89,7 @@ class ReviewsDatabase(object):
                 CREATE TABLE reviews (
                   id INT NOT NULL AUTO_INCREMENT,
                   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  date_deleted TIMESTAMP,
                   appid TEXT DEFAULT NULL,
                   locale TEXT DEFAULT NULL,
                   summary TEXT DEFAULT NULL,
@@ -112,6 +116,13 @@ class ReviewsDatabase(object):
                 ALTER TABLE reviews ADD karma_down INT DEFAULT 0;
                 ALTER TABLE reviews ADD user_display TEXT DEFAULT NULL;
                 ALTER TABLE reviews ADD reported INT DEFAULT 0;
+            """
+            cur.execute(sql_db)
+        except mdb.Error, e:
+            pass
+        try:
+            sql_db = """
+                ALTER TABLE reviews ADD date_deleted TIMESTAMP;
             """
             cur.execute(sql_db)
         except mdb.Error, e:
@@ -202,14 +213,25 @@ class ReviewsDatabase(object):
         except mdb.Error, e:
             raise CursorError(cur, e)
 
+    def review_remove(self, dbid, user_id):
+        """ Marks a review as removed """
+        try:
+            cur = self._db.cursor()
+            cur.execute("UPDATE reviews SET date_deleted = CURRENT_TIMESTAMP "
+                        "WHERE user_id = %s AND id = %s;",
+                        (user_id, dbid,))
+        except mdb.Error, e:
+            raise CursorError(cur, e)
+        return True
+
     def review_get_for_appid(self, appid):
         try:
             cur = self._db.cursor()
             cur.execute("SELECT id, date_created, appid, locale, summary, "
                         "description, version, distro, karma_up, karma_down, "
-                        "user_id, user_display "
-                        "FROM reviews WHERE appid=%s AND reported=0 "
-                        "ORDER BY date_created DESC;",
+                        "user_id, user_display, rating, date_deleted "
+                        "FROM reviews WHERE appid=%s AND reported=0 AND "
+                        "date_deleted=0 ORDER BY date_created DESC;",
                         (appid,))
         except mdb.Error, e:
             raise CursorError(cur, e)
@@ -224,7 +246,8 @@ class ReviewsDatabase(object):
     def review_exists(self, item):
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT id FROM reviews WHERE appid=%s AND user_id=%s;",
+            cur.execute("SELECT id FROM reviews WHERE appid=%s "
+                        "AND user_id=%s AND date_deleted=0;",
                         (item['appid'], item['user_id'],))
         except mdb.Error, e:
             raise CursorError(cur, e)
@@ -270,7 +293,7 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("SELECT id, date_created, appid, locale, summary, "
                         "description, version, distro, karma_up, karma_down, "
-                        "user_id, user_display FROM reviews "
+                        "user_id, user_display, rating, date_deleted FROM reviews "
                         "WHERE reported=0 "
                         "ORDER BY date_created DESC;")
         except mdb.Error, e:
@@ -384,12 +407,13 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("SELECT COUNT(*) total,"
                         "       SUM(rating = 0) star0,"
-                        "       SUM(rating = 1) star1,"
-                        "       SUM(rating = 2) star2,"
-                        "       SUM(rating = 3) star3,"
-                        "       SUM(rating = 4) star4,"
-                        "       SUM(rating = 5) star5 "
-                        "FROM reviews WHERE appid = %s;", (appid,))
+                        "       SUM(rating = 20) star1,"
+                        "       SUM(rating = 40) star2,"
+                        "       SUM(rating = 60) star3,"
+                        "       SUM(rating = 80) star4,"
+                        "       SUM(rating = 100) star5 "
+                        "FROM reviews WHERE appid = %s "
+                        "AND date_deleted=0;", (appid,))
         except mdb.Error, e:
             raise CursorError(cur, e)
         res = cur.fetchone()
