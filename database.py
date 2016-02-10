@@ -423,12 +423,11 @@ class ReviewsDatabase(object):
             return []
         item = {}
         item['total'] = int(res[0])
-        item['star0'] = int(res[1])
-        item['star1'] = int(res[2])
-        item['star2'] = int(res[3])
-        item['star3'] = int(res[4])
-        item['star4'] = int(res[5])
-        item['star5'] = int(res[6])
+        for i in range(6):
+            if res[i + 1]:
+                item['star%i' % i] = int(res[i + 1])
+            else:
+                item['star%i' % i] = 0
         return item
 
     def get_stats(self):
