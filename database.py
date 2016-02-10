@@ -163,7 +163,7 @@ class ReviewsDatabase(object):
                 CREATE TABLE users2 (
                   id INT NOT NULL AUTO_INCREMENT,
                   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  date_request TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  date_request TIMESTAMP,
                   user_id TEXT DEFAULT NULL,
                   karma INT DEFAULT 0,
                   UNIQUE KEY id (id)
@@ -335,6 +335,8 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("INSERT INTO users2 (user_id) VALUES (%s);",
                         (user_id,))
+            cur.execute("UPDATE users2 SET date_request = CURRENT_TIMESTAMP "
+                        "WHERE user_id = %s;", (user_id,))
         except mdb.Error, e:
             raise CursorError(cur, e)
 
