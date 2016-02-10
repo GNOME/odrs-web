@@ -118,6 +118,8 @@ def api_add():
     for key in required_fields:
         if not key in item:
             return json_error('invalid data, expected %s' % key)
+        if item[key] is None:
+            return json_error('missing data, expected %s' % key)
 
     # check fields for markup and length
     if not item['appid'].endswith('.desktop'):
@@ -281,6 +283,8 @@ def api_fetch():
     for key in ['appid', 'user_id', 'locale', 'karma', 'distro', 'limit', 'version']:
         if not key in item:
             return json_error('invalid data, expected %s' % key)
+        if item[key] is None:
+            return json_error('missing data, expected %s' % key)
 
     try:
         db = ReviewsDatabase(os.environ)
@@ -370,6 +374,8 @@ def vote(val):
     for key in ['dbid', 'appid', 'user_id', 'user_key']:
         if not key in item:
             return json_error('invalid data, required %s' % key)
+        if item[key] is None:
+            return json_error('missing data, expected %s' % key)
 
     # connect to database early
     try:
@@ -449,6 +455,8 @@ def api_remove():
     for key in ['dbid', 'appid', 'user_id', 'user_key']:
         if not key in item:
             return json_error('invalid data, required %s' % key)
+        if item[key] is None:
+            return json_error('missing data, expected %s' % key)
 
     # connect to database early
     try:
