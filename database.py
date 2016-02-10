@@ -299,8 +299,8 @@ class ReviewsDatabase(object):
         """ Returns all events from the event log """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT event_id, date_created, user_addr, user_hash, message "
-                        "FROM eventlog2 ORDER BY event_id DESC;")
+            cur.execute("SELECT eventlog_id, date_created, user_addr, user_hash, message "
+                        "FROM eventlog2 ORDER BY eventlog_id DESC;")
         except mdb.Error, e:
             raise CursorError(cur, e)
         res = cur.fetchall()
