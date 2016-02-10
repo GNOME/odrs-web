@@ -18,17 +18,18 @@ def _combine_karma(karma_up, karma_down):
     return (karma_up * 5) - karma_down
 
 def _create_review_item(e):
+    """ Parse a review """
     item = {}
-    item['dbid'] = int(e[0])
+    item['review_id'] = int(e[0])
     item['date_created'] = int(e[1].strftime("%s"))
-    item['appid'] = e[2]
+    item['app_id'] = e[2]
     item['locale'] = e[3]
     item['summary'] = e[4]
     item['description'] = e[5]
     item['version'] = e[6]
     item['distro'] = e[7]
     item['karma'] = _combine_karma(int(e[8]), int(e[9]))
-    item['user_id'] = e[10]
+    item['user_hash'] = e[10]
     item['user_display'] = e[11]
     item['rating'] = int(e[12])
     if e[13]:
@@ -36,20 +37,22 @@ def _create_review_item(e):
     return item
 
 def _create_event_item(e):
+    """ Parse an event """
     item = {}
-    item['evid'] = int(e[0])
+    item['eventlog_id'] = int(e[0])
     item['date_created'] = int(e[1].strftime("%s"))
-    item['user_ip'] = e[2]
-    item['user_id'] = e[3]
+    item['user_addr'] = e[2]
+    item['user_hash'] = e[3]
     item['message'] = e[4]
     return item
 
 def _create_user_item(e):
+    """ Parse a user """
     item = {}
-    item['id'] = int(e[0])
+    item['user_id'] = int(e[0])
     item['date_created'] = int(e[1].strftime("%s"))
     item['date_request'] = int(e[2].strftime("%s"))
-    item['user_id'] = e[3]
+    item['user_hash'] = e[3]
     item['karma'] = int(e[4])
     return item
 
@@ -87,14 +90,14 @@ class ReviewsDatabase(object):
         except mdb.Error, e:
             sql_db = """
                 CREATE TABLE reviews (
-                  id INT NOT NULL AUTO_INCREMENT,
+                  review_id INT NOT NULL AUTO_INCREMENT,
                   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                   date_deleted TIMESTAMP,
-                  appid TEXT DEFAULT NULL,
+                  app_id TEXT DEFAULT NULL,
                   locale TEXT DEFAULT NULL,
                   summary TEXT DEFAULT NULL,
                   description TEXT DEFAULT NULL,
-                  user_id TEXT DEFAULT NULL,
+                  user_hash TEXT DEFAULT NULL,
                   user_addr TEXT DEFAULT NULL,
                   user_display TEXT DEFAULT NULL,
                   version TEXT DEFAULT NULL,
@@ -103,30 +106,10 @@ class ReviewsDatabase(object):
                   karma_up INT DEFAULT 0,
                   karma_down INT DEFAULT 0,
                   reported INT DEFAULT 0,
-                  UNIQUE KEY id (id)
+                  UNIQUE KEY id (review_id)
                 ) CHARSET=utf8;
             """
             cur.execute(sql_db)
-
-        # FIXME: remove after a few days
-        try:
-            sql_db = """
-                ALTER TABLE reviews ADD rating INT DEFAULT 0;
-                ALTER TABLE reviews ADD karma_up INT DEFAULT 0;
-                ALTER TABLE reviews ADD karma_down INT DEFAULT 0;
-                ALTER TABLE reviews ADD user_display TEXT DEFAULT NULL;
-                ALTER TABLE reviews ADD reported INT DEFAULT 0;
-            """
-            cur.execute(sql_db)
-        except mdb.Error, e:
-            pass
-        try:
-            sql_db = """
-                ALTER TABLE reviews ADD date_deleted TIMESTAMP;
-            """
-            cur.execute(sql_db)
-        except mdb.Error, e:
-            pass
 
         # a table for how a user has voted
         try:
@@ -135,24 +118,15 @@ class ReviewsDatabase(object):
         except mdb.Error, e:
             sql_db = """
                 CREATE TABLE votes (
-                  id INT NOT NULL AUTO_INCREMENT,
+                  vote_id INT NOT NULL AUTO_INCREMENT,
                   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  user_id TEXT DEFAULT NULL,
+                  user_hash TEXT DEFAULT NULL,
                   val INT DEFAULT 0,
-                  dbid INT DEFAULT 0,
-                  UNIQUE KEY id (id)
+                  review_id INT DEFAULT 0,
+                  UNIQUE KEY id (vote_id)
                 ) CHARSET=utf8;
             """
             cur.execute(sql_db)
-
-        # FIXME: remove after a few days
-        try:
-            sql_db = """
-                ALTER TABLE votes ADD val INT DEFAULT 0;
-            """
-            cur.execute(sql_db)
-        except mdb.Error, e:
-            pass
 
         # a table for a specific user
         try:
@@ -161,12 +135,12 @@ class ReviewsDatabase(object):
         except mdb.Error, e:
             sql_db = """
                 CREATE TABLE users2 (
-                  id INT NOT NULL AUTO_INCREMENT,
+                  user_id INT NOT NULL AUTO_INCREMENT,
                   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                   date_request TIMESTAMP,
-                  user_id TEXT DEFAULT NULL,
+                  user_hash TEXT DEFAULT NULL,
                   karma INT DEFAULT 0,
-                  UNIQUE KEY id (id)
+                  UNIQUE KEY id (user_id)
                 ) CHARSET=utf8;
             """
             cur.execute(sql_db)
@@ -178,12 +152,12 @@ class ReviewsDatabase(object):
         except mdb.Error, e:
             sql_db = """
                 CREATE TABLE eventlog2 (
-                  id INT NOT NULL AUTO_INCREMENT,
+                  eventlog_id INT NOT NULL AUTO_INCREMENT,
                   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  user_ip TEXT DEFAULT NULL,
-                  user_id TEXT DEFAULT NULL,
+                  user_addr TEXT DEFAULT NULL,
+                  user_hash TEXT DEFAULT NULL,
                   message TEXT DEFAULT NULL,
-                  UNIQUE KEY id (id)
+                  UNIQUE KEY id (eventlog_id)
                 ) CHARSET=utf8;
             """
             cur.execute(sql_db)
@@ -194,17 +168,18 @@ class ReviewsDatabase(object):
             self._db.close()
 
     def review_add(self, item, user_addr):
+        """ Add a review to the database """
         try:
             cur = self._db.cursor()
-            cur.execute("INSERT INTO reviews (appid, locale, summary, "
-                        "description, user_id, user_display, version, "
+            cur.execute("INSERT INTO reviews (app_id, locale, summary, "
+                        "description, user_hash, user_display, version, "
                         "distro, rating, user_addr) "
                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
-                        (item['appid'],
+                        (item['app_id'],
                          item['locale'],
                          item['summary'],
                          item['description'],
-                         item['user_id'],
+                         item['user_hash'],
                          item['user_display'],
                          item['version'],
                          item['distro'],
@@ -213,26 +188,27 @@ class ReviewsDatabase(object):
         except mdb.Error, e:
             raise CursorError(cur, e)
 
-    def review_remove(self, dbid, user_id):
+    def review_remove(self, review_id, user_hash):
         """ Marks a review as removed """
         try:
             cur = self._db.cursor()
             cur.execute("UPDATE reviews SET date_deleted = CURRENT_TIMESTAMP "
-                        "WHERE user_id = %s AND id = %s;",
-                        (user_id, dbid,))
+                        "WHERE user_hash = %s AND review_id = %s;",
+                        (user_hash, review_id,))
         except mdb.Error, e:
             raise CursorError(cur, e)
         return True
 
-    def review_get_for_appid(self, appid):
+    def review_get_for_app_id(self, app_id):
+        """ Returns all the reviews for an application (for client-side) """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT id, date_created, appid, locale, summary, "
+            cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
                         "description, version, distro, karma_up, karma_down, "
-                        "user_id, user_display, rating, date_deleted "
-                        "FROM reviews WHERE appid=%s AND reported=0 AND "
+                        "user_hash, user_display, rating, date_deleted "
+                        "FROM reviews WHERE app_id=%s AND reported=0 AND "
                         "date_deleted=0 ORDER BY date_created DESC;",
-                        (appid,))
+                        (app_id,))
         except mdb.Error, e:
             raise CursorError(cur, e)
         res = cur.fetchall()
@@ -243,12 +219,13 @@ class ReviewsDatabase(object):
             items.append(_create_review_item(e))
         return items
 
-    def review_exists(self, item):
+    def review_exists(self, app_id, user_hash):
+        """ Checks to see if a review exists for the application+user """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT id FROM reviews WHERE appid=%s "
-                        "AND user_id=%s AND date_deleted=0;",
-                        (item['appid'], item['user_id'],))
+            cur.execute("SELECT review_id FROM reviews WHERE app_id=%s "
+                        "AND user_hash=%s AND date_deleted=0;",
+                        (app_id, user_hash,))
         except mdb.Error, e:
             raise CursorError(cur, e)
         res = cur.fetchone()
@@ -256,12 +233,13 @@ class ReviewsDatabase(object):
             return True
         return False
 
-    def vote_exists(self, dbid, user_id):
+    def vote_exists(self, review_id, user_hash):
+        """ Checks to see if a vote exists for the review+user """
         try:
             cur = self._db.cursor()
             cur.execute("SELECT date_created "
-                        "FROM votes WHERE dbid=%s AND user_id=%s;",
-                        (dbid, user_id,))
+                        "FROM votes WHERE review_id=%s AND user_hash=%s;",
+                        (review_id, user_hash,))
         except mdb.Error, e:
             raise CursorError(cur, e)
         res = cur.fetchone()
@@ -269,31 +247,32 @@ class ReviewsDatabase(object):
             return True
         return False
 
-    def vote_add(self, dbid, val, user_id):
+    def vote_add(self, review_id, val, user_hash):
         """ Votes on a specific review and add to the votes database """
         try:
             cur = self._db.cursor()
             if val > 0:
                 cur.execute("UPDATE reviews SET karma_up = karma_up + 1 "
-                            "WHERE id = %s;", (dbid,))
+                            "WHERE review_id = %s;", (review_id,))
             elif val < 0:
                 cur.execute("UPDATE reviews SET karma_down = karma_down + 1 "
-                            "WHERE id = %s;", (dbid,))
+                            "WHERE review_id = %s;", (review_id,))
             else:
                 cur.execute("UPDATE reviews SET reported = reported + 1 "
-                            "WHERE id = %s;", (dbid,))
-            cur.execute("INSERT INTO votes (user_id, dbid, val) "
+                            "WHERE review_id = %s;", (review_id,))
+            cur.execute("INSERT INTO votes (user_hash, review_id, val) "
                         "VALUES (%s, %s, %s);",
-                        (user_id, dbid, val,))
+                        (user_hash, review_id, val,))
         except mdb.Error, e:
             raise CursorError(cur, e)
 
     def review_get_all(self):
+        """ Gets all non-removed reviews from the server for all applications """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT id, date_created, appid, locale, summary, "
+            cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
                         "description, version, distro, karma_up, karma_down, "
-                        "user_id, user_display, rating, date_deleted FROM reviews "
+                        "user_hash, user_display, rating, date_deleted FROM reviews "
                         "WHERE reported=0 "
                         "ORDER BY date_created DESC;")
         except mdb.Error, e:
@@ -306,20 +285,22 @@ class ReviewsDatabase(object):
             items.append(_create_review_item(e))
         return items
 
-    def event_add(self, user_ip=None, user_id=None, message=None):
+    def event_add(self, user_addr=None, user_hash=None, message=None):
+        """ Adds an item to the event log """
         try:
             cur = self._db.cursor()
-            cur.execute("INSERT INTO eventlog2 (user_ip, user_id, message) "
+            cur.execute("INSERT INTO eventlog2 (user_addr, user_hash, message) "
                         "VALUES (%s, %s, %s);",
-                        (user_ip, user_id, message,))
+                        (user_addr, user_hash, message,))
         except mdb.Error, e:
             raise CursorError(cur, e)
 
     def event_get_all(self):
+        """ Returns all events from the event log """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT id, date_created, user_ip, user_id, message "
-                        "FROM eventlog2 ORDER BY id DESC;")
+            cur.execute("SELECT event_id, date_created, user_addr, user_hash, message "
+                        "FROM eventlog2 ORDER BY event_id DESC;")
         except mdb.Error, e:
             raise CursorError(cur, e)
         res = cur.fetchall()
@@ -330,13 +311,14 @@ class ReviewsDatabase(object):
             items.append(_create_event_item(e))
         return items
 
-    def user_add(self, user_id=None):
+    def user_add(self, user_hash):
+        """ Add a user to the database """
         try:
             cur = self._db.cursor()
-            cur.execute("INSERT INTO users2 (user_id) VALUES (%s);",
-                        (user_id,))
+            cur.execute("INSERT INTO users2 (user_hash) VALUES (%s);",
+                        (user_hash,))
             cur.execute("UPDATE users2 SET date_request = CURRENT_TIMESTAMP "
-                        "WHERE user_id = %s;", (user_id,))
+                        "WHERE user_hash = %s;", (user_hash,))
         except mdb.Error, e:
             raise CursorError(cur, e)
 
@@ -344,8 +326,8 @@ class ReviewsDatabase(object):
         """ Get all the users on the system """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT id, date_created, date_request, user_id, karma "
-                        "FROM users2 ORDER BY id DESC;")
+            cur.execute("SELECT user_id, date_created, date_request, user_hash, karma "
+                        "FROM users2 ORDER BY user_id DESC;")
         except mdb.Error, e:
             raise CursorError(cur, e)
         res = cur.fetchall()
@@ -356,13 +338,13 @@ class ReviewsDatabase(object):
             items.append(_create_user_item(e))
         return items
 
-    def user_get_by_id(self, user_id):
+    def user_get_by_id(self, user_hash):
         """ Get information about a specific user """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT id, date_created, date_request, user_id, karma "
-                        "FROM users2 WHERE user_id=%s ORDER BY id DESC;",
-                        (user_id,))
+            cur.execute("SELECT user_id, date_created, date_request, user_hash, karma "
+                        "FROM users2 WHERE user_hash=%s ORDER BY user_id DESC;",
+                        (user_hash,))
         except mdb.Error, e:
             raise CursorError(cur, e)
         res = cur.fetchone()
@@ -370,41 +352,42 @@ class ReviewsDatabase(object):
             return None
         return _create_user_item(res)
 
-    def user_update_request(self, user_id):
+    def user_update_request(self, user_hash):
         """ Update the request time for a specific user ID """
 
         # if not existing, create it
-        user = self.user_get_by_id(user_id)
+        user = self.user_get_by_id(user_hash)
         if not user:
-            self.user_add(user_id)
+            self.user_add(user_hash)
             return
 
         # update the timestamp
         try:
             cur = self._db.cursor()
             cur.execute("UPDATE users2 SET date_request = CURRENT_TIMESTAMP "
-                        "WHERE user_id = %s;", (user_id,))
+                        "WHERE user_hash = %s;", (user_hash,))
         except mdb.Error, e:
             raise CursorError(cur, e)
 
-    def user_update_karma(self, user_id, val):
+    def user_update_karma(self, user_hash, val):
         """ Update the request time for a specific user ID """
 
         # if not existing, create it
-        user = self.user_get_by_id(user_id)
+        user = self.user_get_by_id(user_hash)
         if not user:
-            self.user_add(user_id)
+            self.user_add(user_hash)
             return
 
         # update the karma value
         try:
             cur = self._db.cursor()
             cur.execute("UPDATE users2 SET karma = karma + %s "
-                        "WHERE user_id = %s;", (user_id, val,))
+                        "WHERE user_hash = %s;", (user_hash, val,))
         except mdb.Error, e:
             raise CursorError(cur, e)
 
-    def reviews_get_rating_for_appid(self, appid):
+    def reviews_get_rating_for_app_id(self, app_id):
+        """ Gets the ratings information for the application """
         try:
             cur = self._db.cursor()
             cur.execute("SELECT COUNT(*) total,"
@@ -414,8 +397,8 @@ class ReviewsDatabase(object):
                         "       SUM(rating = 60) star3,"
                         "       SUM(rating = 80) star4,"
                         "       SUM(rating = 100) star5 "
-                        "FROM reviews WHERE appid = %s "
-                        "AND date_deleted=0;", (appid,))
+                        "FROM reviews WHERE app_id = %s "
+                        "AND date_deleted=0;", (app_id,))
         except mdb.Error, e:
             raise CursorError(cur, e)
         res = cur.fetchone()
@@ -431,6 +414,7 @@ class ReviewsDatabase(object):
         return item
 
     def get_stats(self):
+        """ Returns interesting statistics for the webapp """
         item = {}
 
         # get the total number of reviews
@@ -444,7 +428,7 @@ class ReviewsDatabase(object):
 
         # unique reviewers
         try:
-            cur.execute("SELECT COUNT(DISTINCT(user_id)) FROM reviews;")
+            cur.execute("SELECT COUNT(DISTINCT(user_hash)) FROM reviews;")
         except mdb.Error, e:
             raise CursorError(cur, e)
         res = cur.fetchall()
@@ -466,7 +450,7 @@ class ReviewsDatabase(object):
 
         # unique voters
         try:
-            cur.execute("SELECT COUNT(DISTINCT(user_id)) FROM votes;")
+            cur.execute("SELECT COUNT(DISTINCT(user_hash)) FROM votes;")
         except mdb.Error, e:
             raise CursorError(cur, e)
         res = cur.fetchall()

@@ -14,9 +14,9 @@ from database import ReviewsDatabase, CursorError
 
 reviews = Blueprint('reviews', __name__, url_prefix='/reviews')
 
-def _get_user_key(user_id, app_id):
+def _get_user_key(user_hash, app_id):
     salt = os.environ['XDGAPP_REVIEWS_SECRET']
-    return hashlib.sha1(salt + user_id + app_id).hexdigest()
+    return hashlib.sha1(salt + user_hash + app_id).hexdigest()
 
 def _get_client_address():
     """ Gets user IP address """
@@ -103,17 +103,17 @@ def _check_str(val):
         return False
     return True
 
-@reviews.route('/api/add', methods=['POST'])
-def api_add():
+@reviews.route('/api/submit', methods=['POST'])
+def api_submit():
     """
-    Add a new review.
+    Submits a new review.
     """
     try:
         item = json.loads(request.data)
     except ValueError as e:
         return json_error(str(e))
-    required_fields = ['appid', 'locale', 'summary', 'description',
-                       'user_id', 'version', 'distro', 'rating',
+    required_fields = ['app_id', 'locale', 'summary', 'description',
+                       'user_hash', 'version', 'distro', 'rating',
                        'user_display']
     for key in required_fields:
         if not key in item:
@@ -122,7 +122,7 @@ def api_add():
             return json_error('missing data, expected %s' % key)
 
     # check fields for markup and length
-    if not item['appid'].endswith('.desktop'):
+    if not item['app_id'].endswith('.desktop'):
         return json_error('only applications can be reviewed at this time')
     if len(item['summary']) > 70:
         return json_error('summary is too long')
@@ -133,9 +133,9 @@ def api_add():
             return json_error('%s is not a valid string' % key)
     try:
         db = ReviewsDatabase(os.environ)
-        if db.review_exists(item):
-            db.event_add(_get_client_address(), item['user_id'],
-                         "already reviewed %s" % item['appid'])
+        if db.review_exists(item['app_id'], item['user_hash']):
+            db.event_add(_get_client_address(), item['user_hash'],
+                         "already reviewed %s" % item['app_id'])
             return json_error('already reviewed this app')
         db.review_add(item, _get_client_address())
     except CursorError as e:
@@ -176,8 +176,8 @@ def html_eventlog():
         html += '<tr>'
         tmp = datetime.datetime.fromtimestamp(item['date_created']).strftime('%Y-%m-%d %H:%M:%S')
         html += '<td class="history">%s</td>' % tmp
-        html += '<td class="history">%s</td>' % item['user_ip']
-        html += '<td class="history">%s</td>' % item['user_id']
+        html += '<td class="history">%s</td>' % item['user_addr']
+        html += '<td class="history">%s</td>' % item['user_hash']
         html += '<td class="history">%s</td>' % escape(item['message'])
         html += '</tr>\n'
     html += '</table>'
@@ -228,7 +228,7 @@ def html_all():
         else:
             tmp = 'n/a'
         html += '<td class="history">%s</td>' % tmp
-        html += '<td class="history">%s</td>' % item['appid'].replace('.desktop','')
+        html += '<td class="history">%s</td>' % item['app_id'].replace('.desktop','')
         html += '<td class="history">%s</td>' % item['version']
         nr_stars = item['rating'] / 20
         stars = '&#9733;' * nr_stars
@@ -236,7 +236,7 @@ def html_all():
         html += '<td class="history">%s</td>' % stars
         html += '<td class="history">%s</td>' % item['karma']
         html += '<td class="history">%s</td>' % item['distro']
-        html += '<td class="history">%s&hellip;</td>' % item['user_id'][:8]
+        html += '<td class="history">%s&hellip;</td>' % item['user_hash'][:8]
         html += '<td class="history">%s</td>' % item['user_display']
         html += '<td class="history">%s</td>' % item['summary']
         html += '<td class="history">%s</td>' % item['description']
@@ -245,25 +245,25 @@ def html_all():
 
     return render_template('all.html', dyncontent=html)
 
-@reviews.route('/api/app/<appid>/<user_id>')
-@reviews.route('/api/app/<appid>')
-def api_app(appid, user_id=None):
+@reviews.route('/api/app/<app_id>/<user_hash>')
+@reviews.route('/api/app/<app_id>')
+def api_app(app_id, user_hash=None):
     """
     Return details about an application.
     """
     try:
         db = ReviewsDatabase(os.environ)
-        db.event_add(_get_client_address(), user_id,
-                     "getting reviews for %s" % appid)
-        reviews = db.review_get_for_appid(appid)
+        db.event_add(_get_client_address(), user_hash,
+                     "getting reviews for %s" % app_id)
+        reviews = db.review_get_for_app_id(app_id)
     except CursorError as e:
         return json_error(str(e))
 
-    # add key if user_id specified
+    # add key if user_hash specified
     reviews_new = []
     for item in reviews:
-        if user_id:
-            item['user_key'] = _get_user_key(user_id, item['appid'])
+        if user_hash:
+            item['user_skey'] = _get_user_key(user_hash, item['app_id'])
         reviews_new.append(item)
 
     dat = json.dumps(reviews_new, sort_keys=True, indent=4, separators=(',', ': '))
@@ -280,7 +280,7 @@ def api_fetch():
         item = json.loads(request.data)
     except ValueError as e:
         return json_error(str(e))
-    for key in ['appid', 'user_id', 'locale', 'karma', 'distro', 'limit', 'version']:
+    for key in ['app_id', 'user_hash', 'locale', 'karma', 'distro', 'limit', 'version']:
         if not key in item:
             return json_error('invalid data, expected %s' % key)
         if item[key] is None:
@@ -288,14 +288,14 @@ def api_fetch():
 
     try:
         db = ReviewsDatabase(os.environ)
-        db.event_add(_get_client_address(), item['user_id'],
-                     "getting reviews for %s" % item['appid'])
-        reviews = db.review_get_for_appid(item['appid'])
+        db.event_add(_get_client_address(), item['user_hash'],
+                     "getting reviews for %s" % item['app_id'])
+        reviews = db.review_get_for_app_id(item['app_id'])
     except CursorError as e:
         return json_error(str(e))
 
     # update the user request so we can allow the comment to be added
-    db.user_update_request(item['user_id'])
+    db.user_update_request(item['user_hash'])
 
     # add score for review using secret sauce
     reviews_new = []
@@ -303,17 +303,22 @@ def api_fetch():
         # limit to user specified karma
         if review['karma'] < item['karma']:
             continue
-        review['user_key'] = _get_user_key(item['user_id'], review['appid'])
+        review['user_skey'] = _get_user_key(item['user_hash'], review['app_id'])
         review['score'] = _get_review_score(review, item)
+
+        # the UI can hide the vote buttons on reviews already voted on
+        if db.vote_exists(review['review_id'], item['user_hash']):
+            review['vote_id'] = 1
+
         reviews_new.append(review)
 
-    # fake something so the user can get the user_key
+    # fake something so the user can get the user_skey
     if len(reviews_new) == 0:
         review = {}
         review['score'] = 0
-        review['appid'] = item['appid']
-        review['user_id'] = item['user_id']
-        review['user_key'] = _get_user_key(item['user_id'], review['appid'])
+        review['app_id'] = item['app_id']
+        review['user_hash'] = item['user_hash']
+        review['user_skey'] = _get_user_key(item['user_hash'], review['app_id'])
         reviews_new.append(review)
 
     # sort and cut to limit
@@ -325,37 +330,37 @@ def api_fetch():
                     status=200, \
                     mimetype="application/json")
 
-@reviews.route('/api/all/<user_id>')
+@reviews.route('/api/all/<user_hash>')
 @reviews.route('/api/all')
-def api_all(user_id=None):
+def api_all(user_hash=None):
     """
     Return all the reviews on the server as a JSON object.
     """
     try:
         db = ReviewsDatabase(os.environ)
-        db.event_add(_get_client_address(), user_id, "getting all reviews")
+        db.event_add(_get_client_address(), user_hash, "getting all reviews")
         reviews = db.review_get_all()
     except CursorError as e:
         return json_error(str(e))
 
-    # the user specified a user_id
-    if user_id:
+    # the user specified a user_hash
+    if user_hash:
         for item in reviews:
-            item['user_key'] = _get_user_key(user_id, item['appid'])
+            item['user_skey'] = _get_user_key(user_hash, item['app_id'])
 
     dat = json.dumps(reviews, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
                     mimetype="application/json")
 
-@reviews.route('/api/moderate/<user_id>')
-def api_moderate(user_id):
+@reviews.route('/api/moderate/<user_hash>')
+def api_moderate(user_hash):
     """
     Return all the reviews on the server the user can moderate.
     """
     try:
         db = ReviewsDatabase(os.environ)
-        db.event_add(_get_client_address(), user_id, "getting moderatable list")
+        db.event_add(_get_client_address(), user_hash, "getting moderatable list")
         reviews = db.review_get_all()
     except CursorError as e:
         return json_error(str(e))
@@ -363,8 +368,8 @@ def api_moderate(user_id):
     # only return reviews the user has not already voted on
     reviews_new = []
     for item in reviews:
-        if not db.vote_exists(item['dbid'], user_id):
-            item['user_key'] = _get_user_key(user_id, item['appid'])
+        if not db.vote_exists(item['review_id'], user_hash):
+            item['user_skey'] = _get_user_key(user_hash, item['app_id'])
             reviews_new.append(item)
 
     dat = json.dumps(reviews_new, sort_keys=True, indent=4, separators=(',', ': '))
@@ -380,7 +385,7 @@ def vote(val):
         item = json.loads(request.data)
     except ValueError as e:
         return json_error(str(e))
-    for key in ['dbid', 'appid', 'user_id', 'user_key']:
+    for key in ['review_id', 'app_id', 'user_hash', 'user_skey']:
         if not key in item:
             return json_error('invalid data, required %s' % key)
         if item[key] is None:
@@ -392,23 +397,23 @@ def vote(val):
     except CursorError as e:
         return json_error(str(e))
 
-    if item['user_key'] != _get_user_key(item['user_id'], item['appid']):
-        db.event_add(_get_client_address(), item['user_id'],
-                     "invalid user_key of %s" % item['user_key'])
-        #print "expected user_key of %s" % _get_user_key(item['user_id'], item['appid'])
-        return json_error('invalid user_key')
+    if item['user_skey'] != _get_user_key(item['user_hash'], item['app_id']):
+        db.event_add(_get_client_address(), item['user_hash'],
+                     "invalid user_skey of %s" % item['user_skey'])
+        #print "expected user_skey of %s" % _get_user_key(item['user_hash'], item['app_id'])
+        return json_error('invalid user_skey')
     try:
 
         # the user already has a review
-        if db.vote_exists(item['dbid'], item['user_id']):
-            db.event_add(_get_client_address(), item['user_id'],
+        if db.vote_exists(item['review_id'], item['user_hash']):
+            db.event_add(_get_client_address(), item['user_hash'],
                          "attempted duplicate vote")
             return json_error('already reviewed this app')
 
         # update the per-user karma
-        user = db.user_get_by_id(item['user_id'])
+        user = db.user_get_by_id(item['user_hash'])
         if not user:
-            db.user_add(item['user_id'])
+            db.user_add(item['user_hash'])
         else:
 
             # the user wrote the review too quickly
@@ -420,16 +425,16 @@ def vote(val):
                 return json_error('all positive karma used up')
             if val < 0 and user['karma'] < 20:
                 return json_error('all negative karma used up')
-        db.user_update_karma(item['user_id'], val)
+        db.user_update_karma(item['user_hash'], val)
 
         # add the vote to the database
-        db.vote_add(item['dbid'], val, item['user_id'])
-        db.event_add(_get_client_address(), item['user_id'],
-                     "voted %i on %s" % (val, item['appid']))
+        db.vote_add(item['review_id'], val, item['user_hash'])
+        db.event_add(_get_client_address(), item['user_hash'],
+                     "voted %i on %s" % (val, item['app_id']))
 
     except CursorError as e:
         return json_error(str(e))
-    return json_success('voted #%i %i' % (item['dbid'], val))
+    return json_success('voted #%i %i' % (item['review_id'], val))
 
 @reviews.route('/api/upvote', methods=['POST'])
 def api_upvote():
@@ -461,7 +466,7 @@ def api_remove():
         item = json.loads(request.data)
     except ValueError as e:
         return json_error(str(e))
-    for key in ['dbid', 'appid', 'user_id', 'user_key']:
+    for key in ['review_id', 'app_id', 'user_hash', 'user_skey']:
         if not key in item:
             return json_error('invalid data, required %s' % key)
         if item[key] is None:
@@ -472,28 +477,28 @@ def api_remove():
         db = ReviewsDatabase(os.environ)
     except CursorError as e:
         return json_error(str(e))
-    if item['user_key'] != _get_user_key(item['user_id'], item['appid']):
-        db.event_add(_get_client_address(), item['user_id'],
-                     "invalid user_key of %s" % item['user_key'])
-        return json_error('invalid user_key')
+    if item['user_skey'] != _get_user_key(item['user_hash'], item['app_id']):
+        db.event_add(_get_client_address(), item['user_hash'],
+                     "invalid user_skey of %s" % item['user_skey'])
+        return json_error('invalid user_skey')
     try:
         # the user already has a review
-        db.review_remove(item['dbid'], item['user_id'])
-        db.event_add(_get_client_address(), item['user_id'], "removed review")
+        db.review_remove(item['review_id'], item['user_hash'])
+        db.event_add(_get_client_address(), item['user_hash'], "removed review")
     except CursorError as e:
         return json_error(str(e))
-    return json_success('removed review #%i' % item['dbid'])
+    return json_success('removed review #%i' % item['review_id'])
 
-@reviews.route('/api/ratings/<appid>')
-def api_ratings(appid):
+@reviews.route('/api/ratings/<app_id>')
+def api_ratings(app_id):
     """
     Get the star ratings for a specific application.
     """
     try:
         db = ReviewsDatabase(os.environ)
         db.event_add(_get_client_address(), None,
-                     "getting ratings for %s" % appid)
-        ratings = db.reviews_get_rating_for_appid(appid)
+                     "getting ratings for %s" % app_id)
+        ratings = db.reviews_get_rating_for_app_id(app_id)
     except CursorError as e:
         return json_error(str(e))
 
