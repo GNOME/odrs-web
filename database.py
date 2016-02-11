@@ -54,6 +54,7 @@ def _create_user_item(e):
     item['date_request'] = int(e[2].strftime("%s"))
     item['user_hash'] = e[3]
     item['karma'] = int(e[4])
+    item['is_banned'] = int(e[5])
     return item
 
 class ReviewsDatabase(object):
@@ -140,10 +141,20 @@ class ReviewsDatabase(object):
                   date_request TIMESTAMP,
                   user_hash TEXT DEFAULT NULL,
                   karma INT DEFAULT 0,
+                  is_banned INT DEFAULT 0,
                   UNIQUE KEY id (user_id)
                 ) CHARSET=utf8;
             """
             cur.execute(sql_db)
+
+        # FIXME: remove after a few days
+        try:
+            sql_db = """
+                ALTER TABLE users2 ADD is_banned INT DEFAULT 0;
+            """
+            cur.execute(sql_db)
+        except mdb.Error, e:
+            pass
 
         # a table for an admin event log
         try:
@@ -326,7 +337,8 @@ class ReviewsDatabase(object):
         """ Get all the users on the system """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT user_id, date_created, date_request, user_hash, karma "
+            cur.execute("SELECT user_id, date_created, date_request, "
+                        "user_hash, karma, is_banned "
                         "FROM users2 ORDER BY user_id DESC;")
         except mdb.Error, e:
             raise CursorError(cur, e)
@@ -342,7 +354,8 @@ class ReviewsDatabase(object):
         """ Get information about a specific user """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT user_id, date_created, date_request, user_hash, karma "
+            cur.execute("SELECT user_id, date_created, date_request, "
+                        "user_hash, karma, is_banned "
                         "FROM users2 WHERE user_hash=%s ORDER BY user_id DESC;",
                         (user_hash,))
         except mdb.Error, e:

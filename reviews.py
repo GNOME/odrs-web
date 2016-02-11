@@ -137,10 +137,18 @@ def api_submit():
             return json_error('%s is not a valid string' % key)
     try:
         db = ReviewsDatabase(os.environ)
+
+        # user has already reviewed
         if db.review_exists(item['app_id'], item['user_hash']):
             db.event_add(_get_client_address(), item['user_hash'],
                          "already reviewed %s" % item['app_id'])
             return json_error('already reviewed this app')
+
+        # check user has not been banned
+        user = db.user_get_by_id(item['user_hash'])
+        if user and user['is_banned']:
+                return json_error('account has been disabled due to abuse')
+
         db.review_add(item, _get_client_address())
     except CursorError as e:
         return json_error(str(e))
@@ -422,13 +430,17 @@ def vote(val):
         if db.vote_exists(item['review_id'], item['user_hash']):
             db.event_add(_get_client_address(), item['user_hash'],
                          "attempted duplicate vote")
-            return json_error('already reviewed this app')
+            return json_error('already voted on this app')
 
         # update the per-user karma
         user = db.user_get_by_id(item['user_hash'])
         if not user:
             db.user_add(item['user_hash'])
         else:
+
+            # user is naughty
+            if user['is_banned']:
+                return json_error('account has been disabled due to abuse')
 
             # the user wrote the review too quickly
             #if now - user['date_request'] < 30:
