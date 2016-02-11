@@ -147,8 +147,11 @@ def api_submit():
         # check user has not been banned
         user = db.user_get_by_id(item['user_hash'])
         if user and user['is_banned']:
-                return json_error('account has been disabled due to abuse')
+            return json_error('account has been disabled due to abuse')
 
+        # log and add review
+        db.event_add(_get_client_address(), item['user_hash'],
+                     "user %s reviewed %s" % (item['user_hash'], item['app_id']))
         db.review_add(item, _get_client_address())
     except CursorError as e:
         return json_error(str(e))
