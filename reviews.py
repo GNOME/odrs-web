@@ -121,6 +121,10 @@ def api_submit():
         if item[key] is None:
             return json_error('missing data, expected %s' % key)
 
+    # check format
+    if not len(item['user_hash']) == 40:
+        return json_error('the user_hash is invalid')
+
     # check fields for markup and length
     if not item['app_id'].endswith('.desktop'):
         return json_error('only applications can be reviewed at this time')
@@ -286,6 +290,10 @@ def api_fetch():
         if item[key] is None:
             return json_error('missing data, expected %s' % key)
 
+    # check format
+    if not len(item['user_hash']) == 40:
+        return json_error('the user_hash is invalid')
+
     try:
         db = ReviewsDatabase(os.environ)
         db.event_add(_get_client_address(), item['user_hash'],
@@ -391,6 +399,12 @@ def vote(val):
         if item[key] is None:
             return json_error('missing data, expected %s' % key)
 
+    # check format
+    if not len(item['user_hash']) == 40:
+        return json_error('the user_hash is invalid')
+    if not len(item['user_skey']) == 40:
+        return json_error('the user_skey is invalid')
+
     # connect to database early
     try:
         db = ReviewsDatabase(os.environ)
@@ -471,6 +485,12 @@ def api_remove():
             return json_error('invalid data, required %s' % key)
         if item[key] is None:
             return json_error('missing data, expected %s' % key)
+
+    # check format
+    if not len(item['user_hash']) == 40:
+        return json_error('the user_hash is invalid')
+    if not len(item['user_skey']) == 40:
+        return json_error('the user_skey is invalid')
 
     # connect to database early
     try:
