@@ -496,8 +496,6 @@ def api_ratings(app_id):
     """
     try:
         db = ReviewsDatabase(os.environ)
-        db.event_add(_get_client_address(), None,
-                     "getting ratings for %s" % app_id)
         ratings = db.reviews_get_rating_for_app_id(app_id)
     except CursorError as e:
         return json_error(str(e))
