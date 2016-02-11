@@ -449,7 +449,7 @@ def vote(val):
             # the user is either too kind, or too harsh
             if val > 0 and user['karma'] > 100:
                 return json_error('all positive karma used up')
-            if val < 0 and user['karma'] < 20:
+            if val < 0 and user['karma'] < -50:
                 return json_error('all negative karma used up')
         db.user_update_karma(item['user_hash'], val)
 
