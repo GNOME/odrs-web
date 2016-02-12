@@ -262,18 +262,25 @@ class ReviewsDatabase(object):
         """ Votes on a specific review and add to the votes database """
         try:
             cur = self._db.cursor()
-            if val > 0:
+            if val == -5:
+                cur.execute("UPDATE reviews SET reported = reported + 1 "
+                            "WHERE review_id = %s;", (review_id,))
+            elif val == 1:
                 cur.execute("UPDATE reviews SET karma_up = karma_up + 1 "
                             "WHERE review_id = %s;", (review_id,))
-            elif val < 0:
+            elif val == -1:
                 cur.execute("UPDATE reviews SET karma_down = karma_down + 1 "
-                            "WHERE review_id = %s;", (review_id,))
-            else:
-                cur.execute("UPDATE reviews SET reported = reported + 1 "
                             "WHERE review_id = %s;", (review_id,))
             cur.execute("INSERT INTO votes (user_hash, review_id, val) "
                         "VALUES (%s, %s, %s);",
                         (user_hash, review_id, val,))
+        except mdb.Error, e:
+            raise CursorError(cur, e)
+
+    def review_report(self, review_id):
+        """ Reports a specific review for moderation """
+        try:
+            cur = self._db.cursor()
         except mdb.Error, e:
             raise CursorError(cur, e)
 

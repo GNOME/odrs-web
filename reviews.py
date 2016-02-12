@@ -479,12 +479,19 @@ def api_downvote():
     """
     return vote(-1)
 
+@reviews.route('/api/dismiss', methods=['POST'])
+def api_dismiss():
+    """
+    Dismiss a review without rating it up or down.
+    """
+    return vote(0)
+
 @reviews.route('/api/report', methods=['POST'])
 def api_report():
     """
     Report a review for abuse.
     """
-    return vote(0)
+    return vote(-5)
 
 @reviews.route('/api/remove', methods=['POST'])
 def api_remove():
