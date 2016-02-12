@@ -140,8 +140,10 @@ def api_submit():
 
         # user has already reviewed
         if db.review_exists(item['app_id'], item['user_hash']):
-            db.event_add(_get_client_address(), item['user_hash'],
-                         "already reviewed %s" % item['app_id'])
+            db.event_warn(_get_client_address(),
+                          item['user_hash'],
+                          item['app_id'],
+                          "already reviewed")
             return json_error('already reviewed this app')
 
         # check user has not been banned
@@ -150,8 +152,10 @@ def api_submit():
             return json_error('account has been disabled due to abuse')
 
         # log and add review
-        db.event_add(_get_client_address(), item['user_hash'],
-                     "user %s reviewed %s" % (item['user_hash'], item['app_id']))
+        db.event_info(_get_client_address(),
+                      item['user_hash'],
+                      item['app_id'],
+                      "reviewed")
         db.review_add(item, _get_client_address())
     except CursorError as e:
         return json_error(str(e))
@@ -193,6 +197,11 @@ def html_eventlog():
         html += '<td class="history">%s</td>' % tmp
         html += '<td class="history">%s</td>' % item['user_addr']
         html += '<td class="history">%s</td>' % item['user_hash']
+        html += '<td class="history">%s</td>' % item['app_id']
+        if item['important'] == 1:
+            html += '<td class="history">&#x272a;</td>'
+        else:
+            html += '<td class="history"></td>'
         html += '<td class="history">%s</td>' % escape(item['message'])
         html += '</tr>\n'
     html += '</table>'
@@ -268,8 +277,7 @@ def api_app(app_id, user_hash=None):
     """
     try:
         db = ReviewsDatabase(os.environ)
-        db.event_add(_get_client_address(), user_hash,
-                     "getting reviews for %s" % app_id)
+        db.event_info(_get_client_address(), user_hash, app_id, "getting")
         reviews = db.review_get_for_app_id(app_id)
     except CursorError as e:
         return json_error(str(e))
@@ -307,8 +315,8 @@ def api_fetch():
 
     try:
         db = ReviewsDatabase(os.environ)
-        db.event_add(_get_client_address(), item['user_hash'],
-                     "getting reviews for %s" % item['app_id'])
+        db.event_info(_get_client_address(), item['user_hash'], item['app_id'],
+                      "fetching review")
         reviews = db.review_get_for_app_id(item['app_id'])
     except CursorError as e:
         return json_error(str(e))
@@ -357,7 +365,7 @@ def api_all(user_hash=None):
     """
     try:
         db = ReviewsDatabase(os.environ)
-        db.event_add(_get_client_address(), user_hash, "getting all reviews")
+        db.event_info(_get_client_address(), user_hash, None, "getting all reviews")
         reviews = db.review_get_all()
     except CursorError as e:
         return json_error(str(e))
@@ -379,7 +387,7 @@ def api_moderate(user_hash):
     """
     try:
         db = ReviewsDatabase(os.environ)
-        db.event_add(_get_client_address(), user_hash, "getting moderatable list")
+        db.event_info(_get_client_address(), user_hash, None, "getting moderatable reviews")
         reviews = db.review_get_all()
     except CursorError as e:
         return json_error(str(e))
@@ -423,16 +431,16 @@ def vote(val):
         return json_error(str(e))
 
     if item['user_skey'] != _get_user_key(item['user_hash'], item['app_id']):
-        db.event_add(_get_client_address(), item['user_hash'],
-                     "invalid user_skey of %s" % item['user_skey'])
+        db.event_warn(_get_client_address(), item['user_hash'], None,
+                      "invalid user_skey of %s" % item['user_skey'])
         #print "expected user_skey of %s" % _get_user_key(item['user_hash'], item['app_id'])
         return json_error('invalid user_skey')
     try:
 
         # the user already has a review
         if db.vote_exists(item['review_id'], item['user_hash']):
-            db.event_add(_get_client_address(), item['user_hash'],
-                         "attempted duplicate vote")
+            db.event_warn(_get_client_address(), item['user_hash'], item['app_id'],
+                          "duplicate vote")
             return json_error('already voted on this app')
 
         # update the per-user karma
@@ -458,8 +466,8 @@ def vote(val):
 
         # add the vote to the database
         db.vote_add(item['review_id'], val, item['user_hash'])
-        db.event_add(_get_client_address(), item['user_hash'],
-                     "voted %i on %s" % (val, item['app_id']))
+        db.event_info(_get_client_address(), item['user_hash'], item['app_id'],
+                      "voted %i on review" % val)
 
     except CursorError as e:
         return json_error(str(e))
@@ -520,13 +528,16 @@ def api_remove():
     except CursorError as e:
         return json_error(str(e))
     if item['user_skey'] != _get_user_key(item['user_hash'], item['app_id']):
-        db.event_add(_get_client_address(), item['user_hash'],
-                     "invalid user_skey of %s" % item['user_skey'])
+        db.event_warn(_get_client_address(), item['user_hash'], None,
+                      "invalid user_skey of %s" % item['user_skey'])
         return json_error('invalid user_skey')
     try:
         # the user already has a review
         db.review_remove(item['review_id'], item['user_hash'])
-        db.event_add(_get_client_address(), item['user_hash'], "removed review")
+        db.event_info(_get_client_address(),
+                      item['user_hash'],
+                      item['app_id'],
+                      "removed review")
     except CursorError as e:
         return json_error(str(e))
     return json_success('removed review #%i' % item['review_id'])

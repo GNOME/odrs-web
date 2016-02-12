@@ -44,6 +44,8 @@ def _create_event_item(e):
     item['user_addr'] = e[2]
     item['user_hash'] = e[3]
     item['message'] = e[4]
+    item['app_id'] = e[5]
+    item['important'] = int(e[6])
     return item
 
 def _create_user_item(e):
@@ -167,11 +169,23 @@ class ReviewsDatabase(object):
                   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                   user_addr TEXT DEFAULT NULL,
                   user_hash TEXT DEFAULT NULL,
+                  app_id TEXT DEFAULT NULL,
+                  important INT DEFAULT 0,
                   message TEXT DEFAULT NULL,
                   UNIQUE KEY id (eventlog_id)
                 ) CHARSET=utf8;
             """
             cur.execute(sql_db)
+
+        # FIXME: remove after a few days
+        try:
+            sql_db = """
+                ALTER TABLE eventlog2 ADD app_id TEXT DEFAULT NULL;
+                ALTER TABLE eventlog2 ADD important INT DEFAULT 0;
+            """
+            cur.execute(sql_db)
+        except mdb.Error, e:
+            pass
 
     def __del__(self):
         """ Clean up the database """
@@ -277,13 +291,6 @@ class ReviewsDatabase(object):
         except mdb.Error, e:
             raise CursorError(cur, e)
 
-    def review_report(self, review_id):
-        """ Reports a specific review for moderation """
-        try:
-            cur = self._db.cursor()
-        except mdb.Error, e:
-            raise CursorError(cur, e)
-
     def review_get_all(self):
         """ Gets all non-removed reviews from the server for all applications """
         try:
@@ -303,21 +310,32 @@ class ReviewsDatabase(object):
             items.append(_create_review_item(e))
         return items
 
-    def event_add(self, user_addr=None, user_hash=None, message=None):
-        """ Adds an item to the event log """
+    def event_warn(self,
+                   user_addr=None,
+                   user_hash=None,
+                   app_id=None,
+                   message=None,
+                   important=True):
+        """ Adds a warning to the event log """
         try:
             cur = self._db.cursor()
-            cur.execute("INSERT INTO eventlog2 (user_addr, user_hash, message) "
-                        "VALUES (%s, %s, %s);",
-                        (user_addr, user_hash, message,))
+            cur.execute("INSERT INTO eventlog2 (user_addr, user_hash, app_id, "
+                        "message, important) "
+                        "VALUES (%s, %s, %s, %s, %s);",
+                        (user_addr, user_hash, app_id, message, important,))
         except mdb.Error, e:
             raise CursorError(cur, e)
+
+    def event_info(self, user_addr=None, user_hash=None, app_id=None, message=None):
+        """ Adds an info item to the event log """
+        self.event_warn(user_addr, user_hash, app_id, message, False)
 
     def event_get_all(self):
         """ Returns all events from the event log """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT eventlog_id, date_created, user_addr, user_hash, message "
+            cur.execute("SELECT eventlog_id, date_created, user_addr, user_hash, "
+                        "message, app_id, important "
                         "FROM eventlog2 ORDER BY eventlog_id DESC;")
         except mdb.Error, e:
             raise CursorError(cur, e)
