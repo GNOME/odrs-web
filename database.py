@@ -451,6 +451,22 @@ class ReviewsDatabase(object):
                 item['star%i' % i] = 0
         return item
 
+    def get_stats_fetch(self):
+        """ Returns interesting statistics for the webapp """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT DISTINCT app_id, COUNT(app_id) as total "
+                        "FROM eventlog2 WHERE app_id IS NOT NULL "
+                        "AND message='fetching review' GROUP BY app_id "
+                        "ORDER BY total DESC;")
+        except mdb.Error, e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        data = []
+        for en in res:
+            data.append((en[0], en[1]))
+        return data
+
     def get_stats(self):
         """ Returns interesting statistics for the webapp """
         item = {}

@@ -219,11 +219,22 @@ def html_stats():
     except CursorError as e:
         return error_internal(str(e))
 
+    # list each stat the database can report
     html = ''
     for item in stats:
         html += '<tr>'
         html += '<td class="history">%s</td>' % item
         html += '<td class="history">%s</td>' % stats[item]
+        html += '</tr>\n'
+    html += '</table>'
+
+    # list apps by popularity
+    html += '<h1>Top Applications</h1>'
+    html += '<table>'
+    for item in db.get_stats_fetch():
+        html += '<tr>'
+        html += '<td class="history">%i</td>' % item[1]
+        html += '<td class="history">%s</td>' % item[0]
         html += '</tr>\n'
     html += '</table>'
 
@@ -252,7 +263,7 @@ def html_all():
         else:
             tmp = 'n/a'
         html += '<td class="history">%s</td>' % tmp
-        html += '<td class="history">%s</td>' % item['app_id'].replace('.desktop','')
+        html += '<td class="history">%s</td>' % item['app_id'].replace('.desktop', '')
         html += '<td class="history">%s</td>' % item['version']
         nr_stars = item['rating'] / 20
         stars = '&#9733;' * nr_stars
