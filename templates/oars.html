@@ -1,0 +1,269 @@
+{% extends "default.html" %}
+{% block title %}OARS: Open Age Ratings Service{% endblock %}
+
+{% block page_header %}
+<h1>Open Age Ratings Service</h1>
+{% endblock %}
+
+{% block content %}
+
+<script>
+
+function updateAppData() {
+  xml = '  <content_rating type="oars-1.0">\n'
+  cats = ['violence-cartoon',
+          'violence-fantasy',
+          'violence-realistic',
+          'violence-bloodshed',
+          'violence-sexual',
+          'drugs-alcohol',
+          'drugs-narcotics',
+          'drugs-tobacco',
+          'sex-nudity',
+          'sex-themes',
+          'language-profanity',
+          'language-humor',
+          'social-chat',
+          'social-audio',
+          'social-contacts',
+          'gambling-general']
+  for (var i in cats) {
+    val = document.querySelector('input[name="' + cats[i] + '"]:checked').value
+    xml += '    <rating id="' + cats[i] + '">' + val + '</rating>\n'  }
+  xml += '  </content_rating>\n'
+  document.getElementById('appdata_oars').value = xml;
+}
+
+</script>
+
+<p>
+The Open Age Ratings Service allows free and commercial software to generate
+the OARS markup required in the AppData file.
+OARS relies on honest answers from upstream projects and is purely
+informational.
+The OARS markup allows the end user to choose software based on some common
+criteria in the software center.
+The original set of questions has been inspired by the now-defunct
+<a href="http://web.archive.org/web/20120110101954/http://www.tigrs.org/?page=ratings">TIGRS</a>
+and the mapping from rating to minimum suggested age data comes from
+<a href="https://www.commonsensemedia.org/">common sense</a>.
+</p>
+<p>
+By filling in the following form you can generate AppStream-compatible markup
+for the upstream AppData file.
+</p>
+
+<hr/>
+<h2>Violence</h2>
+
+<h3>Cartoon Violence</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="violence-cartoon" value="none" checked>
+None<br/>
+<input type="radio" name="violence-cartoon" value="mild">
+Depictions of cartoon-like characters in unsafe situations<br/>
+<input type="radio" name="violence-cartoon" value="moderate">
+Depictions of cartoon-like characters in aggressive conflict<br/>
+<input type="radio" name="violence-cartoon" value="intense">
+Graphic depictions of violence involving cartoon-like characters<br/>
+</form>
+
+<h3>Fantasy Violence</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="violence-fantasy" value="none" checked>
+None<br/>
+<input type="radio" name="violence-fantasy" value="mild">
+Depictions of characters in unsafe situations easily distinguishable from real life<br/>
+<input type="radio" name="violence-fantasy" value="moderate">
+Depictions of characters in aggressive conflict easily distinguishable from real life<br/>
+<input type="radio" name="violence-fantasy" value="intense">
+Graphic depictions of violence involving situations easily distinguishable from real life<br/>
+</form>
+
+<h3>Realistic Violence</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="violence-realistic" value="none" checked>
+None<br/>
+<input type="radio" name="violence-realistic" value="mild">
+Mild depictions of realistic characters in unsafe situations<br/>
+<input type="radio" name="violence-realistic" value="moderate">
+Depictions of realistic characters in aggressive conflict<br/>
+<input type="radio" name="violence-realistic" value="intense">
+Graphic depictions of violence involving realistic characters<br/>
+</form>
+
+<h3>Bloodshed</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="violence-bloodshed" value="none" checked>
+None<br/>
+<input type="radio" name="violence-bloodshed" value="mild">
+Unrealistic depictions of bloodshed<br/>
+<input type="radio" name="violence-bloodshed" value="moderate">
+Realistic depictions of bloodshed<br/>
+<input type="radio" name="violence-bloodshed" value="intense">
+Depictions of bloodshed and the mutilation of body parts<br/>
+</form>
+
+<h3>Sexual Violence</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="violence-sexual" value="none" checked>
+None<br/>
+<input type="radio" name="violence-sexual" value="intense">
+Depictions of or graphic references to rape or other violent sexual behavior<br/>
+</form>
+
+<hr/>
+<h2>Drugs</h2>
+
+<h3>Alcohol</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="drugs-alcohol" value="none" checked>
+None<br/>
+<input type="radio" name="drugs-alcohol" value="mild">
+References to or images of alcoholic beverages<br/>
+<input type="radio" name="drugs-alcohol" value="moderate">
+Use of alcoholic beverages<br/>
+</form>
+
+<h3>Narcotics</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="drugs-narcotics" value="none" checked>
+None<br/>
+<input type="radio" name="drugs-narcotics" value="mild">
+References to or images of illicit drugs<br/>
+<input type="radio" name="drugs-narcotics" value="moderate">
+Use of illicit drugs<br/>
+</form>
+
+<h3>Tobacco</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="drugs-tobacco" value="none" checked>
+None<br/>
+<input type="radio" name="drugs-tobacco" value="mild">
+References to or images of tobacco products<br/>
+<input type="radio" name="drugs-tobacco" value="moderate">
+Use of tobacco products<br/>
+</form>
+
+<hr/>
+<h2>Sex/Nudity</h2>
+
+<h3>Nudity</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="sex-nudity" value="none" checked>
+None<br/>
+<input type="radio" name="sex-nudity" value="mild">
+Brief depictions of nudity or artistic nudity<br/>
+<input type="radio" name="sex-nudity" value="moderate">
+Prolonged depictions of nudity<br/>
+</form>
+
+<h3>Sexual Themes</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="sex-themes" value="none" checked>
+None<br/>
+<input type="radio" name="sex-themes" value="mild">
+Provocative references or depictions<br/>
+<input type="radio" name="sex-themes" value="moderate">
+Sexual references or depictions<br/>
+<input type="radio" name="sex-themes" value="intense">
+Graphic depictions of sexual behavior<br/>
+</form>
+
+<hr/>
+<h2>Language</h2>
+
+<h3>Profanity</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="language-profanity" value="none" checked>
+None<br/>
+<input type="radio" name="language-profanity" value="mild">
+Mild or infrequent use of profanity<br/>
+<input type="radio" name="language-profanity" value="moderate">
+Moderate use of profanity<br/>
+<input type="radio" name="language-profanity" value="intense">
+Strong or frequent use of profanity<br/>
+</form>
+
+<h3>Humor</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="language-humor" value="none" checked>
+None<br/>
+<input type="radio" name="language-humor" value="mild">
+Depictions of or dialog including slapstick humor<br/>
+<input type="radio" name="language-humor" value="moderate">
+Depictions of or dialog including vulgar humor; bathroom humor<br/>
+<input type="radio" name="language-humor" value="intense">
+Depictions of or dialog including mature humor; sexual humor<br/>
+</form>
+
+<hr/>
+<h2>Gambling</h2>
+
+<h3>General</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="gambling-general" value="none" checked>
+None<br/>
+<input type="radio" name="gambling-general" value="mild">
+Player can gamble on random events using tokens or credits<br/>
+<input type="radio" name="gambling-general" value="moderate">
+Player can gamble using fictional money<br/>
+<input type="radio" name="gambling-general" value="intense">
+Player can gamble using real money<br/>
+</form>
+
+<hr/>
+<h2>Social</h2>
+
+<h3>Online Text-only Messaging</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="social-chat" value="none" checked>
+None<br/>
+<input type="radio" name="social-chat" value="mild">
+Player-to-player game interactions (e.g. playing chess) without chat functionality<br/>
+<input type="radio" name="social-chat" value="moderate">
+Player-to-player scripted interactions (e.g. giving an axe for a quest) without chat functionality<br/>
+<input type="radio" name="social-chat" value="intense">
+Uncontrolled chat functionality between players<br/>
+</form>
+
+<h3>Online Audio and Video Messaging</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="social-audio" value="none" checked>
+None<br/>
+<input type="radio" name="social-audio" value="intense">
+Uncontrolled audio or video chat functionality between players<br/>
+</form>
+
+<h3>Online Audio and Video Messaging</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="social-audio" value="none" checked>
+None<br/>
+<input type="radio" name="social-audio" value="intense">
+Uncontrolled audio or video chat functionality between players<br/>
+</form>
+
+<h3>Other Contact Points</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="social-contacts" value="none" checked>
+None<br/>
+<input type="radio" name="social-contacts" value="intense">
+Ability to share Twitter, Facebook or email addresses to other players<br/>
+</form>
+
+<hr/>
+<p>
+  The following markup can be pasted into the existing application AppData file.
+</p>
+<p>
+  <b>DO NOT USE THIS YET, WE'RE STILL DISCUSSING THE QUESTIONS AND SCHEMA!</b>
+</p>
+<textarea id="appdata_oars" rows="19" cols="60">
+</textarea>
+
+<script>updateAppData();</script>
+
+{% endblock %}
+
+<!-- dynamic content -->
+{% block dyncontent %}{{dyncontent|safe}}{% endblock %}

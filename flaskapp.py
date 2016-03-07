@@ -23,6 +23,11 @@ def fwupd_index():
     """ start page """
     return render_template('index.html')
 
+@app.route('/oars')
+def oars_index():
+    """ OARS page """
+    return render_template('oars.html')
+
 @app.route('/<path:resource>')
 def static_resource(resource):
     """ Return a static image or resource """
