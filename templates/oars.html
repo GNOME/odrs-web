@@ -26,10 +26,11 @@ function updateAppData() {
           'social-chat',
           'social-audio',
           'social-contacts',
-          'gambling-general']
+          'money-purchasing',
+          'money-gambling']
   for (var i in cats) {
     val = document.querySelector('input[name="' + cats[i] + '"]:checked').value
-    xml += '    <rating id="' + cats[i] + '">' + val + '</rating>\n'  }
+    xml += '    <content_attribute id="' + cats[i] + '">' + val + '</content_attribute>\n'  }
   xml += '  </content_rating>\n'
   document.getElementById('appdata_oars').value = xml;
 }
@@ -198,18 +199,26 @@ Depictions of or dialog including mature humor; sexual humor<br/>
 </form>
 
 <hr/>
-<h2>Gambling</h2>
+<h2>Money</h2>
 
-<h3>General</h3>
+<h3>Gambling</h3>
 <form onChange="updateAppData()">
-<input type="radio" name="gambling-general" value="none" checked>
+<input type="radio" name="money-gambling" value="none" checked>
 None<br/>
-<input type="radio" name="gambling-general" value="mild">
+<input type="radio" name="money-gambling" value="mild">
 Player can gamble on random events using tokens or credits<br/>
-<input type="radio" name="gambling-general" value="moderate">
+<input type="radio" name="money-gambling" value="moderate">
 Player can gamble using fictional money<br/>
-<input type="radio" name="gambling-general" value="intense">
+<input type="radio" name="money-gambling" value="intense">
 Player can gamble using real money<br/>
+</form>
+
+<h3>In-Game Purchases</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="money-purchasing" value="none" checked>
+None<br/>
+<input type="radio" name="money-purchasing" value="intense">
+Ability to spend real money in-game, e.g. buying new content or new levels<br/>
 </form>
 
 <hr/>
@@ -251,12 +260,28 @@ None<br/>
 Ability to share Twitter, Facebook or email addresses to other players<br/>
 </form>
 
+<h3>Information Sharing with 3rd Parties</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="social-info" value="none" checked>
+None<br/>
+<input type="radio" name="social-info" value="intense">
+User information is shared with 3rd parties<br/>
+</form>
+
+<h3>Location Sharing</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="social-location" value="none" checked>
+None<br/>
+<input type="radio" name="social-location" value="intense">
+Ability to share physical location to other users<br/>
+</form>
+
 <hr/>
 <p>
   The following markup can be pasted into the existing application AppData file.
 </p>
 <p>
-  <b>DO NOT USE THIS YET, WE'RE STILL DISCUSSING THE QUESTIONS AND SCHEMA!</b>
+  <b>DO NOT USE THIS YET, WE'RE STILL DISCUSSING THE QUESTIONS!</b>
 </p>
 <textarea id="appdata_oars" rows="19" cols="60">
 </textarea>
