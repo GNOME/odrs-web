@@ -23,8 +23,11 @@ function updateAppData() {
           'sex-themes',
           'language-profanity',
           'language-humor',
+          'language-discrimination',
           'social-chat',
+          'social-info',
           'social-audio',
+          'social-location',
           'social-contacts',
           'money-purchasing',
           'money-gambling']
@@ -198,6 +201,18 @@ Depictions of or dialog including vulgar humor; bathroom humor<br/>
 Depictions of or dialog including mature humor; sexual humor<br/>
 </form>
 
+<h3>Discrimination</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="language-discrimination" value="none" checked>
+None<br/>
+<input type="radio" name="language-discrimination" value="mild">
+Depictions of negativity towards a specific group of people, e.g. enthnic jokes<br/>
+<input type="radio" name="language-discrimination" value="moderate">
+Depictions of discrimation designed to cause harm, e.g. racism, or homophobia<br/>
+<input type="radio" name="language-discrimination" value="intense">
+Explicit in-game discrimination based on gender, sexuality, race or religion, e.g. genocide<br/>
+</form>
+
 <hr/>
 <h2>Money</h2>
 
@@ -244,15 +259,7 @@ None<br/>
 Uncontrolled audio or video chat functionality between players<br/>
 </form>
 
-<h3>Online Audio and Video Messaging</h3>
-<form onChange="updateAppData()">
-<input type="radio" name="social-audio" value="none" checked>
-None<br/>
-<input type="radio" name="social-audio" value="intense">
-Uncontrolled audio or video chat functionality between players<br/>
-</form>
-
-<h3>Other Contact Points</h3>
+<h3>Contact Details</h3>
 <form onChange="updateAppData()">
 <input type="radio" name="social-contacts" value="none" checked>
 None<br/>
@@ -260,7 +267,7 @@ None<br/>
 Ability to share Twitter, Facebook or email addresses to other players<br/>
 </form>
 
-<h3>Information Sharing with 3rd Parties</h3>
+<h3>Information Sharing</h3>
 <form onChange="updateAppData()">
 <input type="radio" name="social-info" value="none" checked>
 None<br/>
@@ -283,7 +290,7 @@ Ability to share physical location to other users<br/>
 <p>
   <b>DO NOT USE THIS YET, WE'RE STILL DISCUSSING THE QUESTIONS!</b>
 </p>
-<textarea id="appdata_oars" rows="19" cols="60">
+<textarea id="appdata_oars" rows="19" cols="80">
 </textarea>
 
 <script>updateAppData();</script>
