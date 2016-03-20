@@ -57,6 +57,15 @@ By filling in the following form you can generate AppStream-compatible markup
 for the upstream AppData file.
 </p>
 
+<p>
+When reading the descriptions below, these apply to:
+<ul>
+<li>In-game spoken or written dialog</li>
+<li>Depictions of, e.g. a short cut-scene</li>
+<li>Graphical references, e.g images of</li>
+</ul>
+</p>
+
 <hr/>
 <h2>Violence</h2>
 
@@ -65,11 +74,11 @@ for the upstream AppData file.
 <input type="radio" name="violence-cartoon" value="none" checked>
 None<br/>
 <input type="radio" name="violence-cartoon" value="mild">
-Depictions of cartoon-like characters in unsafe situations<br/>
+Cartoon characters in unsafe situations<br/>
 <input type="radio" name="violence-cartoon" value="moderate">
-Depictions of cartoon-like characters in aggressive conflict<br/>
+Cartoon characters in aggressive conflict<br/>
 <input type="radio" name="violence-cartoon" value="intense">
-Graphic depictions of violence involving cartoon-like characters<br/>
+Graphic violence involving cartoon characters<br/>
 </form>
 
 <h3>Fantasy Violence</h3>
@@ -77,11 +86,11 @@ Graphic depictions of violence involving cartoon-like characters<br/>
 <input type="radio" name="violence-fantasy" value="none" checked>
 None<br/>
 <input type="radio" name="violence-fantasy" value="mild">
-Depictions of characters in unsafe situations easily distinguishable from real life<br/>
+Characters in unsafe situations easily distinguishable from reality<br/>
 <input type="radio" name="violence-fantasy" value="moderate">
-Depictions of characters in aggressive conflict easily distinguishable from real life<br/>
+Characters in aggressive conflict easily distinguishable from reality<br/>
 <input type="radio" name="violence-fantasy" value="intense">
-Graphic depictions of violence involving situations easily distinguishable from real life<br/>
+Graphic violence easily distinguishable from reality<br/>
 </form>
 
 <h3>Realistic Violence</h3>
@@ -89,11 +98,11 @@ Graphic depictions of violence involving situations easily distinguishable from 
 <input type="radio" name="violence-realistic" value="none" checked>
 None<br/>
 <input type="radio" name="violence-realistic" value="mild">
-Mild depictions of realistic characters in unsafe situations<br/>
+Mild realistic characters in unsafe situations<br/>
 <input type="radio" name="violence-realistic" value="moderate">
 Depictions of realistic characters in aggressive conflict<br/>
 <input type="radio" name="violence-realistic" value="intense">
-Graphic depictions of violence involving realistic characters<br/>
+Graphic violence involving realistic characters<br/>
 </form>
 
 <h3>Bloodshed</h3>
@@ -101,9 +110,9 @@ Graphic depictions of violence involving realistic characters<br/>
 <input type="radio" name="violence-bloodshed" value="none" checked>
 None<br/>
 <input type="radio" name="violence-bloodshed" value="mild">
-Unrealistic depictions of bloodshed<br/>
+Unrealistic bloodshed<br/>
 <input type="radio" name="violence-bloodshed" value="moderate">
-Realistic depictions of bloodshed<br/>
+Realistic bloodshed<br/>
 <input type="radio" name="violence-bloodshed" value="intense">
 Depictions of bloodshed and the mutilation of body parts<br/>
 </form>
@@ -113,7 +122,7 @@ Depictions of bloodshed and the mutilation of body parts<br/>
 <input type="radio" name="violence-sexual" value="none" checked>
 None<br/>
 <input type="radio" name="violence-sexual" value="intense">
-Depictions of or graphic references to rape or other violent sexual behavior<br/>
+Rape or other violent sexual behavior<br/>
 </form>
 
 <hr/>
@@ -124,7 +133,7 @@ Depictions of or graphic references to rape or other violent sexual behavior<br/
 <input type="radio" name="drugs-alcohol" value="none" checked>
 None<br/>
 <input type="radio" name="drugs-alcohol" value="mild">
-References to or images of alcoholic beverages<br/>
+References to alcoholic beverages<br/>
 <input type="radio" name="drugs-alcohol" value="moderate">
 Use of alcoholic beverages<br/>
 </form>
@@ -134,7 +143,7 @@ Use of alcoholic beverages<br/>
 <input type="radio" name="drugs-narcotics" value="none" checked>
 None<br/>
 <input type="radio" name="drugs-narcotics" value="mild">
-References to or images of illicit drugs<br/>
+References to illicit drugs<br/>
 <input type="radio" name="drugs-narcotics" value="moderate">
 Use of illicit drugs<br/>
 </form>
@@ -144,7 +153,7 @@ Use of illicit drugs<br/>
 <input type="radio" name="drugs-tobacco" value="none" checked>
 None<br/>
 <input type="radio" name="drugs-tobacco" value="mild">
-References to or images of tobacco products<br/>
+References to tobacco products<br/>
 <input type="radio" name="drugs-tobacco" value="moderate">
 Use of tobacco products<br/>
 </form>
@@ -157,9 +166,9 @@ Use of tobacco products<br/>
 <input type="radio" name="sex-nudity" value="none" checked>
 None<br/>
 <input type="radio" name="sex-nudity" value="mild">
-Brief depictions of nudity or artistic nudity<br/>
+Brief artistic nudity<br/>
 <input type="radio" name="sex-nudity" value="moderate">
-Prolonged depictions of nudity<br/>
+Prolonged nudity<br/>
 </form>
 
 <h3>Sexual Themes</h3>
@@ -171,7 +180,7 @@ Provocative references or depictions<br/>
 <input type="radio" name="sex-themes" value="moderate">
 Sexual references or depictions<br/>
 <input type="radio" name="sex-themes" value="intense">
-Graphic depictions of sexual behavior<br/>
+Graphic sexual behavior<br/>
 </form>
 
 <hr/>
@@ -194,11 +203,11 @@ Strong or frequent use of profanity<br/>
 <input type="radio" name="language-humor" value="none" checked>
 None<br/>
 <input type="radio" name="language-humor" value="mild">
-Depictions of or dialog including slapstick humor<br/>
+Slapstick humor<br/>
 <input type="radio" name="language-humor" value="moderate">
-Depictions of or dialog including vulgar humor; bathroom humor<br/>
+Vulgar or bathroom humor<br/>
 <input type="radio" name="language-humor" value="intense">
-Depictions of or dialog including mature humor; sexual humor<br/>
+Mature or sexual humor<br/>
 </form>
 
 <h3>Discrimination</h3>
@@ -206,26 +215,38 @@ Depictions of or dialog including mature humor; sexual humor<br/>
 <input type="radio" name="language-discrimination" value="none" checked>
 None<br/>
 <input type="radio" name="language-discrimination" value="mild">
-Depictions of negativity towards a specific group of people, e.g. enthnic jokes<br/>
+Negativity towards a specific group of people, e.g. enthnic jokes<br/>
 <input type="radio" name="language-discrimination" value="moderate">
-Depictions of discrimation designed to cause harm, e.g. racism, or homophobia<br/>
+Discrimation designed to cause emotional harm, e.g. racism, or homophobia<br/>
 <input type="radio" name="language-discrimination" value="intense">
-Explicit in-game discrimination based on gender, sexuality, race or religion, e.g. genocide<br/>
+Explicit discrimination based on gender, sexuality, race or religion, e.g. genocide<br/>
 </form>
 
 <hr/>
 <h2>Money</h2>
+
+<h3>Advertising</h3>
+<form onChange="updateAppData()">
+<input type="radio" name="money-advertising" value="none" checked>
+None<br/>
+<input type="radio" name="money-advertising" value="mild">
+Product placement, e.g. billboards in a football game<br/>
+<input type="radio" name="money-advertising" value="moderate">
+Explicit references to specific brands or trademarked products<br/>
+<input type="radio" name="money-advertising" value="intense">
+Players are encouraged to purchase specific real-world items<br/>
+</form>
 
 <h3>Gambling</h3>
 <form onChange="updateAppData()">
 <input type="radio" name="money-gambling" value="none" checked>
 None<br/>
 <input type="radio" name="money-gambling" value="mild">
-Player can gamble on random events using tokens or credits<br/>
+Gambling on random events using tokens or credits<br/>
 <input type="radio" name="money-gambling" value="moderate">
-Player can gamble using fictional money<br/>
+Gambling using fictional money<br/>
 <input type="radio" name="money-gambling" value="intense">
-Player can gamble using real money<br/>
+Gambling using real money<br/>
 </form>
 
 <h3>In-Game Purchases</h3>
@@ -246,7 +267,7 @@ None<br/>
 <input type="radio" name="social-chat" value="mild">
 Player-to-player game interactions (e.g. playing chess) without chat functionality<br/>
 <input type="radio" name="social-chat" value="moderate">
-Player-to-player scripted interactions (e.g. giving an axe for a quest) without chat functionality<br/>
+Player-to-player preset interactions (e.g. giving an axe for a quest) without chat functionality<br/>
 <input type="radio" name="social-chat" value="intense">
 Uncontrolled chat functionality between players<br/>
 </form>
@@ -264,7 +285,7 @@ Uncontrolled audio or video chat functionality between players<br/>
 <input type="radio" name="social-contacts" value="none" checked>
 None<br/>
 <input type="radio" name="social-contacts" value="intense">
-Ability to share Twitter, Facebook or email addresses to other players<br/>
+Sharing Twitter, Facebook or email addresses<br/>
 </form>
 
 <h3>Information Sharing</h3>
@@ -272,7 +293,7 @@ Ability to share Twitter, Facebook or email addresses to other players<br/>
 <input type="radio" name="social-info" value="none" checked>
 None<br/>
 <input type="radio" name="social-info" value="intense">
-User information is shared with 3rd parties<br/>
+Sharing user information with 3rd parties<br/>
 </form>
 
 <h3>Location Sharing</h3>
@@ -280,7 +301,7 @@ User information is shared with 3rd parties<br/>
 <input type="radio" name="social-location" value="none" checked>
 None<br/>
 <input type="radio" name="social-location" value="intense">
-Ability to share physical location to other users<br/>
+Sharing physical location to other users<br/>
 </form>
 
 <hr/>
