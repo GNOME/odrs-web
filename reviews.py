@@ -9,6 +9,7 @@ import json
 import os
 import hashlib
 import datetime
+import calendar
 
 from database import ReviewsDatabase, CursorError
 
@@ -56,6 +57,26 @@ def _get_review_score(review, item):
     if review['distro'] != item['distro']:
         score = score + 100
     return score + (review['karma'] * 2)
+
+def _get_chart_labels_months():
+    """ Gets the chart labels """
+    now = datetime.date.today()
+    labels = []
+    offset = 0
+    for i in range(0, 12):
+        if now.month - i == 0:
+            offset = 1
+        labels.append(calendar.month_name[now.month - i - offset])
+    return labels
+
+def _get_chart_labels_days():
+    """ Gets the chart labels """
+    now = datetime.date.today()
+    labels = []
+    for i in range(0, 30):
+        then = now - datetime.timedelta(i)
+        labels.append("%02i-%02i-%02i" % (then.year, then.month, then.day))
+    return labels
 
 @reviews.errorhandler(400)
 def error_internal(msg=None, errcode=400):
@@ -207,6 +228,96 @@ def html_eventlog():
     html += '</table>'
 
     return render_template('eventlog.html', dyncontent=html)
+
+@reviews.route('/analytics')
+def html_analytics():
+    """
+    Show nice analytics graphs.
+    """
+    try:
+        db = ReviewsDatabase(os.environ)
+        events = db.event_get_all()
+    except CursorError as e:
+        return error_internal(str(e))
+
+    # add days
+    data_fetch = db.get_stats_by_interval(30, 1, 'fetching review')
+    data_review = db.get_stats_by_interval(30, 1, 'reviewed')
+    html = '<h2>Review Activity (day)</h2>'
+    html += '<p>'
+    html += 'This graph shows the number of users accessing this service per day. '
+    html += 'Clients typically cache metadata for 30 days and then will re-request reviews as required.'
+    html += '</p>'
+    html += '<canvas id="reviewsChartDays" width="1200" height="400"></canvas>'
+    html += '<script>'
+    html += 'var ctx = document.getElementById("reviewsChartDays").getContext("2d");'
+    html += 'var data = {'
+    html += '    labels: %s,' % _get_chart_labels_days()[::-1]
+    html += '    datasets: ['
+    html += '        {'
+    html += '            label: "Fetching",'
+    html += '            fillColor: "rgba(120,120,120,0.15)",'
+    html += '            strokeColor: "rgba(120,120,120,0.15)",'
+    html += '            pointColor: "rgba(120,120,120,0.20)",'
+    html += '            pointStrokeColor: "#fff",'
+    html += '            pointHighlightFill: "#fff",'
+    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
+    html += '            data: %s' % data_fetch[::-1]
+    html += '        },'
+    html += '        {'
+    html += '            label: "Submitted",'
+    html += '            fillColor: "rgba(251,14,5,0.2)",'
+    html += '            strokeColor: "rgba(151,14,5,0.1)",'
+    html += '            pointColor: "rgba(151,14,5,0.3)",'
+    html += '            pointStrokeColor: "#fff",'
+    html += '            pointHighlightFill: "#fff",'
+    html += '            pointHighlightStroke: "rgba(151,187,205,1)",'
+    html += '            data: %s' % data_review[::-1]
+    html += '        },'
+    html += '    ]'
+    html += '};'
+    html += 'var myLineChartDays = new Chart(ctx).Line(data, null);'
+    html += '</script>'
+
+    # add months
+    data_fetch = db.get_stats_by_month('fetching review')
+    data_review = db.get_stats_by_month('reviewed')
+    html += '<h2>Review Activity (month)</h2>'
+    html += '<p>'
+    html += 'This graph shows the number of users accessing this service for each month.'
+    html += '</p>'
+    html += '<canvas id="reviewsChartMonths" width="1200" height="400"></canvas>'
+    html += '<script>'
+    html += 'var ctx = document.getElementById("reviewsChartMonths").getContext("2d");'
+    html += 'var data = {'
+    html += '    labels: %s,' % _get_chart_labels_months()[::-1]
+    html += '    datasets: ['
+    html += '        {'
+    html += '            label: "Fetching",'
+    html += '            fillColor: "rgba(120,120,120,0.15)",'
+    html += '            strokeColor: "rgba(120,120,120,0.15)",'
+    html += '            pointColor: "rgba(120,120,120,0.20)",'
+    html += '            pointStrokeColor: "#fff",'
+    html += '            pointHighlightFill: "#fff",'
+    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
+    html += '            data: %s' % data_fetch[::-1]
+    html += '        },'
+    html += '        {'
+    html += '            label: "Submitted",'
+    html += '            fillColor: "rgba(251,14,5,0.2)",'
+    html += '            strokeColor: "rgba(151,14,5,0.1)",'
+    html += '            pointColor: "rgba(151,14,5,0.3)",'
+    html += '            pointStrokeColor: "#fff",'
+    html += '            pointHighlightFill: "#fff",'
+    html += '            pointHighlightStroke: "rgba(151,187,205,1)",'
+    html += '            data: %s' % data_review[::-1]
+    html += '        },'
+    html += '    ]'
+    html += '};'
+    html += 'var myLineChartMonths = new Chart(ctx).Line(data, null);'
+    html += '</script>'
+
+    return render_template('analytics.html', dyncontent=html)
 
 @reviews.route('/stats')
 def html_stats():

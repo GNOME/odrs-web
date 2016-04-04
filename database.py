@@ -6,6 +6,7 @@
 
 import MySQLdb as mdb
 import cgi
+import datetime
 
 class CursorError(Exception):
     def __init__(self, cur, e):
@@ -528,3 +529,39 @@ class ReviewsDatabase(object):
 
         # done
         return item
+
+    def get_stats_by_interval(self, size, interval, msg):
+        """ Gets stats data """
+        data = []
+        now = datetime.date.today()
+
+        # yes, there's probably a way to do this in one query
+        for i in range(size):
+            start = now - datetime.timedelta((i * interval) + interval - 1)
+            end = now - datetime.timedelta((i * interval) - 1)
+            try:
+                cur = self._db.cursor()
+                cur.execute("SELECT COUNT(*) FROM eventlog2 "
+                            "WHERE message = %s AND date_created >= %s "
+                            "AND date_created <  %s", (msg, start, end,))
+            except mdb.Error, e:
+                raise CursorError(cur, e)
+            data.append(int(cur.fetchone()[0]))
+        return data
+
+    def get_stats_by_month(self, msg):
+        data = []
+        now = datetime.date.today()
+        for i in range(0, 12):
+            month_num = now.month - i
+            if month_num < 1:
+                month_num = 12 - month_num
+            try:
+                cur = self._db.cursor()
+                cur.execute("SELECT COUNT(*) FROM eventlog2 "
+                            "WHERE message = %s AND MONTH(date_created) = %s;",
+                            (msg, month_num,))
+            except mdb.Error, e:
+                raise CursorError(cur, e)
+            data.append(int(cur.fetchone()[0]))
+        return data
