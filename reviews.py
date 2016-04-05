@@ -242,20 +242,16 @@ def html_analytics():
 
     # add days
     data_fetch = db.get_stats_by_interval(30, 1, 'fetching review')
+    data_users = db.get_stats_by_interval(30, 1, 'fetching review', distinct=True)
     data_review = db.get_stats_by_interval(30, 1, 'reviewed')
-    html = '<h2>Review Activity (day)</h2>'
-    html += '<p>'
-    html += 'This graph shows the number of users accessing this service per day. '
-    html += 'Clients typically cache metadata for 30 days and then will re-request reviews as required.'
-    html += '</p>'
-    html += '<canvas id="reviewsChartDays" width="1200" height="400"></canvas>'
+    html = '<canvas id="reviewsChartDays" width="1200" height="400"></canvas>'
     html += '<script>'
     html += 'var ctx = document.getElementById("reviewsChartDays").getContext("2d");'
     html += 'var data = {'
     html += '    labels: %s,' % _get_chart_labels_days()[::-1]
     html += '    datasets: ['
     html += '        {'
-    html += '            label: "Fetching",'
+    html += '            label: "Requests",'
     html += '            fillColor: "rgba(120,120,120,0.15)",'
     html += '            strokeColor: "rgba(120,120,120,0.15)",'
     html += '            pointColor: "rgba(120,120,120,0.20)",'
@@ -263,6 +259,16 @@ def html_analytics():
     html += '            pointHighlightFill: "#fff",'
     html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
     html += '            data: %s' % data_fetch[::-1]
+    html += '        },'
+    html += '        {'
+    html += '            label: "Users",'
+    html += '            fillColor: "rgba(20,120,220,0.2)",'
+    html += '            strokeColor: "rgba(20,120,120,0.1)",'
+    html += '            pointColor: "rgba(20,120,120,0.3)",'
+    html += '            pointStrokeColor: "#fff",'
+    html += '            pointHighlightFill: "#fff",'
+    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
+    html += '            data: %s' % data_users[::-1]
     html += '        },'
     html += '        {'
     html += '            label: "Submitted",'
@@ -278,15 +284,13 @@ def html_analytics():
     html += '};'
     html += 'var myLineChartDays = new Chart(ctx).Line(data, null);'
     html += '</script>'
+    html_perday = html
 
     # add months
     data_fetch = db.get_stats_by_month('fetching review')
+    data_users = db.get_stats_by_month('fetching review', distinct=True)
     data_review = db.get_stats_by_month('reviewed')
-    html += '<h2>Review Activity (month)</h2>'
-    html += '<p>'
-    html += 'This graph shows the number of users accessing this service for each month.'
-    html += '</p>'
-    html += '<canvas id="reviewsChartMonths" width="1200" height="400"></canvas>'
+    html = '<canvas id="reviewsChartMonths" width="1200" height="400"></canvas>'
     html += '<script>'
     html += 'var ctx = document.getElementById("reviewsChartMonths").getContext("2d");'
     html += 'var data = {'
@@ -303,6 +307,16 @@ def html_analytics():
     html += '            data: %s' % data_fetch[::-1]
     html += '        },'
     html += '        {'
+    html += '            label: "Users",'
+    html += '            fillColor: "rgba(20,120,220,0.2)",'
+    html += '            strokeColor: "rgba(20,120,120,0.1)",'
+    html += '            pointColor: "rgba(20,120,120,0.3)",'
+    html += '            pointStrokeColor: "#fff",'
+    html += '            pointHighlightFill: "#fff",'
+    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
+    html += '            data: %s' % data_users[::-1]
+    html += '        },'
+    html += '        {'
     html += '            label: "Submitted",'
     html += '            fillColor: "rgba(251,14,5,0.2)",'
     html += '            strokeColor: "rgba(151,14,5,0.1)",'
@@ -316,8 +330,11 @@ def html_analytics():
     html += '};'
     html += 'var myLineChartMonths = new Chart(ctx).Line(data, null);'
     html += '</script>'
+    html_permonth = html
 
-    return render_template('analytics.html', dyncontent=html)
+    return render_template('analytics.html',
+                           dyncontent_perday=html_perday,
+                           dyncontent_permonth=html_permonth)
 
 @reviews.route('/stats')
 def html_stats():
