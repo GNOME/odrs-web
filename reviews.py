@@ -4,13 +4,13 @@
 # Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
 # Licensed under the GNU General Public License Version 3
 
-from flask import Blueprint, Response, request, flash, render_template, escape
 import json
 import os
 import hashlib
 import datetime
 import calendar
 
+from flask import Blueprint, Response, request, flash, render_template, escape
 from database import ReviewsDatabase, CursorError
 
 reviews = Blueprint('reviews', __name__, url_prefix='/reviews')
