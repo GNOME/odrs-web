@@ -150,15 +150,6 @@ class ReviewsDatabase(object):
             """
             cur.execute(sql_db)
 
-        # FIXME: remove after a few days
-        try:
-            sql_db = """
-                ALTER TABLE users2 ADD is_banned INT DEFAULT 0;
-            """
-            cur.execute(sql_db)
-        except mdb.Error, e:
-            pass
-
         # a table for an admin event log
         try:
             cur = self._db.cursor()
@@ -177,16 +168,6 @@ class ReviewsDatabase(object):
                 ) CHARSET=utf8;
             """
             cur.execute(sql_db)
-
-        # FIXME: remove after a few days
-        try:
-            sql_db = """
-                ALTER TABLE eventlog2 ADD app_id TEXT DEFAULT NULL;
-                ALTER TABLE eventlog2 ADD important INT DEFAULT 0;
-            """
-            cur.execute(sql_db)
-        except mdb.Error, e:
-            pass
 
     def __del__(self):
         """ Clean up the database """
