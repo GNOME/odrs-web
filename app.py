@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import newrelic.agent
+newrelic.agent.initialize()
+
 # This file may be used instead of Apache mod_wsgi to run your python
 # web application in a different framework.  A few examples are
 # provided (cherrypi, gevent), but this file may be altered to run
