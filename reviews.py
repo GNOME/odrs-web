@@ -460,8 +460,10 @@ def api_fetch():
     except CursorError as e:
         return json_error(str(e))
 
-    # update the user request so we can allow the comment to be added
-    db.user_update_request(item['user_hash'])
+    # if user does not exist then create
+    user = db.user_get_by_id(item['user_hash'])
+    if not user:
+        db.user_add(item['user_hash'])
 
     # add score for review using secret sauce
     reviews_new = []
@@ -591,10 +593,6 @@ def vote(val):
             # user is naughty
             if user['is_banned']:
                 return json_error('account has been disabled due to abuse')
-
-            # the user wrote the review too quickly
-            #if now - user['date_request'] < 30:
-            #    return json_error('review took insufficient time to write')
 
             # the user is too harsh
             if val < 0 and user['karma'] < -50:

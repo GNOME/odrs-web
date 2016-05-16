@@ -54,7 +54,6 @@ def _create_user_item(e):
     item = {}
     item['user_id'] = int(e[0])
     item['date_created'] = int(e[1].strftime("%s"))
-    item['date_request'] = int(e[2].strftime("%s"))
     item['user_hash'] = e[3]
     item['karma'] = int(e[4])
     item['is_banned'] = int(e[5])
@@ -248,8 +247,6 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("INSERT INTO users2 (user_hash) VALUES (%s);",
                         (user_hash,))
-            cur.execute("UPDATE users2 SET date_request = CURRENT_TIMESTAMP "
-                        "WHERE user_hash = %s;", (user_hash,))
         except mdb.Error, e:
             raise CursorError(cur, e)
 
@@ -257,7 +254,7 @@ class ReviewsDatabase(object):
         """ Get all the users on the system """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT user_id, date_created, date_request, "
+            cur.execute("SELECT user_id, date_created, "
                         "user_hash, karma, is_banned "
                         "FROM users2 ORDER BY user_id DESC;")
         except mdb.Error, e:
@@ -274,7 +271,7 @@ class ReviewsDatabase(object):
         """ Get information about a specific user """
         try:
             cur = self._db.cursor()
-            cur.execute("SELECT user_id, date_created, date_request, "
+            cur.execute("SELECT user_id, date_created, "
                         "user_hash, karma, is_banned "
                         "FROM users2 WHERE user_hash=%s ORDER BY user_id DESC;",
                         (user_hash,))
@@ -284,23 +281,6 @@ class ReviewsDatabase(object):
         if not res:
             return None
         return _create_user_item(res)
-
-    def user_update_request(self, user_hash):
-        """ Update the request time for a specific user ID """
-
-        # if not existing, create it
-        user = self.user_get_by_id(user_hash)
-        if not user:
-            self.user_add(user_hash)
-            return
-
-        # update the timestamp
-        try:
-            cur = self._db.cursor()
-            cur.execute("UPDATE users2 SET date_request = CURRENT_TIMESTAMP "
-                        "WHERE user_hash = %s;", (user_hash,))
-        except mdb.Error, e:
-            raise CursorError(cur, e)
 
     def user_update_karma(self, user_hash, val):
         """ Update the request time for a specific user ID """
