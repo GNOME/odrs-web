@@ -75,99 +75,12 @@ class ReviewsDatabase(object):
                                        int(environ['OPENSHIFT_MYSQL_DB_PORT']),
                                        use_unicode=True, charset='utf8')
             else:
-                # mysql -u root -p
-                # CREATE DATABASE secure;
-                # CREATE USER 'test'@'localhost' IDENTIFIED BY 'test';
-                # USE secure;
-                # GRANT ALL ON secure.* TO 'test'@'localhost';
                 self._db = mdb.connect('localhost', 'test', 'test', 'secure',
                                        use_unicode=True, charset='utf8')
             self._db.autocommit(True)
         except mdb.Error as e:
             print("Error %d: %s" % (e.args[0], e.args[1]))
         assert self._db
-
-        # a table for saving each review
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT * FROM reviews LIMIT 1;")
-        except mdb.Error, e:
-            sql_db = """
-                CREATE TABLE reviews (
-                  review_id INT NOT NULL AUTO_INCREMENT,
-                  date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  date_deleted TIMESTAMP,
-                  app_id TEXT DEFAULT NULL,
-                  locale TEXT DEFAULT NULL,
-                  summary TEXT DEFAULT NULL,
-                  description TEXT DEFAULT NULL,
-                  user_hash TEXT DEFAULT NULL,
-                  user_addr TEXT DEFAULT NULL,
-                  user_display TEXT DEFAULT NULL,
-                  version TEXT DEFAULT NULL,
-                  distro TEXT DEFAULT NULL,
-                  rating INT DEFAULT 0,
-                  karma_up INT DEFAULT 0,
-                  karma_down INT DEFAULT 0,
-                  reported INT DEFAULT 0,
-                  UNIQUE KEY id (review_id)
-                ) CHARSET=utf8;
-            """
-            cur.execute(sql_db)
-
-        # a table for how a user has voted
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT * FROM votes LIMIT 1;")
-        except mdb.Error, e:
-            sql_db = """
-                CREATE TABLE votes (
-                  vote_id INT NOT NULL AUTO_INCREMENT,
-                  date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  user_hash TEXT DEFAULT NULL,
-                  val INT DEFAULT 0,
-                  review_id INT DEFAULT 0,
-                  UNIQUE KEY id (vote_id)
-                ) CHARSET=utf8;
-            """
-            cur.execute(sql_db)
-
-        # a table for a specific user
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT * FROM users2 LIMIT 1;")
-        except mdb.Error, e:
-            sql_db = """
-                CREATE TABLE users2 (
-                  user_id INT NOT NULL AUTO_INCREMENT,
-                  date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  date_request TIMESTAMP,
-                  user_hash TEXT DEFAULT NULL,
-                  karma INT DEFAULT 0,
-                  is_banned INT DEFAULT 0,
-                  UNIQUE KEY id (user_id)
-                ) CHARSET=utf8;
-            """
-            cur.execute(sql_db)
-
-        # a table for an admin event log
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT * FROM eventlog2 LIMIT 1;")
-        except mdb.Error, e:
-            sql_db = """
-                CREATE TABLE eventlog2 (
-                  eventlog_id INT NOT NULL AUTO_INCREMENT,
-                  date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  user_addr TEXT DEFAULT NULL,
-                  user_hash TEXT DEFAULT NULL,
-                  app_id TEXT DEFAULT NULL,
-                  important INT DEFAULT 0,
-                  message TEXT DEFAULT NULL,
-                  UNIQUE KEY id (eventlog_id)
-                ) CHARSET=utf8;
-            """
-            cur.execute(sql_db)
 
     def __del__(self):
         """ Clean up the database """
