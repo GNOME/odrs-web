@@ -596,9 +596,7 @@ def vote(val):
             #if now - user['date_request'] < 30:
             #    return json_error('review took insufficient time to write')
 
-            # the user is either too kind, or too harsh
-            if val > 0 and user['karma'] > 100:
-                return json_error('all positive karma used up')
+            # the user is too harsh
             if val < 0 and user['karma'] < -50:
                 return json_error('all negative karma used up')
         db.user_update_karma(item['user_hash'], val)
