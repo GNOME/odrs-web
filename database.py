@@ -54,9 +54,9 @@ def _create_user_item(e):
     item = {}
     item['user_id'] = int(e[0])
     item['date_created'] = int(e[1].strftime("%s"))
-    item['user_hash'] = e[3]
-    item['karma'] = int(e[4])
-    item['is_banned'] = int(e[5])
+    item['user_hash'] = e[2]
+    item['karma'] = int(e[3])
+    item['is_banned'] = int(e[4])
     return item
 
 class ReviewsDatabase(object):
