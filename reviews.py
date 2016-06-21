@@ -118,10 +118,6 @@ def _check_str(val):
         return False
     if val.find('<') != -1:
         return False
-    try:
-        val.decode('utf-8')
-    except UnicodeDecodeError:
-        return False
     return True
 
 @reviews.route('/api/submit', methods=['POST'])
