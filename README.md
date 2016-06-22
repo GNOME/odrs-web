@@ -136,6 +136,32 @@ CREATE TABLE eventlog2 (
   UNIQUE KEY id (eventlog_id)
 ) CHARSET=utf8;
 
+## How do I backup the data ##
+
+You want to save the variable `XDGAPP_REVIEWS_SECRET` so that old review data
+can be used on the new instance.
+
+    $ rhc env list -a apps -n xdgapp
+    XDGAPP_REVIEWS_SECRET=foobar
+    $ scp baz@apps-xdgapp.rhcloud.com:~/app-root/data/*.sql .
+
+Then dump the tables using:
+
+    $ mysqldump -h $OPENSHIFT_MYSQL_DB_HOST \
+                -P ${OPENSHIFT_MYSQL_DB_PORT:-3306} \
+                -u ${OPENSHIFT_MYSQL_DB_USERNAME:-'admin'} \
+                --password="$OPENSHIFT_MYSQL_DB_PASSWORD" secure > backup.sql
+
+## How do I restore from a backup ##
+
+If this is a fresh instance you want to set `XDGAPP_REVIEWS_SECRET` using:
+
+    $ rhc env set XDGAPP_REVIEWS_SECRET=foobar -a apps -n xdgapp
+
+Then restore the data with:
+
+    $ mysql secure < backup.sql
+
 ## I have a question
 
 Email me or grab me on IRC (`hughsie@freenode`).
