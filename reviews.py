@@ -16,7 +16,7 @@ from database import ReviewsDatabase, CursorError
 reviews = Blueprint('reviews', __name__, url_prefix='/reviews')
 
 def _get_user_key(user_hash, app_id):
-    salt = os.environ['XDGAPP_REVIEWS_SECRET']
+    salt = os.environ['ODRS_REVIEWS_SECRET']
     return hashlib.sha1(salt + user_hash + app_id).hexdigest()
 
 def _get_client_address():

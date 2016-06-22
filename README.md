@@ -138,11 +138,11 @@ CREATE TABLE eventlog2 (
 
 ## How do I backup the data ##
 
-You want to save the variable `XDGAPP_REVIEWS_SECRET` so that old review data
+You want to save the variable `ODRS_REVIEWS_SECRET` so that old review data
 can be used on the new instance.
 
     $ rhc env list -a apps -n xdgapp
-    XDGAPP_REVIEWS_SECRET=foobar
+    ODRS_REVIEWS_SECRET=foobar
     $ scp baz@apps-xdgapp.rhcloud.com:~/app-root/data/*.sql .
 
 Then dump the tables using:
@@ -154,9 +154,9 @@ Then dump the tables using:
 
 ## How do I restore from a backup ##
 
-If this is a fresh instance you want to set `XDGAPP_REVIEWS_SECRET` using:
+If this is a fresh instance you want to set `ODRS_REVIEWS_SECRET` using:
 
-    $ rhc env set XDGAPP_REVIEWS_SECRET=foobar -a apps -n xdgapp
+    $ rhc env set ODRS_REVIEWS_SECRET=foobar -a apps -n xdgapp
 
 Then restore the data with:
 

@@ -38,7 +38,7 @@ if __name__ == '__main__':
         app.debug = True
 
     # we need this
-    if not 'XDGAPP_REVIEWS_SECRET' in os.environ:
-        print 'NO XDGAPP_REVIEWS_SECRET DEFINED, WE ARE INSECURE'
+    if not 'ODRS_REVIEWS_SECRET' in os.environ:
+        print 'NO ODRS_REVIEWS_SECRET DEFINED, WE ARE INSECURE'
 
     app.run()
