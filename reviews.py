@@ -206,7 +206,6 @@ def html_eventlog():
     """
     try:
         db = ReviewsDatabase(os.environ)
-        events = db.event_get_all()
     except CursorError as e:
         return error_internal(str(e))
 
