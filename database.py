@@ -295,7 +295,7 @@ class ReviewsDatabase(object):
         try:
             cur = self._db.cursor()
             cur.execute("UPDATE users2 SET karma = karma + %s "
-                        "WHERE user_hash = %s;", (user_hash, val,))
+                        "WHERE user_hash = %s;", (val, user_hash,))
         except mdb.Error, e:
             raise CursorError(cur, e)
 
