@@ -70,11 +70,11 @@ class ReviewsDatabase(object):
                 self._db = mdb.connect(environ['OPENSHIFT_MYSQL_DB_HOST'],
                                        environ['OPENSHIFT_MYSQL_DB_USERNAME'],
                                        environ['OPENSHIFT_MYSQL_DB_PASSWORD'],
-                                       'secure',
+                                       'odrs',
                                        int(environ['OPENSHIFT_MYSQL_DB_PORT']),
                                        use_unicode=True, charset='utf8')
             else:
-                self._db = mdb.connect('localhost', 'test', 'test', 'secure',
+                self._db = mdb.connect('localhost', 'test', 'test', 'odrs',
                                        use_unicode=True, charset='utf8')
             self._db.autocommit(True)
         except mdb.Error as e:

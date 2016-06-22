@@ -86,10 +86,10 @@ compared to really old versions of these applications.
 
 To set up the database tables do:
 
-CREATE DATABASE secure;
+CREATE DATABASE odrs;
 CREATE USER 'test'@'localhost' IDENTIFIED BY 'test';
-USE secure;
-GRANT ALL ON secure.* TO 'test'@'localhost';
+USE odrs;
+GRANT ALL ON odrs.* TO 'test'@'localhost';
 CREATE TABLE reviews (
   review_id INT NOT NULL AUTO_INCREMENT,
   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -150,7 +150,7 @@ Then dump the tables using:
     $ mysqldump -h $OPENSHIFT_MYSQL_DB_HOST \
                 -P ${OPENSHIFT_MYSQL_DB_PORT:-3306} \
                 -u ${OPENSHIFT_MYSQL_DB_USERNAME:-'admin'} \
-                --password="$OPENSHIFT_MYSQL_DB_PASSWORD" secure > backup.sql
+                --password="$OPENSHIFT_MYSQL_DB_PASSWORD" odrs > backup.sql
 
 ## How do I restore from a backup ##
 
@@ -160,7 +160,7 @@ If this is a fresh instance you want to set `ODRS_REVIEWS_SECRET` using:
 
 Then restore the data with:
 
-    $ mysql secure < backup.sql
+    $ mysql odrs < backup.sql
 
 ## I have a question
 
