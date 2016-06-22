@@ -224,23 +224,6 @@ class ReviewsDatabase(object):
         """ Adds an info item to the event log """
         self.event_warn(user_addr, user_hash, app_id, message, False)
 
-    def event_get_all(self):
-        """ Returns all events from the event log """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT eventlog_id, date_created, user_addr, user_hash, "
-                        "message, app_id, important "
-                        "FROM eventlog2 ORDER BY eventlog_id DESC;")
-        except mdb.Error, e:
-            raise CursorError(cur, e)
-        res = cur.fetchall()
-        if not res:
-            return []
-        items = []
-        for e in res:
-            items.append(_create_event_item(e))
-        return items
-
     def user_add(self, user_hash):
         """ Add a user to the database """
         try:

@@ -183,52 +183,6 @@ def api_submit():
         return json_error(str(e))
     return json_success()
 
-
-@reviews.route('/api/eventlog')
-def api_eventlog():
-    """
-    Return the event log as data.
-    """
-    try:
-        db = ReviewsDatabase(os.environ)
-        events = db.event_get_all()
-    except CursorError as e:
-        return json_error(str(e))
-    dat = json.dumps(events, sort_keys=True, indent=4, separators=(',', ': '))
-    return Response(response=dat,
-                    status=200, \
-                    mimetype="application/json")
-
-@reviews.route('/eventlog')
-def html_eventlog():
-    """
-    Return the event log as HTML.
-    """
-    try:
-        db = ReviewsDatabase(os.environ)
-    except CursorError as e:
-        return error_internal(str(e))
-
-    html = ''
-    if len(events) == 0:
-        return error_internal('No event log available!')
-    for item in events:
-        html += '<tr>'
-        tmp = datetime.datetime.fromtimestamp(item['date_created']).strftime('%Y-%m-%d %H:%M:%S')
-        html += '<td class="history">%s</td>' % tmp
-        html += '<td class="history">%s</td>' % item['user_addr']
-        html += '<td class="history">%s</td>' % item['user_hash']
-        html += '<td class="history">%s</td>' % item['app_id']
-        if item['important'] == 1:
-            html += '<td class="history">&#x272a;</td>'
-        else:
-            html += '<td class="history"></td>'
-        html += '<td class="history">%s</td>' % escape(item['message'])
-        html += '</tr>\n'
-    html += '</table>'
-
-    return render_template('eventlog.html', dyncontent=html)
-
 @reviews.route('/analytics')
 def html_analytics():
     """
@@ -236,7 +190,6 @@ def html_analytics():
     """
     try:
         db = ReviewsDatabase(os.environ)
-        events = db.event_get_all()
     except CursorError as e:
         return error_internal(str(e))
 
