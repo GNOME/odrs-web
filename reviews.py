@@ -20,8 +20,8 @@ def _get_user_key(user_hash, app_id):
     key = 'invalid'
     try:
         key = hashlib.sha1(salt + user_hash + app_id).hexdigest()
-    except UnicodeEncodeError, e:
-        print "invalid input: %s,%s: %s" % (user_hash, app_id, str(e))
+    except UnicodeEncodeError as e:
+        print("invalid input: %s,%s: %s" % (user_hash, app_id, str(e)))
     return key
 
 def _get_client_address():
@@ -321,6 +321,15 @@ def html_stats():
 
     return render_template('stats.html', dyncontent=html)
 
+def _get_stars(rating):
+    nr_stars = int(rating / 20)
+    tmp = ''
+    for i in range(0, nr_stars):
+        tmp += '&#9733;'
+    for i in range(0, 5 - nr_stars):
+        tmp += '&#9734;'
+    return tmp
+
 @reviews.route('/all')
 def html_all():
     """
@@ -346,10 +355,7 @@ def html_all():
         html += '<td class="history">%s</td>' % tmp
         html += '<td class="history">%s</td>' % item['app_id'].replace('.desktop', '')
         html += '<td class="history">%s</td>' % item['version']
-        nr_stars = item['rating'] / 20
-        stars = '&#9733;' * nr_stars
-        stars += '&#9734;' * (5 - nr_stars)
-        html += '<td class="history">%s</td>' % stars
+        html += '<td class="history">%s</td>' % _get_stars(item['rating'])
         html += '<td class="history">%s</td>' % item['karma']
         html += '<td class="history">%s</td>' % item['distro']
         html += '<td class="history">%s&hellip;</td>' % item['user_hash'][:8]
@@ -527,7 +533,7 @@ def vote(val):
     if item['user_skey'] != _get_user_key(item['user_hash'], item['app_id']):
         db.event_warn(_get_client_address(), item['user_hash'], None,
                       "invalid user_skey of %s" % item['user_skey'])
-        #print "expected user_skey of %s" % _get_user_key(item['user_hash'], item['app_id'])
+        #print("expected user_skey of %s" % _get_user_key(item['user_hash'], item['app_id']))
         return json_error('invalid user_skey')
     try:
 

@@ -154,13 +154,35 @@ Then dump the tables using:
 
 ## How do I restore from a backup ##
 
-If this is a fresh instance you want to set `ODRS_REVIEWS_SECRET` using:
+If this is a fresh instance you want to set up using:
 
-    $ rhc env set ODRS_REVIEWS_SECRET=foobar -a apps -n xdgapp
+    $ export OPENSHIFT_NAMESPACE=odrs
+    $ export OPENSHIFT_APP=testing|production
+    $ rhc delete-app --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE}
+    $ rhc create-app --type python-3.3 --scaling \
+        --app ${OPENSHIFT_APP} --namespace odrs \
+        --from-code https://github.com/hughsie/odrs-website.git
+    $ rhc cartridge add --app ${OPENSHIFT_APP} \
+        --namespace ${OPENSHIFT_NAMESPACE} \
+        mysql-5.5
+    $ rhc env set --app ${OPENSHIFT_APP} \
+        --namespace ${OPENSHIFT_NAMESPACE} \
+        ODRS_REVIEWS_SECRET=foobar
+    $ rhc show-app --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE}
+    $ rhc scp --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE} \
+        upload backup*.sql ~/app-root/data
+    $ rhc ssh --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE}
 
 Then restore the data with:
 
-    $ mysql odrs < backup.sql
+    $ mysql
+    mysql> CREATE DATABASE odrs;
+    mysql> use odrs;
+    mysql> source app-root/data/backup.sql;
+
+## How to I use distro packages ##
+
+    $ pkcon install python3-PyMySQL python3-flask python3-flask-wtf
 
 ## I have a question
 

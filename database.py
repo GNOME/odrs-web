@@ -4,7 +4,8 @@
 # Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
 # Licensed under the GNU General Public License Version 3
 
-import MySQLdb as mdb
+import pymysql as mdb
+import pymysql.cursors
 import cgi
 import datetime
 
@@ -104,7 +105,7 @@ class ReviewsDatabase(object):
                          item['distro'],
                          item['rating'],
                          user_addr,))
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
 
     def review_remove(self, review_id, user_hash):
@@ -114,7 +115,7 @@ class ReviewsDatabase(object):
             cur.execute("UPDATE reviews SET date_deleted = CURRENT_TIMESTAMP "
                         "WHERE user_hash = %s AND review_id = %s;",
                         (user_hash, review_id,))
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         return True
 
@@ -128,7 +129,7 @@ class ReviewsDatabase(object):
                         "FROM reviews WHERE app_id=%s AND reported=0 AND "
                         "date_deleted=0 ORDER BY date_created DESC;",
                         (app_id,))
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
         if not res:
@@ -145,7 +146,7 @@ class ReviewsDatabase(object):
             cur.execute("SELECT review_id FROM reviews WHERE app_id=%s "
                         "AND user_hash=%s AND date_deleted=0;",
                         (app_id, user_hash,))
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchone()
         if res is not None:
@@ -159,7 +160,7 @@ class ReviewsDatabase(object):
             cur.execute("SELECT date_created "
                         "FROM votes WHERE review_id=%s AND user_hash=%s;",
                         (review_id, user_hash,))
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchone()
         if res is not None:
@@ -182,7 +183,7 @@ class ReviewsDatabase(object):
             cur.execute("INSERT INTO votes (user_hash, review_id, val) "
                         "VALUES (%s, %s, %s);",
                         (user_hash, review_id, val,))
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
 
     def review_get_all(self):
@@ -194,7 +195,7 @@ class ReviewsDatabase(object):
                         "user_hash, user_display, rating, date_deleted FROM reviews "
                         "WHERE reported=0 "
                         "ORDER BY date_created DESC;")
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
         if not res:
@@ -217,7 +218,7 @@ class ReviewsDatabase(object):
                         "message, important) "
                         "VALUES (%s, %s, %s, %s, %s);",
                         (user_addr, user_hash, app_id, message, important,))
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
 
     def event_info(self, user_addr=None, user_hash=None, app_id=None, message=None):
@@ -230,7 +231,7 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("INSERT INTO users2 (user_hash) VALUES (%s);",
                         (user_hash,))
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
 
     def user_get_all(self):
@@ -240,7 +241,7 @@ class ReviewsDatabase(object):
             cur.execute("SELECT user_id, date_created, "
                         "user_hash, karma, is_banned "
                         "FROM users2 ORDER BY user_id DESC;")
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
         if not res:
@@ -258,7 +259,7 @@ class ReviewsDatabase(object):
                         "user_hash, karma, is_banned "
                         "FROM users2 WHERE user_hash=%s ORDER BY user_id DESC;",
                         (user_hash,))
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchone()
         if not res:
@@ -279,7 +280,7 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("UPDATE users2 SET karma = karma + %s "
                         "WHERE user_hash = %s;", (val, user_hash,))
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
 
     def reviews_get_rating_for_app_id(self, app_id):
@@ -295,7 +296,7 @@ class ReviewsDatabase(object):
                         "       SUM(rating = 100) star5 "
                         "FROM reviews WHERE app_id = %s "
                         "AND date_deleted=0;", (app_id,))
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchone()
         if not res:
@@ -317,7 +318,7 @@ class ReviewsDatabase(object):
                         "FROM eventlog2 WHERE app_id IS NOT NULL "
                         "AND message='fetching review' GROUP BY app_id "
                         "ORDER BY total DESC LIMIT 20;")
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
         data = []
@@ -333,7 +334,7 @@ class ReviewsDatabase(object):
         try:
             cur = self._db.cursor()
             cur.execute("SELECT COUNT(*) FROM reviews;")
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
         item['NumberReviews'] = int(res[0][0])
@@ -341,7 +342,7 @@ class ReviewsDatabase(object):
         # unique reviewers
         try:
             cur.execute("SELECT COUNT(DISTINCT(user_hash)) FROM reviews;")
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
         item['NumberUniqueReviewers'] = int(res[0][0])
@@ -349,13 +350,13 @@ class ReviewsDatabase(object):
         # total votes
         try:
             cur.execute("SELECT COUNT(*) FROM votes WHERE val = 1;")
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
         item['NumberVotesUp'] = int(res[0][0])
         try:
             cur.execute("SELECT COUNT(*) FROM votes WHERE val = -1;")
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
         item['NumberVotesDown'] = int(res[0][0])
@@ -363,7 +364,7 @@ class ReviewsDatabase(object):
         # unique voters
         try:
             cur.execute("SELECT COUNT(DISTINCT(user_hash)) FROM votes;")
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
         item['NumberUniqueVoters'] = int(res[0][0])
@@ -371,7 +372,7 @@ class ReviewsDatabase(object):
         # unique distros
         try:
             cur.execute("SELECT COUNT(DISTINCT(distro)) FROM reviews;")
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
         item['NumberUniqueDistros'] = int(res[0][0])
@@ -379,7 +380,7 @@ class ReviewsDatabase(object):
         # unique distros
         try:
             cur.execute("SELECT COUNT(*) FROM reviews WHERE reported > 0;")
-        except mdb.Error, e:
+        except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
         item['NumberReviewsReported'] = int(res[0][0])
@@ -406,7 +407,7 @@ class ReviewsDatabase(object):
                     cur.execute("SELECT COUNT(*) FROM eventlog2 "
                                 "WHERE message = %s AND date_created >= %s "
                                 "AND date_created <  %s", (msg, start, end,))
-            except mdb.Error, e:
+            except mdb.Error as e:
                 raise CursorError(cur, e)
             data.append(int(cur.fetchone()[0]))
         return data
@@ -428,7 +429,7 @@ class ReviewsDatabase(object):
                     cur.execute("SELECT COUNT(*) FROM eventlog2 "
                                 "WHERE message = %s AND MONTH(date_created) = %s;",
                                 (msg, month_num,))
-            except mdb.Error, e:
+            except mdb.Error as e:
                 raise CursorError(cur, e)
             data.append(int(cur.fetchone()[0]))
         return data

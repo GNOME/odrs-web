@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
@@ -39,6 +39,6 @@ if __name__ == '__main__':
 
     # we need this
     if not 'ODRS_REVIEWS_SECRET' in os.environ:
-        print 'NO ODRS_REVIEWS_SECRET DEFINED, WE ARE INSECURE'
+        print('NO ODRS_REVIEWS_SECRET DEFINED, WE ARE INSECURE')
 
     app.run()
