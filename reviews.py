@@ -17,7 +17,12 @@ reviews = Blueprint('reviews', __name__, url_prefix='/reviews')
 
 def _get_user_key(user_hash, app_id):
     salt = os.environ['ODRS_REVIEWS_SECRET']
-    return hashlib.sha1(salt + user_hash + app_id).hexdigest()
+    key = 'invalid'
+    try:
+        key = hashlib.sha1(salt + user_hash + app_id).hexdigest()
+    except UnicodeEncodeError, e:
+        print "invalid input: %s,%s: %s" % (user_hash, app_id, str(e))
+    return key
 
 def _get_client_address():
     """ Gets user IP address """
