@@ -317,7 +317,7 @@ class ReviewsDatabase(object):
             cur.execute("SELECT DISTINCT app_id, COUNT(app_id) as total "
                         "FROM eventlog2 WHERE app_id IS NOT NULL "
                         "AND message='fetching review' GROUP BY app_id "
-                        "ORDER BY total DESC LIMIT 20;")
+                        "ORDER BY total DESC LIMIT 50;")
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
