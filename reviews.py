@@ -19,7 +19,9 @@ def _get_user_key(user_hash, app_id):
     salt = os.environ['ODRS_REVIEWS_SECRET']
     key = 'invalid'
     try:
-        key = hashlib.sha1(salt + user_hash + app_id).hexdigest()
+        key = hashlib.sha1(salt.encode('utf-8') +
+                           user_hash.encode('utf-8') +
+                           app_id.encode('utf-8')).hexdigest()
     except UnicodeEncodeError as e:
         print("invalid input: %s,%s: %s" % (user_hash, app_id, str(e)))
     return key
@@ -131,7 +133,7 @@ def api_submit():
     Submits a new review.
     """
     try:
-        item = json.loads(request.data)
+        item = json.loads(request.data.decode('utf8'))
     except ValueError as e:
         return json_error(str(e))
     required_fields = ['app_id', 'locale', 'summary', 'description',
@@ -397,7 +399,7 @@ def api_fetch():
     Return details about an application.
     """
     try:
-        item = json.loads(request.data)
+        item = json.loads(request.data.decode('utf8'))
     except ValueError as e:
         return json_error(str(e))
     for key in ['app_id', 'user_hash', 'locale', 'karma', 'distro', 'limit', 'version']:
@@ -508,7 +510,7 @@ def vote(val):
     Up or downvote an existing review by @val karma points.
     """
     try:
-        item = json.loads(request.data)
+        item = json.loads(request.data.decode('utf8'))
     except ValueError as e:
         return json_error(str(e))
     for key in ['review_id', 'app_id', 'user_hash', 'user_skey']:
@@ -600,7 +602,7 @@ def api_remove():
     Remove a review.
     """
     try:
-        item = json.loads(request.data)
+        item = json.loads(request.data.decode('utf8'))
     except ValueError as e:
         return json_error(str(e))
     for key in ['review_id', 'app_id', 'user_hash', 'user_skey']:
