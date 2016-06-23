@@ -144,14 +144,16 @@ can be used on the new instance.
 
     $ rhc env list -a apps -n xdgapp
     ODRS_REVIEWS_SECRET=foobar
-    $ scp baz@apps-xdgapp.rhcloud.com:~/app-root/data/*.sql .
-
-Then dump the tables using:
-
+    $ export OPENSHIFT_NAMESPACE=xdgapp
+    $ export OPENSHIFT_APP=apps
+    $ rhc ssh --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE}
     $ mysqldump -h $OPENSHIFT_MYSQL_DB_HOST \
                 -P ${OPENSHIFT_MYSQL_DB_PORT:-3306} \
                 -u ${OPENSHIFT_MYSQL_DB_USERNAME:-'admin'} \
-                --password="$OPENSHIFT_MYSQL_DB_PASSWORD" odrs > backup.sql
+                --password="$OPENSHIFT_MYSQL_DB_PASSWORD" \
+                odrs > app-root/data/backup.sql
+    $ rhc scp --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE} \
+        download . app-root/data/backup.sql
 
 ## How do I restore from a backup ##
 
@@ -161,17 +163,17 @@ If this is a fresh instance you want to set up using:
     $ export OPENSHIFT_APP=testing|production
     $ rhc delete-app --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE}
     $ rhc create-app --type python-3.3 --scaling \
-        --app ${OPENSHIFT_APP} --namespace odrs \
+        --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE} \
         --from-code https://github.com/hughsie/odrs-website.git
     $ rhc cartridge add --app ${OPENSHIFT_APP} \
         --namespace ${OPENSHIFT_NAMESPACE} \
         mysql-5.5
     $ rhc env set --app ${OPENSHIFT_APP} \
         --namespace ${OPENSHIFT_NAMESPACE} \
-        ODRS_REVIEWS_SECRET=foobar
+        ODRS_REVIEWS_SECRET=ac16ddd414e2241101dc2ec2e8dc45052a1e171c
     $ rhc show-app --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE}
     $ rhc scp --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE} \
-        upload backup*.sql ~/app-root/data
+        upload backup.sql app-root/data
     $ rhc ssh --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE}
 
 Then restore the data with:
