@@ -369,6 +369,14 @@ class ReviewsDatabase(object):
         res = cur.fetchall()
         item['NumberUniqueVoters'] = int(res[0][0])
 
+        # unique languages
+        try:
+            cur.execute("SELECT COUNT(DISTINCT(locale)) FROM reviews;")
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        item['NumberUniqueLocales'] = int(res[0][0])
+
         # unique distros
         try:
             cur.execute("SELECT COUNT(DISTINCT(distro)) FROM reviews;")
