@@ -180,6 +180,13 @@ Then restore the data with:
     mysql> use odrs;
     mysql> source app-root/data/backup.sql;
 
+## Can I clean up the event log a bit? ##
+
+    $ mysql
+    mysql> DELETE FROM eventlog2 WHERE message = 'already reviewed';
+    mysql> DELETE FROM eventlog2 WHERE message = 'duplicate vote';
+    mysql> DELETE FROM eventlog2 WHERE message = 'getting';
+
 ## How to I use distro packages ##
 
     $ pkcon install python3-PyMySQL python3-flask python3-flask-wtf
