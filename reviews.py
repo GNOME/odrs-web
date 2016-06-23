@@ -309,15 +309,19 @@ def html_stats():
         html += '</tr>\n'
     html += '</table>'
 
-    # list apps by popularity
-    html += '<h1>Top Applications</h1>'
-    html += '<table>'
-    for item in db.get_stats_fetch():
-        html += '<tr>'
-        html += '<td class="history">%i</td>' % item[1]
-        html += '<td class="history">%s</td>' % item[0]
-        html += '</tr>\n'
-    html += '</table>'
+    # list apps by view popularity
+    html += '<h1>Top Applications (Page Views)</h1>'
+    html += '<ol>'
+    for item in db.get_stats_fetch('fetching review'):
+        html += '<li>%s [%i]</li>' % (item[0].replace('.desktop', ''), item[1])
+    html += '</ol>'
+
+    # list apps by review popularity
+    html += '<h1>Top Applications (Reviews)</h1>'
+    html += '<ol>'
+    for item in db.get_stats_fetch('reviewed'):
+        html += '<li>%s [%i]</li>' % (item[0].replace('.desktop', ''), item[1])
+    html += '</ol>'
 
     return render_template('stats.html', dyncontent=html)
 
