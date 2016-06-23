@@ -359,6 +359,7 @@ def html_all():
         html += '<td class="history">%s</td>' % item['karma']
         html += '<td class="history">%s</td>' % item['distro']
         html += '<td class="history">%s&hellip;</td>' % item['user_hash'][:8]
+        html += '<td class="history">%s</td>' % item['locale']
         html += '<td class="history">%s</td>' % item['user_display']
         html += '<td class="history">%s</td>' % item['summary']
         html += '<td class="history">%s</td>' % item['description']
