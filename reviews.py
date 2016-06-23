@@ -195,7 +195,6 @@ def html_analytics():
 
     # add days
     data_fetch = db.get_stats_by_interval(30, 1, 'fetching review')
-    data_users = db.get_stats_by_interval(30, 1, 'fetching review', distinct=True)
     data_review = db.get_stats_by_interval(30, 1, 'reviewed')
     html = '<canvas id="reviewsChartDays" width="1200" height="400"></canvas>'
     html += '<script>'
@@ -211,7 +210,7 @@ def html_analytics():
     html += '            pointStrokeColor: "#fff",'
     html += '            pointHighlightFill: "#fff",'
     html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_fetch[::-1]
+    html += '            data: %s' % data_fetch[0][::-1]
     html += '        },'
     html += '        {'
     html += '            label: "Users",'
@@ -221,7 +220,7 @@ def html_analytics():
     html += '            pointStrokeColor: "#fff",'
     html += '            pointHighlightFill: "#fff",'
     html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_users[::-1]
+    html += '            data: %s' % data_fetch[1][::-1]
     html += '        },'
     html += '        {'
     html += '            label: "Submitted",'
@@ -231,7 +230,7 @@ def html_analytics():
     html += '            pointStrokeColor: "#fff",'
     html += '            pointHighlightFill: "#fff",'
     html += '            pointHighlightStroke: "rgba(151,187,205,1)",'
-    html += '            data: %s' % data_review[::-1]
+    html += '            data: %s' % data_review[0][::-1]
     html += '        },'
     html += '    ]'
     html += '};'
@@ -240,9 +239,8 @@ def html_analytics():
     html_perday = html
 
     # add months
-    data_fetch = db.get_stats_by_month('fetching review')
-    data_users = db.get_stats_by_month('fetching review', distinct=True)
-    data_review = db.get_stats_by_month('reviewed')
+    data_fetch = db.get_stats_by_interval(12, 30, 'fetching review')
+    data_review = db.get_stats_by_interval(12, 30, 'reviewed')
     html = '<canvas id="reviewsChartMonths" width="1200" height="400"></canvas>'
     html += '<script>'
     html += 'var ctx = document.getElementById("reviewsChartMonths").getContext("2d");'
@@ -257,7 +255,7 @@ def html_analytics():
     html += '            pointStrokeColor: "#fff",'
     html += '            pointHighlightFill: "#fff",'
     html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_fetch[::-1]
+    html += '            data: %s' % data_fetch[0][::-1]
     html += '        },'
     html += '        {'
     html += '            label: "Users",'
@@ -267,7 +265,7 @@ def html_analytics():
     html += '            pointStrokeColor: "#fff",'
     html += '            pointHighlightFill: "#fff",'
     html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_users[::-1]
+    html += '            data: %s' % data_fetch[1][::-1]
     html += '        },'
     html += '        {'
     html += '            label: "Submitted",'
@@ -277,7 +275,7 @@ def html_analytics():
     html += '            pointStrokeColor: "#fff",'
     html += '            pointHighlightFill: "#fff",'
     html += '            pointHighlightStroke: "rgba(151,187,205,1)",'
-    html += '            data: %s' % data_review[::-1]
+    html += '            data: %s' % data_review[0][::-1]
     html += '        },'
     html += '    ]'
     html += '};'

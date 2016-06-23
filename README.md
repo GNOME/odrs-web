@@ -135,6 +135,7 @@ CREATE TABLE eventlog2 (
   message TEXT DEFAULT NULL,
   UNIQUE KEY id (eventlog_id)
 ) CHARSET=utf8;
+CREATE INDEX date_created_idx ON eventlog2 (date_created);
 
 ## How do I backup the data ##
 

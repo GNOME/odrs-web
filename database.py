@@ -396,48 +396,29 @@ class ReviewsDatabase(object):
         # done
         return item
 
-    def get_stats_by_interval(self, size, interval, msg, distinct=False):
+    def get_stats_by_interval(self, size, interval, msg):
         """ Gets stats data """
-        data = []
+        cnt = []
+        cnt_unique = []
         now = datetime.date.today()
 
         # yes, there's probably a way to do this in one query
+        cur = self._db.cursor()
         for i in range(size):
             start = now - datetime.timedelta((i * interval) + interval - 1)
             end = now - datetime.timedelta((i * interval) - 1)
             try:
-                cur = self._db.cursor()
-                if distinct:
-                    cur.execute("SELECT COUNT(DISTINCT(user_hash)) FROM eventlog2 "
-                                "WHERE message = %s AND date_created >= %s "
-                                "AND date_created <  %s", (msg, start, end,))
-                else:
-                    cur.execute("SELECT COUNT(*) FROM eventlog2 "
-                                "WHERE message = %s AND date_created >= %s "
-                                "AND date_created <  %s", (msg, start, end,))
+                cur.execute("SELECT COUNT(*), COUNT(DISTINCT(user_hash)) FROM eventlog2 "
+                            "WHERE message = %s AND date_created BETWEEN %s "
+                            "AND %s", (msg, start, end,))
             except mdb.Error as e:
                 raise CursorError(cur, e)
-            data.append(int(cur.fetchone()[0]))
-        return data
+            res = cur.fetchone()
+            cnt.append(int(res[0]))
+            cnt_unique.append(int(res[1]))
 
-    def get_stats_by_month(self, msg, distinct=False):
+        # pack the data
         data = []
-        now = datetime.date.today()
-        for i in range(0, 12):
-            month_num = now.month - i
-            if month_num < 1:
-                month_num = 12 - month_num
-            try:
-                cur = self._db.cursor()
-                if distinct:
-                    cur.execute("SELECT COUNT(DISTINCT(user_hash)) FROM eventlog2 "
-                                "WHERE message = %s AND MONTH(date_created) = %s;",
-                                (msg, month_num,))
-                else:
-                    cur.execute("SELECT COUNT(*) FROM eventlog2 "
-                                "WHERE message = %s AND MONTH(date_created) = %s;",
-                                (msg, month_num,))
-            except mdb.Error as e:
-                raise CursorError(cur, e)
-            data.append(int(cur.fetchone()[0]))
+        data.append(cnt)
+        data.append(cnt_unique)
         return data
