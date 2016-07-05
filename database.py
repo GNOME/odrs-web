@@ -36,6 +36,8 @@ def _create_review_item(e):
     item['rating'] = int(e[12])
     if e[13]:
         item['date_deleted'] = int(e[13].strftime("%s"))
+    else:
+        item['date_deleted'] = None
     return item
 
 def _create_event_item(e):
@@ -86,6 +88,25 @@ class ReviewsDatabase(object):
         """ Clean up the database """
         if self._db:
             self._db.close()
+
+    def review_modify(self, item):
+        """ Modifies a review """
+        try:
+            cur = self._db.cursor()
+            cur.execute("UPDATE reviews SET version = %s, "
+                        "distro = %s, locale = %s, "
+                        "summary = %s, description = %s, "
+                        "user_display = %s WHERE review_id = %s;",
+                        (item['version'],
+                         item['distro'],
+                         item['locale'],
+                         item['summary'],
+                         item['description'],
+                         item['user_display'],
+                         item['review_id'],))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        return True
 
     def review_add(self, item, user_addr):
         """ Add a review to the database """
@@ -138,6 +159,22 @@ class ReviewsDatabase(object):
         for e in res:
             items.append(_create_review_item(e))
         return items
+
+    def review_get_for_id(self, review_id):
+        """ Returns a specific review """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
+                        "description, version, distro, karma_up, karma_down, "
+                        "user_hash, user_display, rating, date_deleted "
+                        "FROM reviews WHERE review_id=%s LIMIT 1;",
+                        (review_id,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        if not res:
+            return None
+        return _create_review_item(res[0])
 
     def review_exists(self, app_id, user_hash):
         """ Checks to see if a review exists for the application+user """

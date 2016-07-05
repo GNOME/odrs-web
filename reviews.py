@@ -10,7 +10,7 @@ import hashlib
 import datetime
 import calendar
 
-from flask import Blueprint, Response, request, flash, render_template, escape
+from flask import Blueprint, Response, request, flash, render_template, escape, redirect, url_for
 from database import ReviewsDatabase, CursorError
 
 reviews = Blueprint('reviews', __name__, url_prefix='/reviews')
@@ -325,7 +325,7 @@ def html_stats():
 
     return render_template('stats.html', dyncontent=html)
 
-def _get_stars(rating):
+def _stringify_rating(rating):
     nr_stars = int(rating / 20)
     tmp = ''
     for i in range(0, nr_stars):
@@ -333,6 +333,62 @@ def _get_stars(rating):
     for i in range(0, 5 - nr_stars):
         tmp += '&#9734;'
     return tmp
+
+def _string_truncate(tmp, length):
+    if len(tmp) <= length:
+        return tmp
+    return tmp[:length] + '&hellip;'
+
+def _stringify_timestamp(tmp):
+    if not tmp:
+        return 'n/a'
+    return datetime.datetime.fromtimestamp(tmp).strftime('%Y-%m-%d %H:%M:%S')
+
+@reviews.route('/show/<review_id>')
+def html_show(review_id):
+    """
+    Show a specific review as HTML.
+    """
+    try:
+        db = ReviewsDatabase(os.environ)
+        item = db.review_get_for_id(review_id)
+    except CursorError as e:
+        return json_error(str(e))
+    if not item:
+        return json_error('no review with that ID')
+    return render_template('show.html',
+                           review_id=item['review_id'],
+                           date_created=_stringify_timestamp(item['date_created']),
+                           app_id=item['app_id'],
+                           locale=item['locale'],
+                           summary=item['summary'],
+                           description=item['description'],
+                           version=item['version'],
+                           distro=item['distro'],
+                           karma=item['karma'],
+                           user_hash=item['user_hash'],
+                           user_display=item['user_display'],
+                           rating=_stringify_rating(item['rating']),
+                           date_deleted=_stringify_timestamp(item['date_deleted']))
+
+@reviews.route('/modify/<review_id>', methods=['POST'])
+def html_modify(review_id):
+    """ Change details about a review """
+    try:
+        db = ReviewsDatabase(os.environ)
+        item = db.review_get_for_id(review_id)
+    except CursorError as e:
+        return json_error(str(e))
+    if not item:
+        return json_error('no review with that ID')
+    item['distro'] = request.form['distro']
+    item['locale'] = request.form['locale']
+    item['user_display'] = request.form['user_display']
+    item['description'] = request.form['description']
+    item['summary'] = request.form['summary']
+    item['version'] = request.form['version']
+    db.review_modify(item)
+    return redirect(url_for('.html_show', review_id=review_id))
 
 @reviews.route('/all')
 def html_all():
@@ -350,23 +406,20 @@ def html_all():
         return error_internal('No reviews available!')
     for item in reviews:
         html += '<tr>'
-        tmp = datetime.datetime.fromtimestamp(item['date_created']).strftime('%Y-%m-%d %H:%M:%S')
+        tmp = _stringify_timestamp(item['date_created'])
+        html += '<td class="history"><a href="show/%i">%s</a></td>' % (item['review_id'], int(item['review_id']))
         html += '<td class="history">%s</td>' % tmp
-        if 'date_deleted' in item:
-            tmp = datetime.datetime.fromtimestamp(item['date_deleted']).strftime('%Y-%m-%d %H:%M:%S')
-        else:
-            tmp = 'n/a'
-        html += '<td class="history">%s</td>' % tmp
+        html += '<td class="history">%s</td>' % _stringify_timestamp(item['date_deleted'])
         html += '<td class="history">%s</td>' % item['app_id'].replace('.desktop', '')
         html += '<td class="history">%s</td>' % item['version']
-        html += '<td class="history">%s</td>' % _get_stars(item['rating'])
+        html += '<td class="history">%s</td>' % _stringify_rating(item['rating'])
         html += '<td class="history">%s</td>' % item['karma']
         html += '<td class="history">%s</td>' % item['distro']
-        html += '<td class="history">%s&hellip;</td>' % item['user_hash'][:8]
+        html += '<td class="history">%s</td>' % _string_truncate(item['user_hash'], 8)
         html += '<td class="history">%s</td>' % item['locale']
         html += '<td class="history">%s</td>' % item['user_display']
-        html += '<td class="history">%s</td>' % item['summary']
-        html += '<td class="history">%s</td>' % item['description']
+        html += '<td class="history">%s</td>' % _string_truncate(item['summary'], 20)
+        html += '<td class="history">%s</td>' % _string_truncate(item['description'], 40)
         html += '</tr>\n'
     html += '</table>'
 

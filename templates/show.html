@@ -1,0 +1,81 @@
+{% extends "default.html" %}
+{% block title %}Review #{{ review_id }}{% endblock %}
+
+{% block page_header %}
+<h1>Review #{{ review_id }}</h1>
+{% endblock %}
+
+{% block content %}
+
+<form name="myform" action="/1.0/reviews/modify/{{ review_id }}" method="POST">
+<table class="history">
+  <tr>
+    <th>Application</th>
+    <td>{{ app_id }}</td>
+  </tr>
+  <tr>
+    <th>Rating</th>
+    <td>{{ rating|safe }}</td>
+  </tr>
+  <tr>
+    <th>Created</th>
+    <td>{{ date_created }}</td>
+  </tr>
+  <tr>
+    <th>Deleted</th>
+    <td>{{ date_deleted }}</td>
+  </tr>
+  <tr>
+    <th>Karma</th>
+    <td>{{ karma }}</td>
+  </tr>
+  <tr>
+    <th>User Hash</th>
+    <td>{{ user_hash }}</td>
+  </tr>
+  <tr>
+    <th>User Display</th>
+    <td>
+      <textarea cols="80" rows="1" name="user_display">{{ user_display }}</textarea>
+    </td>
+  </tr>
+  <tr>
+    <th>Locale</th>
+    <td>
+      <textarea cols="80" rows="1" name="locale">{{ locale }}</textarea>
+    </td>
+  </tr>
+  <tr>
+    <th>Version</th>
+    <td>
+      <textarea cols="80" rows="1" name="version">{{ version }}</textarea>
+    </td>
+  </tr>
+  <tr>
+    <th>Distro</th>
+    <td>
+      <textarea cols="80" rows="1" name="distro">{{ distro }}</textarea>
+    </td>
+  </tr>
+  <tr>
+    <th>Summary</th>
+    <td>
+      <textarea cols="80" rows="1" name="summary">{{ summary }}</textarea>
+    </td>
+  </tr>
+  <tr>
+    <th>Description</th>
+    <td>
+<textarea cols="80" rows="10" name="description">{{ description }}</textarea>
+    </td>
+  </tr>
+</table>
+
+<input type="submit" value="Modify">
+
+</form>
+
+{% endblock %}
+
+<!-- dynamic content -->
+{% block dyncontent %}{{dyncontent|safe}}{% endblock %}
