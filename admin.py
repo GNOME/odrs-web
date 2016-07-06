@@ -195,10 +195,10 @@ def unreport(review_id):
     db.review_modify(review)
     return redirect(url_for('.review', review_id=review_id))
 
-@admin.route('/delete/<review_id>', methods=['POST'])
+@admin.route('/delete/<review_id>/force')
 @login_required
-def delete(review_id):
-    """ Change details about a review """
+def delete_force(review_id):
+    """ Delete a review """
     try:
         db = ReviewsDatabase(os.environ)
         review = db.review_get_for_id(review_id)
@@ -208,6 +208,12 @@ def delete(review_id):
         return error_internal('no review with that ID')
     db.review_delete(review)
     return redirect(url_for('.show_all'))
+
+@admin.route('/delete/<review_id>')
+@login_required
+def delete(review_id):
+    """ Ask for confirmation to delete a review """
+    return render_template('delete.html', review_id=review_id)
 
 @admin.route('/show_all')
 def show_all():
