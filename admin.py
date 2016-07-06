@@ -96,11 +96,11 @@ def popularity():
     except CursorError as e:
         return error_internal(str(e))
     results1 = []
-    for item in db.get_stats_fetch('fetching review'):
-        results1.append((item[0].replace('.desktop', ''), item[1]))
+    for review in db.get_stats_fetch('fetching review'):
+        results1.append((review[0].replace('.desktop', ''), review[1]))
     results2 = []
-    for item in db.get_stats_fetch('reviewed'):
-        results2.append((item[0].replace('.desktop', ''), item[1]))
+    for review in db.get_stats_fetch('reviewed'):
+        results2.append((review[0].replace('.desktop', ''), review[1]))
     return render_template('popularity.html',
                            results1=results1,
                            results2=results2)
@@ -147,25 +147,25 @@ def review(review_id):
     """
     try:
         db = ReviewsDatabase(os.environ)
-        item = db.review_get_for_id(review_id)
+        review = db.review_get_for_id(review_id)
     except CursorError as e:
         return error_internal(str(e))
-    if not item:
+    if not review:
         return error_internal('no review with that ID')
     return render_template('show.html',
-                           review_id=item['review_id'],
-                           date_created=_stringify_timestamp(item['date_created']),
-                           app_id=item['app_id'],
-                           locale=item['locale'],
-                           summary=item['summary'],
-                           description=item['description'],
-                           version=item['version'],
-                           distro=item['distro'],
-                           karma=item['karma'],
-                           user_hash=item['user_hash'],
-                           user_display=item['user_display'],
-                           rating=_stringify_rating(item['rating']),
-                           date_deleted=_stringify_timestamp(item['date_deleted']))
+                           review_id=review.review_id,
+                           date_created=_stringify_timestamp(review.date_created),
+                           app_id=review.app_id,
+                           locale=review.locale,
+                           summary=review.summary,
+                           description=review.description,
+                           version=review.version,
+                           distro=review.distro,
+                           karma=review.karma,
+                           user_hash=review.user_hash,
+                           user_display=review.user_display,
+                           rating=_stringify_rating(review.rating),
+                           date_deleted=_stringify_timestamp(review.date_deleted))
 
 @admin.route('/modify/<review_id>', methods=['POST'])
 @login_required
@@ -173,50 +173,50 @@ def modify(review_id):
     """ Change details about a review """
     try:
         db = ReviewsDatabase(os.environ)
-        item = db.review_get_for_id(review_id)
+        review = db.review_get_for_id(review_id)
     except CursorError as e:
         return error_internal(str(e))
-    if not item:
+    if not review:
         return error_internal('no review with that ID')
-    item['distro'] = request.form['distro']
-    item['locale'] = request.form['locale']
-    item['user_display'] = request.form['user_display']
-    item['description'] = request.form['description']
-    item['summary'] = request.form['summary']
-    item['version'] = request.form['version']
-    db.review_modify(item)
+    review.distro = request.form['distro']
+    review.locale = request.form['locale']
+    review.user_display = request.form['user_display']
+    review.description = request.form['description']
+    review.summary = request.form['summary']
+    review.version = request.form['version']
+    db.review_modify(review)
     return redirect(url_for('.review', review_id=review_id))
 
 @admin.route('/all')
 def all():
     """
-    Return all the admin on the server as HTML.
+    Return all the reviews on the server as HTML.
     """
     try:
         db = ReviewsDatabase(os.environ)
-        admin = db.review_get_all()
+        reviews = db.review_get_all()
     except CursorError as e:
         return error_internal(str(e))
 
     html = ''
-    if len(admin) == 0:
-        return error_internal('No admin available!')
-    for item in admin:
+    if len(reviews) == 0:
+        return error_internal('No reviews available!')
+    for review in reviews:
         html += '<tr>'
-        tmp = _stringify_timestamp(item['date_created'])
-        html += '<td class="history"><a href="review/%i">%s</a></td>' % (item['review_id'], int(item['review_id']))
+        tmp = _stringify_timestamp(review.date_created)
+        html += '<td class="history"><a href="review/%i">%s</a></td>' % (review.review_id, int(review.review_id))
         html += '<td class="history">%s</td>' % tmp
-        html += '<td class="history">%s</td>' % _stringify_timestamp(item['date_deleted'])
-        html += '<td class="history">%s</td>' % item['app_id'].replace('.desktop', '')
-        html += '<td class="history">%s</td>' % item['version']
-        html += '<td class="history">%s</td>' % _stringify_rating(item['rating'])
-        html += '<td class="history">%s</td>' % item['karma']
-        html += '<td class="history">%s</td>' % item['distro']
-        html += '<td class="history">%s</td>' % _string_truncate(item['user_hash'], 8)
-        html += '<td class="history">%s</td>' % item['locale']
-        html += '<td class="history">%s</td>' % item['user_display']
-        html += '<td class="history">%s</td>' % _string_truncate(item['summary'], 20)
-        html += '<td class="history">%s</td>' % _string_truncate(item['description'], 40)
+        html += '<td class="history">%s</td>' % _stringify_timestamp(review.date_deleted)
+        html += '<td class="history">%s</td>' % review.app_id.replace('.desktop', '')
+        html += '<td class="history">%s</td>' % review.version
+        html += '<td class="history">%s</td>' % _stringify_rating(review.rating)
+        html += '<td class="history">%s</td>' % review.karma
+        html += '<td class="history">%s</td>' % review.distro
+        html += '<td class="history">%s</td>' % _string_truncate(review.user_hash, 8)
+        html += '<td class="history">%s</td>' % review.locale
+        html += '<td class="history">%s</td>' % review.user_display
+        html += '<td class="history">%s</td>' % _string_truncate(review.summary, 20)
+        html += '<td class="history">%s</td>' % _string_truncate(review.description, 40)
         html += '</tr>\n'
     html += '</table>'
 

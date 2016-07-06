@@ -203,4 +203,4 @@ Email me or grab me on IRC (`hughsie@freenode`).
 ## What's left to do?
 
 * Get reported into review item
-* Make dict into object
+

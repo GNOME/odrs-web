@@ -7,12 +7,11 @@
 import json
 import os
 import hashlib
-import datetime
-import calendar
 
 from flask import Blueprint, Response, request
 
 from database import ReviewsDatabase, CursorError
+from review import OdrsReview
 
 reviews = Blueprint('reviews', __name__, url_prefix='/reviews')
 
@@ -58,13 +57,13 @@ def _locale_is_compatible(l1, l2):
 def _get_review_score(review, item):
     """ Gets a review score given certain parameters """
     score = 0
-    if not _locale_is_compatible(review['locale'], item['locale']):
+    if not _locale_is_compatible(review.locale, item['locale']):
         score = score - 1000
-    if review['version'] != item['version']:
+    if review.version != item['version']:
         score = score + 100
-    if review['distro'] != item['distro']:
+    if review.distro != item['distro']:
         score = score + 100
-    return score + (review['karma'] * 2)
+    return score + (review.karma * 2)
 
 @reviews.errorhandler(400)
 def json_error(msg=None, errcode=400):
@@ -147,15 +146,27 @@ def submit():
 
         # check user has not been banned
         user = db.user_get_by_hash(item['user_hash'])
-        if user and user['is_banned']:
+        if user and user.is_banned:
             return json_error('account has been disabled due to abuse')
 
-        # log and add review
+        # create new
+        review = OdrsReview()
+        review.app_id = item['app_id']
+        review.locale = item['locale']
+        review.summary = item['summary']
+        review.description = item['description']
+        review.user_hash = item['user_hash']
+        review.user_display = item['user_display']
+        review.version = item['version']
+        review.distro = item['distro']
+        review.rating = item['rating']
+
+        # log and add
         db.event_info(_get_client_address(),
-                      item['user_hash'],
-                      item['app_id'],
+                      review.user_hash,
+                      review.app_id,
                       "reviewed")
-        db.review_add(item, _get_client_address())
+        db.review_add(review, _get_client_address())
     except CursorError as e:
         return json_error(str(e))
     return json_success()
@@ -174,13 +185,14 @@ def app(app_id, user_hash=None):
         return json_error(str(e))
 
     # add key if user_hash specified
-    reviews_new = []
-    for item in reviews:
+    items_new = []
+    for review in reviews:
+        item = review.__dict__
         if user_hash:
-            item['user_skey'] = _get_user_key(user_hash, item['app_id'])
-        reviews_new.append(item)
+            item['user_skey'] = _get_user_key(user_hash, review.app_id)
+        items_new.append(item)
 
-    dat = json.dumps(reviews_new, sort_keys=True, indent=4, separators=(',', ': '))
+    dat = json.dumps(items_new, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
                     mimetype="application/json")
@@ -218,34 +230,36 @@ def fetch():
         db.user_add(item['user_hash'])
 
     # add score for review using secret sauce
-    reviews_new = []
+    items_new = []
     for review in reviews:
+
         # limit to user specified karma
-        if review['karma'] < item['karma']:
+        if review.karma < item['karma']:
             continue
-        review['user_skey'] = _get_user_key(item['user_hash'], review['app_id'])
-        review['score'] = _get_review_score(review, item)
+        item_new = review.__dict__
+        item_new['user_skey'] = _get_user_key(item['user_hash'], review.app_id)
+        item_new['score'] = _get_review_score(review, item)
 
         # the UI can hide the vote buttons on reviews already voted on
-        if db.vote_exists(review['review_id'], item['user_hash']):
-            review['vote_id'] = 1
+        if db.vote_exists(review.review_id, item['user_hash']):
+            item_new['vote_id'] = 1
 
-        reviews_new.append(review)
+        items_new.append(item_new)
 
     # fake something so the user can get the user_skey
-    if len(reviews_new) == 0:
-        review = {}
-        review['score'] = 0
-        review['app_id'] = item['app_id']
-        review['user_hash'] = item['user_hash']
-        review['user_skey'] = _get_user_key(item['user_hash'], review['app_id'])
-        reviews_new.append(review)
+    if len(items_new) == 0:
+        item_new = {}
+        item_new['score'] = 0
+        item_new['app_id'] = item['app_id']
+        item_new['user_hash'] = item['user_hash']
+        item_new['user_skey'] = _get_user_key(item['user_hash'], item['app_id'])
+        items_new.append(item_new)
 
     # sort and cut to limit
-    sorted(reviews_new, key=lambda item: item['score'])
-    reviews_new = reviews_new[:item['limit']]
+    sorted(items_new, key=lambda item: item['score'])
+    items_new = items_new[:item['limit']]
 
-    dat = json.dumps(reviews_new, sort_keys=True, indent=4, separators=(',', ': '))
+    dat = json.dumps(items_new, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
                     mimetype="application/json")
@@ -266,7 +280,7 @@ def all(user_hash=None):
     # the user specified a user_hash
     if user_hash:
         for item in reviews:
-            item['user_skey'] = _get_user_key(user_hash, item['app_id'])
+            item['user_skey'] = _get_user_key(user_hash, item.app_id)
 
     dat = json.dumps(reviews, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
@@ -286,13 +300,14 @@ def moderate(user_hash):
         return json_error(str(e))
 
     # only return reviews the user has not already voted on
-    reviews_new = []
-    for item in reviews:
-        if not db.vote_exists(item['review_id'], user_hash):
-            item['user_skey'] = _get_user_key(user_hash, item['app_id'])
-            reviews_new.append(item)
+    items_new = []
+    for review in reviews:
+        if not db.vote_exists(review.review_id, user_hash):
+            item = review.__dict__
+            item['user_skey'] = _get_user_key(user_hash, review.app_id)
+            items_new.append(item)
 
-    dat = json.dumps(reviews_new, sort_keys=True, indent=4, separators=(',', ': '))
+    dat = json.dumps(items_new, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
                     mimetype="application/json")
@@ -343,11 +358,11 @@ def vote(val):
         else:
 
             # user is naughty
-            if user['is_banned']:
+            if user.is_banned:
                 return json_error('account has been disabled due to abuse')
 
             # the user is too harsh
-            if val < 0 and user['karma'] < -50:
+            if val < 0 and user.karma < -50:
                 return json_error('all negative karma used up')
         db.user_update_karma(item['user_hash'], val)
 
@@ -427,7 +442,7 @@ def remove():
                       "removed review")
     except CursorError as e:
         return json_error(str(e))
-    return json_success('removed review #%i' % item['review_id'])
+    return json_success('removed review #%i' % item.review_id)
 
 @reviews.route('/api/ratings/<app_id>')
 def ratings(app_id):

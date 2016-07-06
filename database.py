@@ -11,6 +11,8 @@ import datetime
 import hashlib
 
 from user import OdrsUser
+from event import OdrsEvent
+from review import OdrsReview
 
 class CursorError(Exception):
     def __init__(self, cur, e):
@@ -22,57 +24,45 @@ def _combine_karma(karma_up, karma_down):
     """ This is required because society is broken """
     return (karma_up * 5) - karma_down
 
-def _create_review_item(e):
+def _create_review(e):
     """ Parse a review """
-    item = {}
-    item['review_id'] = int(e[0])
-    item['date_created'] = int(e[1].strftime("%s"))
-    item['app_id'] = e[2]
-    item['locale'] = e[3]
-    item['summary'] = e[4]
-    item['description'] = e[5]
-    item['version'] = e[6]
-    item['distro'] = e[7]
-    item['karma'] = _combine_karma(int(e[8]), int(e[9]))
-    item['user_hash'] = e[10]
-    item['user_display'] = e[11]
-    item['rating'] = int(e[12])
+    review = OdrsReview()
+    review.review_id = int(e[0])
+    review.date_created = int(e[1].strftime("%s"))
+    review.app_id = e[2]
+    review.locale = e[3]
+    review.summary = e[4]
+    review.description = e[5]
+    review.version = e[6]
+    review.distro = e[7]
+    review.karma = _combine_karma(int(e[8]), int(e[9]))
+    review.user_hash = e[10]
+    review.user_display = e[11]
+    review.rating = int(e[12])
     if e[13]:
-        item['date_deleted'] = int(e[13].strftime("%s"))
-    else:
-        item['date_deleted'] = None
-    return item
+        review.date_deleted = int(e[13].strftime("%s"))
+    return review
 
-def _create_event_item(e):
+def _create_event(e):
     """ Parse an event """
-    item = {}
-    item['eventlog_id'] = int(e[0])
-    item['date_created'] = int(e[1].strftime("%s"))
-    item['user_addr'] = e[2]
-    item['user_hash'] = e[3]
-    item['message'] = e[4]
-    item['app_id'] = e[5]
-    item['important'] = int(e[6])
-    return item
-
-def _create_user_item(e):
-    """ Parse a user """
-    item = {}
-    item['user_id'] = int(e[0])
-    item['date_created'] = int(e[1].strftime("%s"))
-    item['user_hash'] = e[2]
-    item['karma'] = int(e[3])
-    item['is_banned'] = int(e[4])
-    return item
+    event = OdrsEvent()
+    event.eventlog_id = int(e[0])
+    event.date_created = int(e[1].strftime("%s"))
+    event.user_addr = e[2]
+    event.user_hash = e[3]
+    event.message = e[4]
+    event.app_id = e[5]
+    event.important = int(e[6])
+    return event
 
 def _create_user(e):
     """ Parse a user """
     user = OdrsUser()
     user.id = int(e[0])
-    #item['date_created'] = int(e[1].strftime("%s"))
-    #item['user_hash'] = e[2]
-    #item['karma'] = int(e[3])
-    #item['is_banned'] = int(e[4])
+    user.date_created = int(e[1].strftime("%s"))
+    user.user_hash = e[2]
+    user.karma = int(e[3])
+    user.is_banned = int(e[4])
     return user
 
 def _password_hash(value):
@@ -107,7 +97,7 @@ class ReviewsDatabase(object):
         if self._db:
             self._db.close()
 
-    def review_modify(self, item):
+    def review_modify(self, review):
         """ Modifies a review """
         try:
             cur = self._db.cursor()
@@ -115,18 +105,18 @@ class ReviewsDatabase(object):
                         "distro = %s, locale = %s, "
                         "summary = %s, description = %s, "
                         "user_display = %s WHERE review_id = %s;",
-                        (item['version'],
-                         item['distro'],
-                         item['locale'],
-                         item['summary'],
-                         item['description'],
-                         item['user_display'],
-                         item['review_id'],))
+                        (review.version,
+                         review.distro,
+                         review.locale,
+                         review.summary,
+                         review.description,
+                         review.user_display,
+                         review.review_id,))
         except mdb.Error as e:
             raise CursorError(cur, e)
         return True
 
-    def review_add(self, item, user_addr):
+    def review_add(self, review, user_addr):
         """ Add a review to the database """
         try:
             cur = self._db.cursor()
@@ -134,15 +124,15 @@ class ReviewsDatabase(object):
                         "description, user_hash, user_display, version, "
                         "distro, rating, user_addr) "
                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
-                        (item['app_id'],
-                         item['locale'],
-                         item['summary'],
-                         item['description'],
-                         item['user_hash'],
-                         item['user_display'],
-                         item['version'],
-                         item['distro'],
-                         item['rating'],
+                        (review.app_id,
+                         review.locale,
+                         review.summary,
+                         review.description,
+                         review.user_hash,
+                         review.user_display,
+                         review.version,
+                         review.distro,
+                         review.rating,
                          user_addr,))
         except mdb.Error as e:
             raise CursorError(cur, e)
@@ -173,10 +163,10 @@ class ReviewsDatabase(object):
         res = cur.fetchall()
         if not res:
             return []
-        items = []
+        reviews = []
         for e in res:
-            items.append(_create_review_item(e))
-        return items
+            reviews.append(_create_review(e))
+        return reviews
 
     def review_get_for_id(self, review_id):
         """ Returns a specific review """
@@ -192,7 +182,7 @@ class ReviewsDatabase(object):
         res = cur.fetchall()
         if not res:
             return None
-        return _create_review_item(res[0])
+        return _create_review(res[0])
 
     def review_exists(self, app_id, user_hash):
         """ Checks to see if a review exists for the application+user """
@@ -255,10 +245,10 @@ class ReviewsDatabase(object):
         res = cur.fetchall()
         if not res:
             return []
-        items = []
+        reviews = []
         for e in res:
-            items.append(_create_review_item(e))
-        return items
+            reviews.append(_create_review(e))
+        return reviews
 
     def event_warn(self,
                    user_addr=None,
@@ -301,10 +291,10 @@ class ReviewsDatabase(object):
         res = cur.fetchall()
         if not res:
             return []
-        items = []
+        users = []
         for e in res:
-            items.append(_create_user_item(e))
-        return items
+            users.append(_create_user(e))
+        return users
 
     def user_get_with_login(self, username, password):
         """ Get information about a specific login """
@@ -350,7 +340,7 @@ class ReviewsDatabase(object):
         res = cur.fetchone()
         if not res:
             return None
-        return _create_user_item(res)
+        return _create_user(res)
 
     def user_update_karma(self, user_hash, val):
         """ Update the request time for a specific user ID """
