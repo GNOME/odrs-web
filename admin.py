@@ -121,24 +121,30 @@ def stats():
         results.append((item, stats[item]))
     return render_template('stats.html', results=results)
 
-def _stringify_rating(rating):
-    nr_stars = int(rating / 20)
-    tmp = ''
-    for i in range(0, nr_stars):
-        tmp += '&#9733;'
-    for i in range(0, 5 - nr_stars):
-        tmp += '&#9734;'
-    return tmp
-
-def _string_truncate(tmp, length):
-    if len(tmp) <= length:
+@admin.context_processor
+def utility_processor():
+    def format_rating(rating):
+        nr_stars = int(rating / 20)
+        tmp = ''
+        for i in range(0, nr_stars):
+            tmp += '★'
+        for i in range(0, 5 - nr_stars):
+            tmp += '☆'
         return tmp
-    return tmp[:length] + '&hellip;'
 
-def _stringify_timestamp(tmp):
-    if not tmp:
-        return 'n/a'
-    return datetime.datetime.fromtimestamp(tmp).strftime('%Y-%m-%d %H:%M:%S')
+    def format_truncate(tmp, length):
+        if len(tmp) <= length:
+            return tmp
+        return tmp[:length] + '…'
+
+    def format_timestamp(tmp):
+        if not tmp:
+            return 'n/a'
+        return datetime.datetime.fromtimestamp(tmp).strftime('%Y-%m-%d %H:%M:%S')
+
+    return dict(format_rating=format_rating,
+                format_truncate=format_truncate,
+                format_timestamp=format_timestamp)
 
 @admin.route('/review/<review_id>')
 def review(review_id):
@@ -152,20 +158,7 @@ def review(review_id):
         return error_internal(str(e))
     if not review:
         return error_internal('no review with that ID')
-    return render_template('show.html',
-                           review_id=review.review_id,
-                           date_created=_stringify_timestamp(review.date_created),
-                           app_id=review.app_id,
-                           locale=review.locale,
-                           summary=review.summary,
-                           description=review.description,
-                           version=review.version,
-                           distro=review.distro,
-                           karma=review.karma,
-                           user_hash=review.user_hash,
-                           user_display=review.user_display,
-                           rating=_stringify_rating(review.rating),
-                           date_deleted=_stringify_timestamp(review.date_deleted))
+    return render_template('show.html', r=review)
 
 @admin.route('/modify/<review_id>', methods=['POST'])
 @login_required
@@ -187,8 +180,8 @@ def modify(review_id):
     db.review_modify(review)
     return redirect(url_for('.review', review_id=review_id))
 
-@admin.route('/all')
-def all():
+@admin.route('/show_all')
+def show_all():
     """
     Return all the reviews on the server as HTML.
     """
@@ -197,27 +190,6 @@ def all():
         reviews = db.review_get_all()
     except CursorError as e:
         return error_internal(str(e))
-
-    html = ''
     if len(reviews) == 0:
         return error_internal('No reviews available!')
-    for review in reviews:
-        html += '<tr>'
-        tmp = _stringify_timestamp(review.date_created)
-        html += '<td class="history"><a href="review/%i">%s</a></td>' % (review.review_id, int(review.review_id))
-        html += '<td class="history">%s</td>' % tmp
-        html += '<td class="history">%s</td>' % _stringify_timestamp(review.date_deleted)
-        html += '<td class="history">%s</td>' % review.app_id.replace('.desktop', '')
-        html += '<td class="history">%s</td>' % review.version
-        html += '<td class="history">%s</td>' % _stringify_rating(review.rating)
-        html += '<td class="history">%s</td>' % review.karma
-        html += '<td class="history">%s</td>' % review.distro
-        html += '<td class="history">%s</td>' % _string_truncate(review.user_hash, 8)
-        html += '<td class="history">%s</td>' % review.locale
-        html += '<td class="history">%s</td>' % review.user_display
-        html += '<td class="history">%s</td>' % _string_truncate(review.summary, 20)
-        html += '<td class="history">%s</td>' % _string_truncate(review.description, 40)
-        html += '</tr>\n'
-    html += '</table>'
-
-    return render_template('all.html', dyncontent=html)
+    return render_template('show-all.html', reviews=reviews)

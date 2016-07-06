@@ -1,0 +1,48 @@
+{% extends "default.html" %}
+{% block title %}All Reviews{% endblock %}
+
+{% block page_header %}
+<h1>All Reviews</h1>
+{% endblock %}
+
+{% block content %}
+
+<table class="history">
+  <tr>
+    <th>#</th>
+    <th>Created</th>
+    <th>Deleted</th>
+    <th>Application</th>
+    <th>Version</th>
+    <th>Rating</th>
+    <th>Karma</th>
+    <th>Distro</th>
+    <th>User</th>
+    <th>Locale</th>
+    <th>Name</th>
+    <th>Summary</th>
+    <th>Description</th>
+  </tr>
+
+{% for r in reviews %}
+  <tr>
+    <td class="history"><a href="review/{{ r.review_id }}">{{ r.review_id }}</a></td>
+    <td class="history">{{ format_timestamp(r.date_created) }}</td>
+    <td class="history">{{ format_timestamp(r.date_deleted) }}</td>
+    <td class="history">{{ r.app_id.replace('.desktop', '') }}</td>
+    <td class="history">{{ r.version }}</td>
+    <td class="history">{{ format_rating(r.rating) }}</td>
+    <td class="history">{{ r.karma }}</td>
+    <td class="history">{{ r.distro }}</td>
+    <td class="history">{{ format_truncate(r.user_hash, 8) }}</td>
+    <td class="history">{{ r.locale }}</td>
+    <td class="history">{{ r.user_display }}</td>
+    <td class="history">{{ format_truncate(r.summary, 20) }}</td>
+    <td class="history">{{ format_truncate(r.description, 40) }}</td>
+  </tr>
+{% endfor %}
+
+</table>
+
+
+{% endblock %}

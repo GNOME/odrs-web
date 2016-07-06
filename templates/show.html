@@ -2,71 +2,71 @@
 {% block title %}Review #{{ review_id }}{% endblock %}
 
 {% block page_header %}
-<h1>Review #{{ review_id }}</h1>
+<h1>Review #{{ r.review_id }}</h1>
 {% endblock %}
 
 {% block content %}
 
-<form name="myform" action="/admin/modify/{{ review_id }}" method="POST">
+<form name="myform" action="/admin/modify/{{ r.review_id }}" method="POST">
 <table class="history">
   <tr>
     <th>Application</th>
-    <td>{{ app_id }}</td>
+    <td>{{ r.app_id }}</td>
   </tr>
   <tr>
     <th>Rating</th>
-    <td>{{ rating|safe }}</td>
+    <td>{{ format_rating(r.rating) }}</td>
   </tr>
   <tr>
     <th>Created</th>
-    <td>{{ date_created }}</td>
+    <td>{{ format_timestamp(r.date_created) }}</td>
   </tr>
   <tr>
     <th>Deleted</th>
-    <td>{{ date_deleted }}</td>
+    <td>{{ format_timestamp(r.date_deleted) }}</td>
   </tr>
   <tr>
     <th>Karma</th>
-    <td>{{ karma }}</td>
+    <td>{{ r.karma }}</td>
   </tr>
   <tr>
     <th>User Hash</th>
-    <td>{{ user_hash }}</td>
+    <td>{{ r.user_hash }}</td>
   </tr>
   <tr>
     <th>User Display</th>
     <td>
-      <textarea cols="80" rows="1" name="user_display">{{ user_display }}</textarea>
+      <textarea cols="80" rows="1" name="user_display">{{ r.user_display }}</textarea>
     </td>
   </tr>
   <tr>
     <th>Locale</th>
     <td>
-      <textarea cols="80" rows="1" name="locale">{{ locale }}</textarea>
+      <textarea cols="80" rows="1" name="locale">{{ r.locale }}</textarea>
     </td>
   </tr>
   <tr>
     <th>Version</th>
     <td>
-      <textarea cols="80" rows="1" name="version">{{ version }}</textarea>
+      <textarea cols="80" rows="1" name="version">{{ r.version }}</textarea>
     </td>
   </tr>
   <tr>
     <th>Distro</th>
     <td>
-      <textarea cols="80" rows="1" name="distro">{{ distro }}</textarea>
+      <textarea cols="80" rows="1" name="distro">{{ r.distro }}</textarea>
     </td>
   </tr>
   <tr>
     <th>Summary</th>
     <td>
-      <textarea cols="80" rows="1" name="summary">{{ summary }}</textarea>
+      <textarea cols="80" rows="1" name="summary">{{ r.summary }}</textarea>
     </td>
   </tr>
   <tr>
     <th>Description</th>
     <td>
-<textarea cols="80" rows="10" name="description">{{ description }}</textarea>
+<textarea cols="80" rows="10" name="description">{{ r.description }}</textarea>
     </td>
   </tr>
 </table>
@@ -78,6 +78,3 @@
 </form>
 
 {% endblock %}
-
-<!-- dynamic content -->
-{% block dyncontent %}{{dyncontent|safe}}{% endblock %}

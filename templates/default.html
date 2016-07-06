@@ -14,7 +14,7 @@
 {% block navigation %}
 <ul class="navigation">
   <li class="navigation"><a class="navigation" href="/">Home</a></li>
-  <li class="navigation"><a class="navigation" href="/admin/all">All Reviews</a></li>
+  <li class="navigation"><a class="navigation" href="/admin/show_all">All Reviews</a></li>
 {% if current_user.is_authenticated %}
   <li class="navigation"><a class="navigation" href="/admin/stats">Statistics</a></li>
   <li class="navigation"><a class="navigation" href="/admin/popularity">Popularity</a></li>
@@ -37,7 +37,6 @@
 </div>
 
 {% block content %}{% endblock %}
-{% block dyncontent %}{% endblock %}
 
 <p class="footer">
  Copyright <a href="mailto:richard@hughsie.com">Richard Hughes 2016</a>
