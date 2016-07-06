@@ -71,7 +71,9 @@
   </tr>
 </table>
 
+{% if current_user.is_authenticated %}
 <input type="submit" value="Modify">
+{% endif %}
 
 </form>
 
