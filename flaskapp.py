@@ -34,7 +34,6 @@ def login():
         return render_template('login.html')
     username = request.form['username']
     password = request.form['password']
-    print(username,password)
     try:
         db = ReviewsDatabase(os.environ)
         user = db.user_get_with_login(request.form['username'],
