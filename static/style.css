@@ -71,6 +71,16 @@ a:active.navigation {
   border-bottom-color: #3e78b4;
 }
 
+textarea {
+  vertical-align: middle;
+}
+
+button.inline {
+  vertical-align: middle;
+  display: inline-block;
+  float: right;
+}
+
 button.action {
   background-color: #555555;
   border: 1px solid black;

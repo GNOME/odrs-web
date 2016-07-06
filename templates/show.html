@@ -34,7 +34,9 @@
     <td>
       {{ r.reported }}
 {% if r.reported > 0 %}
-<a href="/admin/unreport/{{ r.review_id }}">Unreport</a>
+<a href="/admin/unreport/{{ r.review_id }}">
+<button class="inline">Unreport</button>
+</a>
 {% endif %}
     </td>
   </tr>
@@ -51,7 +53,12 @@
   <tr>
     <th>Locale</th>
     <td>
-      <textarea cols="80" rows="1" name="locale">{{ r.locale }}</textarea>
+      <textarea cols="10" rows="1" name="locale">{{ r.locale }}</textarea>
+{% if not r.locale.startswith('en_') %}
+<a href="/admin/englishify/{{ r.review_id }}">
+<button class="inline">Englishify</button>
+</a>
+{% endif %}
     </td>
   </tr>
   <tr>
