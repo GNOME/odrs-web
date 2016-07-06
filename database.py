@@ -250,6 +250,26 @@ class ReviewsDatabase(object):
             reviews.append(_create_review(e))
         return reviews
 
+    def review_get_all_for_user_hash(self, user_hash):
+        """ Gets all non-removed reviews from the server for all applications """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
+                        "description, version, distro, karma_up, karma_down, "
+                        "user_hash, user_display, rating, date_deleted, reported "
+                        "FROM reviews WHERE user_hash = %s "
+                        "ORDER BY date_created DESC;",
+                        (user_hash,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        if not res:
+            return []
+        reviews = []
+        for e in res:
+            reviews.append(_create_review(e))
+        return reviews
+
     def event_warn(self,
                    user_addr=None,
                    user_hash=None,

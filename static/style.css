@@ -26,6 +26,15 @@ h1, h2, h3 {
   padding: .5em .5em .5em 0;
 }
 
+a:hover {
+  color: #147;
+  text-decoration: none;
+}
+
+a {
+  color: #147;
+  text-decoration: none;
+}
 
 ul.navigation {
   list-style-type: none;
