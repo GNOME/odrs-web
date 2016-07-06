@@ -85,6 +85,26 @@ def graph_year():
                            data_users=data_fetch[1][::-1],
                            data_submitted=data_review[0][::-1])
 
+@admin.route('/popularity')
+@login_required
+def popularity():
+    """
+    Return the popularity page as HTML.
+    """
+    try:
+        db = ReviewsDatabase(os.environ)
+    except CursorError as e:
+        return error_internal(str(e))
+    results1 = []
+    for item in db.get_stats_fetch('fetching review'):
+        results1.append((item[0].replace('.desktop', ''), item[1]))
+    results2 = []
+    for item in db.get_stats_fetch('reviewed'):
+        results2.append((item[0].replace('.desktop', ''), item[1]))
+    return render_template('popularity.html',
+                           results1=results1,
+                           results2=results2)
+
 @admin.route('/stats')
 @login_required
 def stats():
@@ -96,31 +116,10 @@ def stats():
         stats = db.get_stats()
     except CursorError as e:
         return error_internal(str(e))
-
-    # list each stat the database can report
-    html = ''
+    results = []
     for item in stats:
-        html += '<tr>'
-        html += '<td class="history">%s</td>' % item
-        html += '<td class="history">%s</td>' % stats[item]
-        html += '</tr>\n'
-    html += '</table>'
-
-    # list apps by view popularity
-    html += '<h1>Top Applications (Page Views)</h1>'
-    html += '<ol>'
-    for item in db.get_stats_fetch('fetching review'):
-        html += '<li>%s [%i]</li>' % (item[0].replace('.desktop', ''), item[1])
-    html += '</ol>'
-
-    # list apps by review popularity
-    html += '<h1>Top Applications (Reviews)</h1>'
-    html += '<ol>'
-    for item in db.get_stats_fetch('reviewed'):
-        html += '<li>%s [%i]</li>' % (item[0].replace('.desktop', ''), item[1])
-    html += '</ol>'
-
-    return render_template('stats.html', dyncontent=html)
+        results.append((item, stats[item]))
+    return render_template('stats.html', results=results)
 
 def _stringify_rating(rating):
     nr_stars = int(rating / 20)
