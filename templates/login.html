@@ -1,0 +1,31 @@
+{% extends "default.html" %}
+{% block title %}Login{% endblock %}
+
+<!-- no navigation -->
+{% block navigation %}{% endblock %}
+
+{% block page_header %}
+<h1>Please Login</h1>
+{% endblock %}
+
+{% block content %}
+<p>
+You can request an account if you think it is required.
+</p>
+<form method="POST" action="">
+<table>
+<tr>
+<th><label for="username">Username:</label></td>
+<td><input type="text" name="username" required></td>
+</tr>
+<tr>
+<th><label for="password">Password:</label></td>
+<td><input type="password" name="password" required></td>
+</tr>
+</table>
+<input type="submit" class="submit" value="Login">
+</form>
+</body>
+</html>
+
+{% endblock %}

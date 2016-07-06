@@ -11,6 +11,8 @@ import datetime
 import calendar
 
 from flask import Blueprint, Response, request, flash, render_template, escape, redirect, url_for
+from flask.ext.login import login_required
+
 from database import ReviewsDatabase, CursorError
 
 reviews = Blueprint('reviews', __name__, url_prefix='/reviews')
@@ -186,6 +188,7 @@ def api_submit():
     return json_success()
 
 @reviews.route('/analytics')
+@login_required
 def html_analytics():
     """
     Show nice analytics graphs.
@@ -290,6 +293,7 @@ def html_analytics():
                            dyncontent_permonth=html_permonth)
 
 @reviews.route('/stats')
+@login_required
 def html_stats():
     """
     Return the statistics page as HTML.
@@ -372,6 +376,7 @@ def html_show(review_id):
                            date_deleted=_stringify_timestamp(item['date_deleted']))
 
 @reviews.route('/modify/<review_id>', methods=['POST'])
+@login_required
 def html_modify(review_id):
     """ Change details about a review """
     try:

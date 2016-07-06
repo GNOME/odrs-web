@@ -192,8 +192,15 @@ Then restore the data with:
 
 ## How to I use distro packages ##
 
-    pkcon install python3-PyMySQL python3-flask python3-flask-wtf
+    pkcon install python3-PyMySQL python3-flask python3-flask-wtf \
+      python3-flask-login
 
 ## I have a question
 
 Email me or grab me on IRC (`hughsie@freenode`).
+
+## What's left to do?
+
+* Get users from database
+* Get reported into review item
+* Make dict into object
