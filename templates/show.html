@@ -31,7 +31,12 @@
   </tr>
   <tr>
     <th>Reported</th>
-    <td>{{ r.reported }}</td>
+    <td>
+      {{ r.reported }}
+{% if r.reported > 0 %}
+<a href="/admin/unreport/{{ r.review_id }}">Unreport</a>
+{% endif %}
+    </td>
   </tr>
   <tr>
     <th>User Hash</th>
