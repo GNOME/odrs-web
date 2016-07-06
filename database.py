@@ -8,6 +8,9 @@ import pymysql as mdb
 import pymysql.cursors
 import cgi
 import datetime
+import hashlib
+
+from user import OdrsUser
 
 class CursorError(Exception):
     def __init__(self, cur, e):
@@ -61,6 +64,21 @@ def _create_user_item(e):
     item['karma'] = int(e[3])
     item['is_banned'] = int(e[4])
     return item
+
+def _create_user(e):
+    """ Parse a user """
+    user = OdrsUser()
+    user.id = int(e[0])
+    #item['date_created'] = int(e[1].strftime("%s"))
+    #item['user_hash'] = e[2]
+    #item['karma'] = int(e[3])
+    #item['is_banned'] = int(e[4])
+    return user
+
+def _password_hash(value):
+    """ Generate a salted hash of the password string """
+    salt = 'odrs%%%'
+    return hashlib.sha1(salt.encode('utf-8') + value.encode('utf-8')).hexdigest()
 
 class ReviewsDatabase(object):
 
@@ -288,7 +306,38 @@ class ReviewsDatabase(object):
             items.append(_create_user_item(e))
         return items
 
+    def user_get_with_login(self, username, password):
+        """ Get information about a specific login """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT user_id, date_created, "
+                        "user_hash, karma, is_banned "
+                        "FROM users2 WHERE user_hash=%s and password=%s;",
+                        (username,
+                         _password_hash(password),))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if not res:
+            return None
+        return _create_user(res)
+
     def user_get_by_id(self, user_hash):
+        """ Get information about a specific user """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT user_id, date_created, "
+                        "user_hash, karma, is_banned "
+                        "FROM users2 WHERE user_id=%s;",
+                        (user_hash,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if not res:
+            return None
+        return _create_user(res)
+
+    def user_get_by_hash(self, user_hash):
         """ Get information about a specific user """
         try:
             cur = self._db.cursor()
@@ -307,7 +356,7 @@ class ReviewsDatabase(object):
         """ Update the request time for a specific user ID """
 
         # if not existing, create it
-        user = self.user_get_by_id(user_hash)
+        user = self.user_get_by_hash(user_hash)
         if not user:
             self.user_add(user_hash)
             return

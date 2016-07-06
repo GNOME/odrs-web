@@ -173,7 +173,7 @@ def api_submit():
             return json_error('already reviewed this app')
 
         # check user has not been banned
-        user = db.user_get_by_id(item['user_hash'])
+        user = db.user_get_by_hash(item['user_hash'])
         if user and user['is_banned']:
             return json_error('account has been disabled due to abuse')
 
@@ -483,7 +483,7 @@ def api_fetch():
         return json_error(str(e))
 
     # if user does not exist then create
-    user = db.user_get_by_id(item['user_hash'])
+    user = db.user_get_by_hash(item['user_hash'])
     if not user:
         db.user_add(item['user_hash'])
 
@@ -607,7 +607,7 @@ def vote(val):
             return json_error('already voted on this app')
 
         # update the per-user karma
-        user = db.user_get_by_id(item['user_hash'])
+        user = db.user_get_by_hash(item['user_hash'])
         if not user:
             db.user_add(item['user_hash'])
         else:

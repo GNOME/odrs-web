@@ -5,10 +5,13 @@
 # Licensed under the GNU General Public License Version 3
 
 import os
-from flask import Flask, request, url_for, redirect, flash, render_template, send_from_directory
+from flask import Flask, request, url_for, redirect, flash, render_template, send_from_directory, abort
 from flask.ext.login import LoginManager
 from flask.ext.login import login_required, login_user, logout_user
+
 from reviews import reviews
+from database import ReviewsDatabase, CursorError
+from user import OdrsUser
 
 app = Flask(__name__)
 app.config.from_pyfile('flaskapp.cfg')
@@ -17,30 +20,10 @@ app.register_blueprint(reviews, url_prefix='/1.0/reviews')
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-class User(object):
-    def __init__(self):
-        self.id = None
-    @property
-    def is_authenticated(self):
-        return True
-    @property
-    def is_active(self):
-        return True
-    @property
-    def is_anonymous(self):
-        return False
-    def get_id(self):
-        return str(self.id)
-    def __repr__(self):
-        return '<User %r>' % (self.nickname)
-
-
 @login_manager.user_loader
 def load_user(user_id):
-    #return User.get(user_id)
-    print("USERID:%s" % user_id)
-    user = User()
-    user_id = 998
+    db = ReviewsDatabase(os.environ)
+    user = db.user_get_by_id(user_id)
     return user
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -50,13 +33,18 @@ def login():
     username = request.form['username']
     password = request.form['password']
     print(username,password)
-    user = User()
-    user.id = 99
+    try:
+        db = ReviewsDatabase(os.environ)
+        user = db.user_get_with_login(request.form['username'],
+                                      request.form['password'])
+    except CursorError as e:
+        return json_error(str(e))
+    if not user:
+        flash('Credentials are not valid.')
+        return redirect(url_for('.login'))
     login_user(user, remember=False)
-    ##fixme
     flash('Logged in successfully.')
     return redirect(url_for('.index'))
-
 
 @app.route("/logout")
 def logout():

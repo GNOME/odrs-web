@@ -15,10 +15,13 @@
 <ul class="navigation">
   <li class="navigation"><a class="navigation" href="/">Home</a></li>
   <li class="navigation"><a class="navigation" href="/1.0/reviews/all">All Reviews</a></li>
+{% if current_user.is_authenticated %}
   <li class="navigation"><a class="navigation" href="/1.0/reviews/stats">Statistics</a></li>
   <li class="navigation"><a class="navigation" href="/1.0/reviews/analytics">Analytics</a></li>
-  <li class="navigation"><a class="navigation" href="/login">Login</a></li>
-  <li class="navigation"><a class="navigation" href="/logout">Logout</a></li>
+  <li class="navigation2"><a class="navigation" href="/logout">Logout</a></li>
+{% else %}
+  <li class="navigation2"><a class="navigation" href="/login">Login</a></li>
+{% endif %}
 </ul>
 {% endblock %}
 

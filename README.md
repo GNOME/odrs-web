@@ -123,6 +123,7 @@ To set up the database tables do:
       user_hash TEXT DEFAULT NULL,
       karma INT DEFAULT 0,
       is_banned INT DEFAULT 0,
+      password TEXT DEFAULT NULL,
       UNIQUE KEY id (user_id)
     ) CHARSET=utf8;
     CREATE TABLE eventlog2 (
@@ -201,6 +202,5 @@ Email me or grab me on IRC (`hughsie@freenode`).
 
 ## What's left to do?
 
-* Get users from database
 * Get reported into review item
 * Make dict into object
