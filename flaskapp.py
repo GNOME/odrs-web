@@ -10,12 +10,14 @@ from flask.ext.login import LoginManager
 from flask.ext.login import login_required, login_user, logout_user
 
 from reviews import reviews
+from admin import admin
 from database import ReviewsDatabase, CursorError
 from user import OdrsUser
 
 app = Flask(__name__)
 app.config.from_pyfile('flaskapp.cfg')
 app.register_blueprint(reviews, url_prefix='/1.0/reviews')
+app.register_blueprint(admin, url_prefix='/admin')
 
 login_manager = LoginManager()
 login_manager.init_app(app)

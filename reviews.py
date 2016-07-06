@@ -10,8 +10,7 @@ import hashlib
 import datetime
 import calendar
 
-from flask import Blueprint, Response, request, flash, render_template, escape, redirect, url_for
-from flask.ext.login import login_required
+from flask import Blueprint, Response, request
 
 from database import ReviewsDatabase, CursorError
 
@@ -67,38 +66,7 @@ def _get_review_score(review, item):
         score = score + 100
     return score + (review['karma'] * 2)
 
-def _get_chart_labels_months():
-    """ Gets the chart labels """
-    now = datetime.date.today()
-    labels = []
-    offset = 0
-    for i in range(0, 12):
-        if now.month - i == 0:
-            offset = 1
-        labels.append(calendar.month_name[now.month - i - offset])
-    return labels
-
-def _get_chart_labels_days():
-    """ Gets the chart labels """
-    now = datetime.date.today()
-    labels = []
-    for i in range(0, 30):
-        then = now - datetime.timedelta(i)
-        labels.append("%02i-%02i-%02i" % (then.year, then.month, then.day))
-    return labels
-
 @reviews.errorhandler(400)
-def error_internal(msg=None, errcode=400):
-    """ Error handler: Internal """
-    flash("Internal error: %s" % msg)
-    return render_template('error.html'), errcode
-
-@reviews.errorhandler(401)
-def error_permission_denied(msg=None):
-    """ Error handler: Permission Denied """
-    flash("Permission denied: %s" % msg)
-    return render_template('error.html'), 401
-
 def json_error(msg=None, errcode=400):
     """ Error handler: JSON output """
     item = {}
@@ -109,6 +77,11 @@ def json_error(msg=None, errcode=400):
     return Response(response=dat,
                     status=errcode, \
                     mimetype="application/json")
+
+@reviews.errorhandler(401)
+def error_permission_denied(msg=None):
+    """ Error handler: Permission Denied """
+    return json_error(msg, 401)
 
 def json_success(msg=None, errcode=200):
     """ Success handler: JSON output """
@@ -130,7 +103,7 @@ def _check_str(val):
     return True
 
 @reviews.route('/api/submit', methods=['POST'])
-def api_submit():
+def submit():
     """
     Submits a new review.
     """
@@ -187,252 +160,9 @@ def api_submit():
         return json_error(str(e))
     return json_success()
 
-@reviews.route('/analytics')
-@login_required
-def html_analytics():
-    """
-    Show nice analytics graphs.
-    """
-    try:
-        db = ReviewsDatabase(os.environ)
-    except CursorError as e:
-        return error_internal(str(e))
-
-    # add days
-    data_fetch = db.get_stats_by_interval(30, 1, 'fetching review')
-    data_review = db.get_stats_by_interval(30, 1, 'reviewed')
-    html = '<canvas id="reviewsChartDays" width="1200" height="400"></canvas>'
-    html += '<script>'
-    html += 'var ctx = document.getElementById("reviewsChartDays").getContext("2d");'
-    html += 'var data = {'
-    html += '    labels: %s,' % _get_chart_labels_days()[::-1]
-    html += '    datasets: ['
-    html += '        {'
-    html += '            label: "Requests",'
-    html += '            fillColor: "rgba(120,120,120,0.15)",'
-    html += '            strokeColor: "rgba(120,120,120,0.15)",'
-    html += '            pointColor: "rgba(120,120,120,0.20)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_fetch[0][::-1]
-    html += '        },'
-    html += '        {'
-    html += '            label: "Users",'
-    html += '            fillColor: "rgba(20,120,220,0.2)",'
-    html += '            strokeColor: "rgba(20,120,120,0.1)",'
-    html += '            pointColor: "rgba(20,120,120,0.3)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_fetch[1][::-1]
-    html += '        },'
-    html += '        {'
-    html += '            label: "Submitted",'
-    html += '            fillColor: "rgba(251,14,5,0.2)",'
-    html += '            strokeColor: "rgba(151,14,5,0.1)",'
-    html += '            pointColor: "rgba(151,14,5,0.3)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(151,187,205,1)",'
-    html += '            data: %s' % data_review[0][::-1]
-    html += '        },'
-    html += '    ]'
-    html += '};'
-    html += 'var myLineChartDays = new Chart(ctx).Line(data, null);'
-    html += '</script>'
-    html_perday = html
-
-    # add months
-    data_fetch = db.get_stats_by_interval(12, 30, 'fetching review')
-    data_review = db.get_stats_by_interval(12, 30, 'reviewed')
-    html = '<canvas id="reviewsChartMonths" width="1200" height="400"></canvas>'
-    html += '<script>'
-    html += 'var ctx = document.getElementById("reviewsChartMonths").getContext("2d");'
-    html += 'var data = {'
-    html += '    labels: %s,' % _get_chart_labels_months()[::-1]
-    html += '    datasets: ['
-    html += '        {'
-    html += '            label: "Fetching",'
-    html += '            fillColor: "rgba(120,120,120,0.15)",'
-    html += '            strokeColor: "rgba(120,120,120,0.15)",'
-    html += '            pointColor: "rgba(120,120,120,0.20)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_fetch[0][::-1]
-    html += '        },'
-    html += '        {'
-    html += '            label: "Users",'
-    html += '            fillColor: "rgba(20,120,220,0.2)",'
-    html += '            strokeColor: "rgba(20,120,120,0.1)",'
-    html += '            pointColor: "rgba(20,120,120,0.3)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_fetch[1][::-1]
-    html += '        },'
-    html += '        {'
-    html += '            label: "Submitted",'
-    html += '            fillColor: "rgba(251,14,5,0.2)",'
-    html += '            strokeColor: "rgba(151,14,5,0.1)",'
-    html += '            pointColor: "rgba(151,14,5,0.3)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(151,187,205,1)",'
-    html += '            data: %s' % data_review[0][::-1]
-    html += '        },'
-    html += '    ]'
-    html += '};'
-    html += 'var myLineChartMonths = new Chart(ctx).Line(data, null);'
-    html += '</script>'
-    html_permonth = html
-
-    return render_template('analytics.html',
-                           dyncontent_perday=html_perday,
-                           dyncontent_permonth=html_permonth)
-
-@reviews.route('/stats')
-@login_required
-def html_stats():
-    """
-    Return the statistics page as HTML.
-    """
-    try:
-        db = ReviewsDatabase(os.environ)
-        stats = db.get_stats()
-    except CursorError as e:
-        return error_internal(str(e))
-
-    # list each stat the database can report
-    html = ''
-    for item in stats:
-        html += '<tr>'
-        html += '<td class="history">%s</td>' % item
-        html += '<td class="history">%s</td>' % stats[item]
-        html += '</tr>\n'
-    html += '</table>'
-
-    # list apps by view popularity
-    html += '<h1>Top Applications (Page Views)</h1>'
-    html += '<ol>'
-    for item in db.get_stats_fetch('fetching review'):
-        html += '<li>%s [%i]</li>' % (item[0].replace('.desktop', ''), item[1])
-    html += '</ol>'
-
-    # list apps by review popularity
-    html += '<h1>Top Applications (Reviews)</h1>'
-    html += '<ol>'
-    for item in db.get_stats_fetch('reviewed'):
-        html += '<li>%s [%i]</li>' % (item[0].replace('.desktop', ''), item[1])
-    html += '</ol>'
-
-    return render_template('stats.html', dyncontent=html)
-
-def _stringify_rating(rating):
-    nr_stars = int(rating / 20)
-    tmp = ''
-    for i in range(0, nr_stars):
-        tmp += '&#9733;'
-    for i in range(0, 5 - nr_stars):
-        tmp += '&#9734;'
-    return tmp
-
-def _string_truncate(tmp, length):
-    if len(tmp) <= length:
-        return tmp
-    return tmp[:length] + '&hellip;'
-
-def _stringify_timestamp(tmp):
-    if not tmp:
-        return 'n/a'
-    return datetime.datetime.fromtimestamp(tmp).strftime('%Y-%m-%d %H:%M:%S')
-
-@reviews.route('/show/<review_id>')
-def html_show(review_id):
-    """
-    Show a specific review as HTML.
-    """
-    try:
-        db = ReviewsDatabase(os.environ)
-        item = db.review_get_for_id(review_id)
-    except CursorError as e:
-        return json_error(str(e))
-    if not item:
-        return json_error('no review with that ID')
-    return render_template('show.html',
-                           review_id=item['review_id'],
-                           date_created=_stringify_timestamp(item['date_created']),
-                           app_id=item['app_id'],
-                           locale=item['locale'],
-                           summary=item['summary'],
-                           description=item['description'],
-                           version=item['version'],
-                           distro=item['distro'],
-                           karma=item['karma'],
-                           user_hash=item['user_hash'],
-                           user_display=item['user_display'],
-                           rating=_stringify_rating(item['rating']),
-                           date_deleted=_stringify_timestamp(item['date_deleted']))
-
-@reviews.route('/modify/<review_id>', methods=['POST'])
-@login_required
-def html_modify(review_id):
-    """ Change details about a review """
-    try:
-        db = ReviewsDatabase(os.environ)
-        item = db.review_get_for_id(review_id)
-    except CursorError as e:
-        return json_error(str(e))
-    if not item:
-        return json_error('no review with that ID')
-    item['distro'] = request.form['distro']
-    item['locale'] = request.form['locale']
-    item['user_display'] = request.form['user_display']
-    item['description'] = request.form['description']
-    item['summary'] = request.form['summary']
-    item['version'] = request.form['version']
-    db.review_modify(item)
-    return redirect(url_for('.html_show', review_id=review_id))
-
-@reviews.route('/all')
-def html_all():
-    """
-    Return all the reviews on the server as HTML.
-    """
-    try:
-        db = ReviewsDatabase(os.environ)
-        reviews = db.review_get_all()
-    except CursorError as e:
-        return json_error(str(e))
-
-    html = ''
-    if len(reviews) == 0:
-        return error_internal('No reviews available!')
-    for item in reviews:
-        html += '<tr>'
-        tmp = _stringify_timestamp(item['date_created'])
-        html += '<td class="history"><a href="show/%i">%s</a></td>' % (item['review_id'], int(item['review_id']))
-        html += '<td class="history">%s</td>' % tmp
-        html += '<td class="history">%s</td>' % _stringify_timestamp(item['date_deleted'])
-        html += '<td class="history">%s</td>' % item['app_id'].replace('.desktop', '')
-        html += '<td class="history">%s</td>' % item['version']
-        html += '<td class="history">%s</td>' % _stringify_rating(item['rating'])
-        html += '<td class="history">%s</td>' % item['karma']
-        html += '<td class="history">%s</td>' % item['distro']
-        html += '<td class="history">%s</td>' % _string_truncate(item['user_hash'], 8)
-        html += '<td class="history">%s</td>' % item['locale']
-        html += '<td class="history">%s</td>' % item['user_display']
-        html += '<td class="history">%s</td>' % _string_truncate(item['summary'], 20)
-        html += '<td class="history">%s</td>' % _string_truncate(item['description'], 40)
-        html += '</tr>\n'
-    html += '</table>'
-
-    return render_template('all.html', dyncontent=html)
-
 @reviews.route('/api/app/<app_id>/<user_hash>')
 @reviews.route('/api/app/<app_id>')
-def api_app(app_id, user_hash=None):
+def app(app_id, user_hash=None):
     """
     Return details about an application.
     """
@@ -456,7 +186,7 @@ def api_app(app_id, user_hash=None):
                     mimetype="application/json")
 
 @reviews.route('/api/fetch', methods=['POST'])
-def api_fetch():
+def fetch():
     """
     Return details about an application.
     """
@@ -522,7 +252,7 @@ def api_fetch():
 
 @reviews.route('/api/all/<user_hash>')
 @reviews.route('/api/all')
-def api_all(user_hash=None):
+def all(user_hash=None):
     """
     Return all the reviews on the server as a JSON object.
     """
@@ -544,7 +274,7 @@ def api_all(user_hash=None):
                     mimetype="application/json")
 
 @reviews.route('/api/moderate/<user_hash>')
-def api_moderate(user_hash):
+def moderate(user_hash):
     """
     Return all the reviews on the server the user can moderate.
     """
@@ -631,35 +361,35 @@ def vote(val):
     return json_success('voted #%i %i' % (item['review_id'], val))
 
 @reviews.route('/api/upvote', methods=['POST'])
-def api_upvote():
+def upvote():
     """
     Upvote an existing review by one karma point.
     """
     return vote(1)
 
 @reviews.route('/api/downvote', methods=['POST'])
-def api_downvote():
+def downvote():
     """
     Downvote an existing review by one karma point.
     """
     return vote(-1)
 
 @reviews.route('/api/dismiss', methods=['POST'])
-def api_dismiss():
+def dismiss():
     """
     Dismiss a review without rating it up or down.
     """
     return vote(0)
 
 @reviews.route('/api/report', methods=['POST'])
-def api_report():
+def report():
     """
     Report a review for abuse.
     """
     return vote(-5)
 
 @reviews.route('/api/remove', methods=['POST'])
-def api_remove():
+def remove():
     """
     Remove a review.
     """
@@ -700,7 +430,7 @@ def api_remove():
     return json_success('removed review #%i' % item['review_id'])
 
 @reviews.route('/api/ratings/<app_id>')
-def api_ratings(app_id):
+def ratings(app_id):
     """
     Get the star ratings for a specific application.
     """
