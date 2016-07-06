@@ -75,7 +75,7 @@
   <tr>
     <th>Description</th>
     <td>
-<textarea cols="80" rows="10" name="description">{{ r.description }}</textarea>
+<textarea cols="80" rows="20" name="description">{{ r.description }}</textarea>
     </td>
   </tr>
 </table>
@@ -91,7 +91,15 @@
 <form name="myform" action="/admin/delete/{{ r.review_id }}" method="POST">
 <button class="action" type="submit">Delete</button>
 </form>
+
 {% endif %}
 </div>
+
+<a href="/admin/review/{{ r.review_id + 1 }}">
+<button class="action" type="submit">Next</button>
+</a>
+<a href="/admin/review/{{ r.review_id - 1 }}">
+<button class="action" type="submit">Previous</button>
+</a>
 
 {% endblock %}
