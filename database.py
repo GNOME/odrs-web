@@ -138,6 +138,16 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
 
+    def review_delete(self, review):
+        """ Deletes a review """
+        try:
+            cur = self._db.cursor()
+            cur.execute("DELETE FROM reviews WHERE review_id = %s;",
+                        (review.review_id,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        return True
+
     def review_remove(self, review_id, user_hash):
         """ Marks a review as removed """
         try:

@@ -180,6 +180,20 @@ def modify(review_id):
     db.review_modify(review)
     return redirect(url_for('.review', review_id=review_id))
 
+@admin.route('/delete/<review_id>', methods=['POST'])
+@login_required
+def delete(review_id):
+    """ Change details about a review """
+    try:
+        db = ReviewsDatabase(os.environ)
+        review = db.review_get_for_id(review_id)
+    except CursorError as e:
+        return error_internal(str(e))
+    if not review:
+        return error_internal('no review with that ID')
+    db.review_delete(review)
+    return redirect(url_for('.show_all'))
+
 @admin.route('/show_all')
 def show_all():
     """
