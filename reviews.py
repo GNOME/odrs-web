@@ -187,6 +187,8 @@ def app(app_id, user_hash=None):
     # add key if user_hash specified
     items_new = []
     for review in reviews:
+        if review.reported > 0:
+            continue
         item = review.__dict__
         if user_hash:
             item['user_skey'] = _get_user_key(user_hash, review.app_id)
@@ -232,6 +234,8 @@ def fetch():
     # add score for review using secret sauce
     items_new = []
     for review in reviews:
+        if review.reported > 0:
+            continue
 
         # limit to user specified karma
         if review.karma < item['karma']:
@@ -279,8 +283,11 @@ def all(user_hash=None):
 
     # the user specified a user_hash
     if user_hash:
-        for item in reviews:
-            item['user_skey'] = _get_user_key(user_hash, item.app_id)
+        for review in reviews:
+            if review.reported > 0:
+                continue
+            item = review.__dict__
+            item['user_skey'] = _get_user_key(user_hash, review.app_id)
 
     dat = json.dumps(reviews, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,

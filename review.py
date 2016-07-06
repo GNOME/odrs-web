@@ -19,3 +19,4 @@ class OdrsReview(object):
         self.user_display = None
         self.rating = 0
         self.date_deleted = None
+        self.reported = None

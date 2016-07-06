@@ -41,6 +41,7 @@ def _create_review(e):
     review.rating = int(e[12])
     if e[13]:
         review.date_deleted = int(e[13].strftime("%s"))
+    review.reported = int(e[14])
     return review
 
 def _create_event(e):
@@ -154,8 +155,8 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
                         "description, version, distro, karma_up, karma_down, "
-                        "user_hash, user_display, rating, date_deleted "
-                        "FROM reviews WHERE app_id=%s AND reported=0 AND "
+                        "user_hash, user_display, rating, date_deleted, reported "
+                        "FROM reviews WHERE app_id=%s AND "
                         "date_deleted=0 ORDER BY date_created DESC;",
                         (app_id,))
         except mdb.Error as e:
@@ -174,7 +175,7 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
                         "description, version, distro, karma_up, karma_down, "
-                        "user_hash, user_display, rating, date_deleted "
+                        "user_hash, user_display, rating, date_deleted, reported "
                         "FROM reviews WHERE review_id=%s LIMIT 1;",
                         (review_id,))
         except mdb.Error as e:
@@ -237,9 +238,8 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
                         "description, version, distro, karma_up, karma_down, "
-                        "user_hash, user_display, rating, date_deleted FROM reviews "
-                        "WHERE reported=0 "
-                        "ORDER BY date_created DESC;")
+                        "user_hash, user_display, rating, date_deleted, reported "
+                        "FROM reviews ORDER BY date_created DESC;")
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
