@@ -1,0 +1,66 @@
+{% extends "default.html" %}
+{% block title %}Analytics{% endblock %}
+
+{% block page_header %}
+<h1>Analytics</h1>
+{% endblock %}
+
+{% block content %}
+<script src="/static/Chart.js"></script>
+<script>
+Chart.defaults.global.animation = false;
+</script>
+{% endblock %}
+
+<!-- dynamic content -->
+{% block dyncontent %}
+
+<h2>Review Activity (month)</h2>
+<p>
+This graph shows the same requests handled by this service for each month.
+Clients typically cache metadata for 30 days and then will re-request
+reviews as required.
+</p>
+
+<canvas id="reviewsChart" width="1200" height="400"></canvas>
+<script>
+var ctx = document.getElementById("reviewsChart").getContext("2d");
+var data = {
+    labels: {{labels|safe}},
+    datasets: [
+        {
+            label: "Requests",
+            fillColor: "rgba(120,120,120,0.15)",
+            strokeColor: "rgba(120,120,120,0.15)",
+            pointColor: "rgba(120,120,120,0.20)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(220,220,220,1)",
+            data: {{data_requests|safe}}
+        },
+        {
+            label: "Users",
+            fillColor: "rgba(20,120,220,0.2)",
+            strokeColor: "rgba(20,120,120,0.1)",
+            pointColor: "rgba(20,120,120,0.3)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(220,220,220,1)",
+            data: {{data_users|safe}}
+        },
+        {
+            label: "Submitted",
+            fillColor: "rgba(251,14,5,0.2)",
+            strokeColor: "rgba(151,14,5,0.1)",
+            pointColor: "rgba(151,14,5,0.3)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(151,187,205,1)",
+            data: {{data_submitted|safe}}
+        },
+    ]
+};
+var myLineChartDays = new Chart(ctx).Line(data, null);
+</script>
+
+{% endblock %}

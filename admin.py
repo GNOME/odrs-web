@@ -49,110 +49,41 @@ def error_permission_denied(msg=None):
     return render_template('error.html'), 401
 
 
-@admin.route('/analytics')
+@admin.route('/graph_month')
 @login_required
-def analytics():
+def graph_month():
     """
-    Show nice analytics graphs.
+    Show nice graph graphs.
     """
     try:
         db = ReviewsDatabase(os.environ)
     except CursorError as e:
         return error_internal(str(e))
-
-    # add days
     data_fetch = db.get_stats_by_interval(30, 1, 'fetching review')
     data_review = db.get_stats_by_interval(30, 1, 'reviewed')
-    html = '<canvas id="reviewsChartDays" width="1200" height="400"></canvas>'
-    html += '<script>'
-    html += 'var ctx = document.getElementById("reviewsChartDays").getContext("2d");'
-    html += 'var data = {'
-    html += '    labels: %s,' % _get_chart_labels_days()[::-1]
-    html += '    datasets: ['
-    html += '        {'
-    html += '            label: "Requests",'
-    html += '            fillColor: "rgba(120,120,120,0.15)",'
-    html += '            strokeColor: "rgba(120,120,120,0.15)",'
-    html += '            pointColor: "rgba(120,120,120,0.20)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_fetch[0][::-1]
-    html += '        },'
-    html += '        {'
-    html += '            label: "Users",'
-    html += '            fillColor: "rgba(20,120,220,0.2)",'
-    html += '            strokeColor: "rgba(20,120,120,0.1)",'
-    html += '            pointColor: "rgba(20,120,120,0.3)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_fetch[1][::-1]
-    html += '        },'
-    html += '        {'
-    html += '            label: "Submitted",'
-    html += '            fillColor: "rgba(251,14,5,0.2)",'
-    html += '            strokeColor: "rgba(151,14,5,0.1)",'
-    html += '            pointColor: "rgba(151,14,5,0.3)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(151,187,205,1)",'
-    html += '            data: %s' % data_review[0][::-1]
-    html += '        },'
-    html += '    ]'
-    html += '};'
-    html += 'var myLineChartDays = new Chart(ctx).Line(data, null);'
-    html += '</script>'
-    html_perday = html
+    return render_template('graph-month.html',
+                           labels=_get_chart_labels_days()[::-1],
+                           data_requests=data_fetch[0][::-1],
+                           data_users=data_fetch[1][::-1],
+                           data_submitted=data_review[0][::-1])
 
-    # add months
+@admin.route('/graph_year')
+@login_required
+def graph_year():
+    """
+    Show nice graph graphs.
+    """
+    try:
+        db = ReviewsDatabase(os.environ)
+    except CursorError as e:
+        return error_internal(str(e))
     data_fetch = db.get_stats_by_interval(12, 30, 'fetching review')
     data_review = db.get_stats_by_interval(12, 30, 'reviewed')
-    html = '<canvas id="reviewsChartMonths" width="1200" height="400"></canvas>'
-    html += '<script>'
-    html += 'var ctx = document.getElementById("reviewsChartMonths").getContext("2d");'
-    html += 'var data = {'
-    html += '    labels: %s,' % _get_chart_labels_months()[::-1]
-    html += '    datasets: ['
-    html += '        {'
-    html += '            label: "Fetching",'
-    html += '            fillColor: "rgba(120,120,120,0.15)",'
-    html += '            strokeColor: "rgba(120,120,120,0.15)",'
-    html += '            pointColor: "rgba(120,120,120,0.20)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_fetch[0][::-1]
-    html += '        },'
-    html += '        {'
-    html += '            label: "Users",'
-    html += '            fillColor: "rgba(20,120,220,0.2)",'
-    html += '            strokeColor: "rgba(20,120,120,0.1)",'
-    html += '            pointColor: "rgba(20,120,120,0.3)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(220,220,220,1)",'
-    html += '            data: %s' % data_fetch[1][::-1]
-    html += '        },'
-    html += '        {'
-    html += '            label: "Submitted",'
-    html += '            fillColor: "rgba(251,14,5,0.2)",'
-    html += '            strokeColor: "rgba(151,14,5,0.1)",'
-    html += '            pointColor: "rgba(151,14,5,0.3)",'
-    html += '            pointStrokeColor: "#fff",'
-    html += '            pointHighlightFill: "#fff",'
-    html += '            pointHighlightStroke: "rgba(151,187,205,1)",'
-    html += '            data: %s' % data_review[0][::-1]
-    html += '        },'
-    html += '    ]'
-    html += '};'
-    html += 'var myLineChartMonths = new Chart(ctx).Line(data, null);'
-    html += '</script>'
-    html_permonth = html
-
-    return render_template('analytics.html',
-                           dyncontent_perday=html_perday,
-                           dyncontent_permonth=html_permonth)
+    return render_template('graph-year.html',
+                           labels=_get_chart_labels_months()[::-1],
+                           data_requests=data_fetch[0][::-1],
+                           data_users=data_fetch[1][::-1],
+                           data_submitted=data_review[0][::-1])
 
 @admin.route('/stats')
 @login_required
