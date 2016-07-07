@@ -54,10 +54,12 @@
     <th>Locale</th>
     <td>
       <textarea cols="10" rows="1" name="locale">{{ r.locale }}</textarea>
+{% if current_user.is_authenticated %}
 {% if not r.locale.startswith('en_') %}
 <a href="/admin/englishify/{{ r.review_id }}">
 <button class="inline" type="button">Englishify</button>
 </a>
+{% endif %}
 {% endif %}
     </td>
   </tr>
