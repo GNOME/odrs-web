@@ -513,6 +513,14 @@ class ReviewsDatabase(object):
         res = cur.fetchall()
         item['NumberUniqueDistros'] = int(res[0][0])
 
+        # unique apps
+        try:
+            cur.execute("SELECT COUNT(DISTINCT(app_id)) FROM reviews;")
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        item['NumberUniqueApps'] = int(res[0][0])
+
         # unique distros
         try:
             cur.execute("SELECT COUNT(*) FROM reviews WHERE reported > 0;")
