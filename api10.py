@@ -13,7 +13,7 @@ from flask import Blueprint, Response, request
 from database import ReviewsDatabase, CursorError
 from review import OdrsReview
 
-reviews = Blueprint('reviews', __name__, url_prefix='/reviews')
+api = Blueprint('api10', __name__, url_prefix='/')
 
 def _get_user_key(user_hash, app_id):
     salt = os.environ['ODRS_REVIEWS_SECRET']
@@ -65,7 +65,7 @@ def _get_review_score(review, item):
         score = score + 100
     return score + (review.karma * 2)
 
-@reviews.errorhandler(400)
+@api.errorhandler(400)
 def json_error(msg=None, errcode=400):
     """ Error handler: JSON output """
     item = {}
@@ -77,7 +77,7 @@ def json_error(msg=None, errcode=400):
                     status=errcode, \
                     mimetype="application/json")
 
-@reviews.errorhandler(401)
+@api.errorhandler(401)
 def error_permission_denied(msg=None):
     """ Error handler: Permission Denied """
     return json_error(msg, 401)
@@ -101,7 +101,7 @@ def _check_str(val):
         return False
     return True
 
-@reviews.route('/api/submit', methods=['POST'])
+@api.route('/api/submit', methods=['POST'])
 def submit():
     """
     Submits a new review.
@@ -171,8 +171,8 @@ def submit():
         return json_error(str(e))
     return json_success()
 
-@reviews.route('/api/app/<app_id>/<user_hash>')
-@reviews.route('/api/app/<app_id>')
+@api.route('/api/app/<app_id>/<user_hash>')
+@api.route('/api/app/<app_id>')
 def app(app_id, user_hash=None):
     """
     Return details about an application.
@@ -199,7 +199,7 @@ def app(app_id, user_hash=None):
                     status=200, \
                     mimetype="application/json")
 
-@reviews.route('/api/fetch', methods=['POST'])
+@api.route('/api/fetch', methods=['POST'])
 def fetch():
     """
     Return details about an application.
@@ -268,8 +268,8 @@ def fetch():
                     status=200, \
                     mimetype="application/json")
 
-@reviews.route('/api/all/<user_hash>')
-@reviews.route('/api/all')
+@api.route('/api/all/<user_hash>')
+@api.route('/api/all')
 def all(user_hash=None):
     """
     Return all the reviews on the server as a JSON object.
@@ -294,7 +294,7 @@ def all(user_hash=None):
                     status=200, \
                     mimetype="application/json")
 
-@reviews.route('/api/moderate/<user_hash>')
+@api.route('/api/moderate/<user_hash>')
 def moderate(user_hash):
     """
     Return all the reviews on the server the user can moderate.
@@ -382,35 +382,35 @@ def vote(val):
         return json_error(str(e))
     return json_success('voted #%i %i' % (item['review_id'], val))
 
-@reviews.route('/api/upvote', methods=['POST'])
+@api.route('/api/upvote', methods=['POST'])
 def upvote():
     """
     Upvote an existing review by one karma point.
     """
     return vote(1)
 
-@reviews.route('/api/downvote', methods=['POST'])
+@api.route('/api/downvote', methods=['POST'])
 def downvote():
     """
     Downvote an existing review by one karma point.
     """
     return vote(-1)
 
-@reviews.route('/api/dismiss', methods=['POST'])
+@api.route('/api/dismiss', methods=['POST'])
 def dismiss():
     """
     Dismiss a review without rating it up or down.
     """
     return vote(0)
 
-@reviews.route('/api/report', methods=['POST'])
+@api.route('/api/report', methods=['POST'])
 def report():
     """
     Report a review for abuse.
     """
     return vote(-5)
 
-@reviews.route('/api/remove', methods=['POST'])
+@api.route('/api/remove', methods=['POST'])
 def remove():
     """
     Remove a review.
@@ -451,7 +451,7 @@ def remove():
         return json_error(str(e))
     return json_success('removed review #%i' % item.review_id)
 
-@reviews.route('/api/ratings/<app_id>')
+@api.route('/api/ratings/<app_id>')
 def ratings(app_id):
     """
     Get the star ratings for a specific application.
