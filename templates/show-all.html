@@ -7,6 +7,11 @@
 
 {% block content %}
 
+{% if reviews|length == 0 %}
+<p>
+  There are no results for this query.
+</p>
+{% else %}
 <table class="history">
   <tr>
     <th>#</th>
@@ -45,6 +50,7 @@
 {% endfor %}
 
 </table>
+{% endif %}
 
 
 {% endblock %}

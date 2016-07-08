@@ -244,8 +244,6 @@ def show_all():
         reviews = db.review_get_all()
     except CursorError as e:
         return error_internal(str(e))
-    if len(reviews) == 0:
-        return error_internal('No reviews available!')
     return render_template('show-all.html', reviews=reviews)
 
 @admin.route('/show_reported')
@@ -258,8 +256,6 @@ def show_reported():
         reviews = db.review_get_all_reported()
     except CursorError as e:
         return error_internal(str(e))
-    if len(reviews) == 0:
-        return error_internal('No reviews available!')
     return render_template('show-all.html', reviews=reviews)
 
 @admin.route('/user/<user_hash>')
@@ -272,6 +268,4 @@ def user(user_hash):
         reviews = db.review_get_all_for_user_hash(user_hash)
     except CursorError as e:
         return error_internal(str(e))
-    if len(reviews) == 0:
-        return error_internal('No reviews available!')
     return render_template('show-all.html', reviews=reviews)
