@@ -449,7 +449,7 @@ def remove():
                       "removed review")
     except CursorError as e:
         return json_error(str(e))
-    return json_success('removed review #%i' % item.review_id)
+    return json_success('removed review #%i' % item['review_id'])
 
 @api.route('/api/ratings/<app_id>')
 def rating_for_id(app_id):
