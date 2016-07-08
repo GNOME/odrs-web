@@ -452,7 +452,7 @@ def remove():
     return json_success('removed review #%i' % item.review_id)
 
 @api.route('/api/ratings/<app_id>')
-def ratings(app_id):
+def rating_for_id(app_id):
     """
     Get the star ratings for a specific application.
     """
@@ -463,6 +463,28 @@ def ratings(app_id):
         return json_error(str(e))
 
     dat = json.dumps(ratings, sort_keys=True, indent=4, separators=(',', ': '))
+    return Response(response=dat,
+                    status=200, \
+                    mimetype="application/json")
+
+@api.route('/api/ratings')
+def ratings():
+    """
+    Get the star ratings for a specific application.
+    """
+    item = {}
+    try:
+        db = ReviewsDatabase(os.environ)
+        app_ids = db.get_all_apps()
+        for app_id in app_ids:
+            ratings = db.reviews_get_rating_for_app_id(app_id, 2)
+            if len(ratings) == 0:
+                continue
+            item[app_id] = ratings
+    except CursorError as e:
+        return json_error(str(e))
+
+    dat = json.dumps(item, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
                     mimetype="application/json")

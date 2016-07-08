@@ -410,7 +410,7 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
 
-    def reviews_get_rating_for_app_id(self, app_id):
+    def reviews_get_rating_for_app_id(self, app_id, min_total=1):
         """ Gets the ratings information for the application """
         try:
             cur = self._db.cursor()
@@ -430,6 +430,8 @@ class ReviewsDatabase(object):
             return []
         item = {}
         item['total'] = int(res[0])
+        if item['total'] < min_total:
+            return []
         for i in range(6):
             if res[i + 1]:
                 item['star%i' % i] = int(res[i + 1])
@@ -452,6 +454,19 @@ class ReviewsDatabase(object):
         data = []
         for en in res:
             data.append((en[0], en[1]))
+        return data
+
+    def get_all_apps(self):
+        """ Returns interesting statistics for the webapp """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT DISTINCT(app_id) FROM reviews ORDER BY app_id;")
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        data = []
+        for en in res:
+            data.append(en[0])
         return data
 
     def get_stats(self):
