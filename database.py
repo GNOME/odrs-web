@@ -442,6 +442,22 @@ class ReviewsDatabase(object):
                 item['star%i' % i] = 0
         return item
 
+    def get_stats_distro(self, limit=10):
+        """ Returns distro stats for reviews """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT DISTINCT(distro), COUNT(distro) AS total "
+                        "FROM reviews GROUP BY distro ORDER BY total DESC "
+                        "LIMIT %s;",
+                        (limit,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        data = []
+        for en in res:
+            data.append((en[0], en[1]))
+        return data
+
     def get_stats_fetch(self, msg, limit=50):
         """ Returns interesting statistics for the webapp """
         try:

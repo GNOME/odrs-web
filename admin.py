@@ -121,6 +121,28 @@ def stats():
         results.append((item, stats[item]))
     return render_template('stats.html', results=results)
 
+@admin.route('/distros')
+@login_required
+def distros():
+    """
+    Return the statistics page as HTML.
+    """
+    try:
+        db = ReviewsDatabase(os.environ)
+        stats = db.get_stats_distro(8)
+    except CursorError as e:
+        return error_internal(str(e))
+    labels = []
+    data = []
+    for s in stats:
+        name = s[0]
+        for suffix in [' Linux', ' GNU/Linux', ' OS', ' Linux']:
+            if name.endswith(suffix):
+                name = name[:-len(suffix)]
+        labels.append(name)
+        data.append(s[1])
+    return render_template('distros.html', labels=labels, data=data)
+
 @admin.context_processor
 def utility_processor():
     def format_rating(rating):

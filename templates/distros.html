@@ -1,0 +1,36 @@
+{% extends "default.html" %}
+{% block title %}Statistics{% endblock %}
+
+{% block page_header %}
+<h1>Reviews from Distributions</h1>
+{% endblock %}
+
+{% block content %}
+<script src="/static/Chart.js"></script>
+<script>
+Chart.defaults.global.animation = false;
+</script>
+
+<canvas id="reviewsChart" width="800" height="400"></canvas>
+<script>
+var ctx = document.getElementById("reviewsChart").getContext("2d");
+var data = {
+    labels: {{labels|safe}},
+    datasets: [
+        {
+            label: "Distributions",
+            fillColor: "rgba(20,120,220,0.2)",
+            strokeColor: "rgba(20,120,120,0.1)",
+            pointColor: "rgba(20,120,120,0.3)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(220,220,220,1)",
+            data: {{data|safe}}
+        },
+    ]
+};
+var myBarChartDistros = new Chart(ctx).Bar(data, null);
+</script>
+
+
+{% endblock %}
