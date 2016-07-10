@@ -22,8 +22,17 @@
     <td>{{ format_timestamp(r.date_created) }}</td>
   </tr>
   <tr>
-    <th>Deleted</th>
-    <td>{{ format_timestamp(r.date_deleted) }}</td>
+    <th>Removed</th>
+    <td>
+      {{ format_timestamp(r.date_deleted) }}
+{% if current_user.is_authenticated %}
+{% if r.date_deleted %}
+<a href="/admin/unremove/{{ r.review_id }}">
+<button class="inline" type="button">Unremove</button>
+</a>
+{% endif %}
+{% endif %}
+    </td>
   </tr>
   <tr>
     <th>Karma</th>

@@ -106,7 +106,7 @@ class ReviewsDatabase(object):
                         "distro = %s, locale = %s, "
                         "summary = %s, description = %s, "
                         "user_display = %s, reported = %s, "
-                        "user_hash = %s "
+                        "user_hash = %s, date_deleted = %s "
                         "WHERE review_id = %s;",
                         (review.version,
                          review.distro,
@@ -116,6 +116,7 @@ class ReviewsDatabase(object):
                          review.user_display,
                          review.reported,
                          review.user_hash,
+                         review.date_deleted,
                          review.review_id,))
         except mdb.Error as e:
             raise CursorError(cur, e)
