@@ -116,7 +116,7 @@ class ReviewsDatabase(object):
                          review.user_display,
                          review.reported,
                          review.user_hash,
-                         review.date_deleted,
+                         review.date_deleted or 0,
                          review.review_id,))
         except mdb.Error as e:
             raise CursorError(cur, e)
