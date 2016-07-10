@@ -14,9 +14,9 @@
 {% block navigation %}
 <ul class="navigation">
   <li class="navigation"><a class="navigation" href="/">Home</a></li>
-  <li class="navigation"><a class="navigation" href="/admin/show_all">All Reviews</a></li>
+  <li class="navigation"><a class="navigation" href="/admin/show/all">All Reviews</a></li>
 {% if current_user.is_authenticated %}
-  <li class="navigation"><a class="navigation" href="/admin/show_reported">Reported</a></li>
+  <li class="navigation"><a class="navigation" href="/admin/show/reported">Reported</a></li>
   <li class="navigation"><a class="navigation" href="/admin/stats">Statistics</a></li>
   <li class="navigation"><a class="navigation" href="/admin/popularity">Popularity</a></li>
   <li class="navigation"><a class="navigation" href="/admin/distros">Distributions</a></li>

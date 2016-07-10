@@ -272,7 +272,7 @@ def delete(review_id):
     """ Ask for confirmation to delete a review """
     return render_template('delete.html', review_id=review_id)
 
-@admin.route('/show_all')
+@admin.route('/show/all')
 def show_all():
     """
     Return all the reviews on the server as HTML.
@@ -284,26 +284,66 @@ def show_all():
         return error_internal(str(e))
     return render_template('show-all.html', reviews=reviews)
 
-@admin.route('/show_reported')
+@admin.route('/show/reported')
 def show_reported():
     """
-    Return all the reviews on the server as HTML.
+    Return all the reported reviews on the server as HTML.
     """
+    reviews_filtered = []
     try:
         db = ReviewsDatabase(os.environ)
-        reviews = db.review_get_all_reported()
+        reviews = db.review_get_all()
+        for review in reviews:
+            if review.reported > 0:
+                reviews_filtered.append(review)
     except CursorError as e:
         return error_internal(str(e))
-    return render_template('show-all.html', reviews=reviews)
+    return render_template('show-all.html', reviews=reviews_filtered)
 
-@admin.route('/user/<user_hash>')
-def user(user_hash):
+@admin.route('/show/user/<user_hash>')
+def show_user(user_hash):
     """
     Return all the reviews from a user on the server as HTML.
     """
+    reviews_filtered = []
     try:
         db = ReviewsDatabase(os.environ)
-        reviews = db.review_get_all_for_user_hash(user_hash)
+        reviews = db.review_get_all()
+        for review in reviews:
+            if review.user_hash == user_hash:
+                reviews_filtered.append(review)
     except CursorError as e:
         return error_internal(str(e))
-    return render_template('show-all.html', reviews=reviews)
+    return render_template('show-all.html', reviews=reviews_filtered)
+
+@admin.route('/show/app/<app_id>')
+def show_app(app_id):
+    """
+    Return all the reviews from a user on the server as HTML.
+    """
+    reviews_filtered = []
+    try:
+        db = ReviewsDatabase(os.environ)
+        reviews = db.review_get_all()
+        for review in reviews:
+            if review.app_id == app_id:
+                reviews_filtered.append(review)
+    except CursorError as e:
+        return error_internal(str(e))
+    return render_template('show-all.html', reviews=reviews_filtered)
+
+@admin.route('/show/lang/<locale>')
+def show_lang(locale):
+    """
+    Return all the reviews from a user on the server as HTML.
+    """
+    reviews_filtered = []
+    try:
+        db = ReviewsDatabase(os.environ)
+        reviews = db.review_get_all()
+        for review in reviews:
+            if review.locale == locale:
+                reviews_filtered.append(review)
+    except CursorError as e:
+        return error_internal(str(e))
+    return render_template('show-all.html', reviews=reviews_filtered)

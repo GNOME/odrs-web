@@ -11,7 +11,14 @@
 <table class="history">
   <tr>
     <th>Application</th>
-    <td>{{ r.app_id }}</td>
+    <td>
+      <textarea cols="40" rows="1" name="app_id">{{ r.app_id }}</textarea>
+{% if current_user.is_authenticated %}
+      <a href="/admin/show/app/{{ r.app_id }}">
+        <button class="inline" type="button">Show All</button>
+      </a>
+{% endif %}
+    </td>
   </tr>
   <tr>
     <th>Rating</th>
@@ -27,9 +34,9 @@
       {{ format_timestamp(r.date_deleted) }}
 {% if current_user.is_authenticated %}
 {% if r.date_deleted %}
-<a href="/admin/unremove/{{ r.review_id }}">
-<button class="inline" type="button">Unremove</button>
-</a>
+      <a href="/admin/unremove/{{ r.review_id }}">
+        <button class="inline" type="button">Unremove</button>
+      </a>
 {% endif %}
 {% endif %}
     </td>
@@ -43,16 +50,21 @@
     <td>
       {{ r.reported }}
 {% if r.reported > 0 %}
-<a href="/admin/unreport/{{ r.review_id }}">
-<button class="inline" type="button">Unreport</button>
-</a>
+      <a href="/admin/unreport/{{ r.review_id }}">
+        <button class="inline" type="button">Unreport</button>
+      </a>
 {% endif %}
     </td>
   </tr>
   <tr>
     <th>User Hash</th>
     <td>
-      <textarea cols="80" rows="1" name="user_hash">{{ r.user_hash }}</textarea>
+      <textarea cols="40" rows="1" name="user_hash">{{ r.user_hash }}</textarea>
+{% if current_user.is_authenticated %}
+      <a href="/admin/show/user/{{ r.user_hash }}">
+        <button class="inline" type="button">Show All</button>
+      </a>
+{% endif %}
     </td>
   </tr>
   <tr>
@@ -66,10 +78,13 @@
     <td>
       <textarea cols="10" rows="1" name="locale">{{ r.locale }}</textarea>
 {% if current_user.is_authenticated %}
+      <a href="/admin/show/lang/{{ r.locale }}">
+        <button class="inline" type="button">Show All</button>
+      </a>
 {% if not r.locale.startswith('en_') %}
-<a href="/admin/englishify/{{ r.review_id }}">
-<button class="inline" type="button">Englishify</button>
-</a>
+      <a href="/admin/englishify/{{ r.review_id }}">
+        <button class="inline" type="button">Englishify</button>
+      </a>
 {% endif %}
 {% endif %}
     </td>
