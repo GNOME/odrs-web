@@ -347,3 +347,17 @@ def show_lang(locale):
     except CursorError as e:
         return error_internal(str(e))
     return render_template('show-all.html', reviews=reviews_filtered)
+
+@admin.route('/users/all')
+@login_required
+def users_all():
+    """
+    Return all the users as HTML.
+    """
+    try:
+        db = ReviewsDatabase(os.environ)
+        users1 = db.get_users_by_karma(best=True)
+        users2 = db.get_users_by_karma(best=False)
+    except CursorError as e:
+        return error_internal(str(e))
+    return render_template('users.html', users1=users1, users2=users2)

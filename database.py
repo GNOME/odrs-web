@@ -357,6 +357,26 @@ class ReviewsDatabase(object):
             return None
         return _create_user(res)
 
+    def get_users_by_karma(self, best=True):
+        """ Returns interesting statistics for the webapp """
+        try:
+            cur = self._db.cursor()
+            if best:
+                cur.execute("SELECT user_id, date_created, "
+                            "user_hash, karma, is_banned FROM users2 "
+                            "WHERE karma != 0 ORDER BY karma DESC LIMIT 10;")
+            else:
+                cur.execute("SELECT user_id, date_created, "
+                            "user_hash, karma, is_banned FROM users2 "
+                            "WHERE karma != 0 ORDER BY karma ASC LIMIT 10;")
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        results = cur.fetchall()
+        data = []
+        for res in results:
+            data.append(_create_user(res))
+        return data
+
     def user_update_karma(self, user_hash, val):
         """ Update the request time for a specific user ID """
 

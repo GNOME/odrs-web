@@ -1,0 +1,66 @@
+{% extends "default.html" %}
+{% block title %}Users{% endblock %}
+
+{% block page_header %}
+<h1>User Statistics</h1>
+{% endblock %}
+
+{% block content %}
+
+<h2>Most Awesome Users</h2>
+<table class="history">
+  <tr>
+    <th>User</th>
+    <th>Karma</th>
+    <th>Hash</th>
+    <th>Created</th>
+    <th>Banned</th>
+  </tr>
+{% for u in users1 %}
+  <tr>
+    <td> {{ u.id }} </td>
+    <td> {{ u.karma }} </td>
+    <td>
+{% if current_user.is_authenticated %}
+      <a href="/admin/show/user/{{ u.user_hash }}">
+        <code>{{ u.user_hash }}</code>
+      </a>
+{% else %}
+      <code>{{ u.user_hash }}</code>
+{% endif %}
+    </td>
+    <td> {{ format_timestamp(u.date_created) }} </td>
+    <td> {{ u.is_banned }} </td>
+  </tr>
+{% endfor %}
+</table>
+
+<h2>Haters Gonna Hate</h2>
+<table class="history">
+  <tr>
+    <th>User</th>
+    <th>Karma</th>
+    <th>Hash</th>
+    <th>Created</th>
+    <th>Banned</th>
+  </tr>
+{% for u in users2 %}
+  <tr>
+    <td> {{ u.id }} </td>
+    <td> {{ u.karma }} </td>
+    <td>
+{% if current_user.is_authenticated %}
+      <a href="/admin/show/user/{{ u.user_hash }}">
+        <code>{{ u.user_hash }}</code>
+      </a>
+{% else %}
+      <code>{{ u.user_hash }}</code>
+{% endif %}
+    </td>
+    <td> {{ format_timestamp(u.date_created) }} </td>
+    <td> {{ u.is_banned }} </td>
+  </tr>
+{% endfor %}
+</table>
+
+{% endblock %}
