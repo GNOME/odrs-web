@@ -105,7 +105,8 @@ class ReviewsDatabase(object):
             cur.execute("UPDATE reviews SET version = %s, "
                         "distro = %s, locale = %s, "
                         "summary = %s, description = %s, "
-                        "user_display = %s, reported = %s "
+                        "user_display = %s, reported = %s, "
+                        "user_hash = %s "
                         "WHERE review_id = %s;",
                         (review.version,
                          review.distro,
@@ -114,6 +115,7 @@ class ReviewsDatabase(object):
                          review.description,
                          review.user_display,
                          review.reported,
+                         review.user_hash,
                          review.review_id,))
         except mdb.Error as e:
             raise CursorError(cur, e)

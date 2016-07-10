@@ -174,6 +174,7 @@ def modify(review_id):
     review.distro = request.form['distro']
     review.locale = request.form['locale']
     review.user_display = request.form['user_display']
+    review.user_hash = request.form['user_hash']
     review.description = request.form['description']
     review.summary = request.form['summary']
     review.version = request.form['version']
