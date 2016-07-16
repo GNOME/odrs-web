@@ -7,6 +7,7 @@
 import os
 import datetime
 import calendar
+from math import ceil
 
 from flask import Blueprint, abort, request, flash, render_template, redirect, url_for
 from flask.ext.login import login_required
@@ -34,6 +35,38 @@ def _get_chart_labels_days():
         then = now - datetime.timedelta(i)
         labels.append("%02i-%02i-%02i" % (then.year, then.month, then.day))
     return labels
+
+class Pagination(object):
+
+    def __init__(self, page, per_page, total_count):
+        self.page = page
+        self.per_page = per_page
+        self.total_count = total_count
+
+    @property
+    def pages(self):
+        return int(ceil(self.total_count / float(self.per_page)))
+
+    @property
+    def has_prev(self):
+        return self.page > 1
+
+    @property
+    def has_next(self):
+        return self.page < self.pages
+
+    def iter_pages(self, left_edge=2, left_current=2,
+                   right_current=5, right_edge=2):
+        last = 0
+        for num in range(1, self.pages + 1):
+            if num <= left_edge or \
+               (num > self.page - left_current - 1 and \
+                num < self.page + right_current) or \
+               num > self.pages - right_edge:
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
 
 @admin.errorhandler(400)
 def error_internal(msg=None, errcode=400):
@@ -163,9 +196,15 @@ def utility_processor():
             return 'n/a'
         return datetime.datetime.fromtimestamp(tmp).strftime('%Y-%m-%d %H:%M:%S')
 
+    def url_for_other_page(page):
+        args = request.view_args.copy()
+        args['page'] = page
+        return url_for(request.endpoint, **args)
+
     return dict(format_rating=format_rating,
                 format_truncate=format_truncate,
-                format_timestamp=format_timestamp)
+                format_timestamp=format_timestamp,
+                url_for_other_page=url_for_other_page)
 
 @admin.route('/review/<review_id>')
 def review(review_id):
@@ -271,8 +310,9 @@ def delete(review_id):
     """ Ask for confirmation to delete a review """
     return render_template('delete.html', review_id=review_id)
 
-@admin.route('/show/all')
-def show_all():
+@admin.route('/show/all', defaults={'page': 1})
+@admin.route('/show/all/page/<int:page>')
+def show_all(page):
     """
     Return all the reviews on the server as HTML.
     """
@@ -281,7 +321,15 @@ def show_all():
         reviews = db.review_get_all()
     except CursorError as e:
         return error_internal(str(e))
-    return render_template('show-all.html', reviews=reviews)
+    if not reviews and page != 1:
+        abort(404)
+    reviews_per_page = 20
+    pagination = Pagination(page, reviews_per_page, len(reviews))
+    # FIXME: do this database side...
+    reviews = reviews[(page-1) * reviews_per_page:page * reviews_per_page]
+    return render_template('show-all.html',
+                           pagination=pagination,
+                           reviews=reviews)
 
 @admin.route('/show/reported')
 def show_reported():
