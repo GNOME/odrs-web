@@ -8,7 +8,7 @@ import os
 import datetime
 import calendar
 
-from flask import Blueprint, Response, request, flash, render_template, redirect, url_for
+from flask import Blueprint, abort, request, flash, render_template, redirect, url_for
 from flask.ext.login import login_required
 
 from database import ReviewsDatabase, CursorError
