@@ -4,7 +4,6 @@
 # Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
 # Licensed under the GNU General Public License Version 3
 
-import json
 import os
 import datetime
 import calendar
