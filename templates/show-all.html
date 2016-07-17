@@ -15,15 +15,11 @@
 <table class="history">
   <tr>
     <th>#</th>
-    <th>Created</th>
-    <th>Deleted</th>
+    <th>Created / Deleted</th>
     <th>Application</th>
     <th>Version</th>
     <th>Rating</th>
-    <th>Karma</th>
-    <th>Rprt</th>
     <th>Distro</th>
-    <th>User</th>
     <th>Locale</th>
     <th>Name</th>
     <th>Summary</th>
@@ -33,15 +29,25 @@
 {% for r in reviews %}
   <tr>
     <td class="history"><a href="/admin/review/{{ r.review_id }}">{{ r.review_id }}</a></td>
-    <td class="history">{{ format_timestamp(r.date_created) }}</td>
-    <td class="history">{{ format_timestamp(r.date_deleted) }}</td>
+    <td class="history">
+      {{ format_timestamp(r.date_created) }}
+{% if r.date_deleted %}
+      <br/>
+      <i class="important">{{ format_timestamp(r.date_deleted) }}</i>
+{% endif %}
+    </td>
     <td class="history">{{ r.app_id.replace('.desktop', '') }}</td>
     <td class="history">{{ r.version }}</td>
-    <td class="history">{{ format_rating(r.rating) }}</td>
-    <td class="history">{{ r.karma }}</td>
-    <td class="history">{{ r.reported }}</td>
+    <td class="history">
+{% if r.reported > 0 %}
+    <i class="important">
+    {{ format_rating(r.rating) }} [{{ r.karma }}]
+    </i>
+{% else %}
+    {{ format_rating(r.rating) }} [{{ r.karma }}]
+{% endif %}
+    </td>
     <td class="history">{{ r.distro }}</td>
-    <td class="history">{{ format_truncate(r.user_hash, 8) }}</td>
     <td class="history">{{ r.locale }}</td>
     <td class="history">{{ r.user_display }}</td>
     <td class="history">{{ format_truncate(r.summary, 20) }}</td>

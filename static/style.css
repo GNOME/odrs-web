@@ -22,6 +22,10 @@ h1, h2, h3 {
   text-align: left;
 }
 
+.important {
+  color: #ff0000;
+}
+
 .history td {
   padding: .5em .5em .5em 0;
 }
