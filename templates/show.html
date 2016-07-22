@@ -49,10 +49,12 @@
     <th>Reported</th>
     <td>
       {{ r.reported }}
+{% if current_user.is_authenticated %}
 {% if r.reported > 0 %}
       <a href="/admin/unreport/{{ r.review_id }}">
         <button class="inline" type="button">Unreport</button>
       </a>
+{% endif %}
 {% endif %}
     </td>
   </tr>
