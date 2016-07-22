@@ -57,8 +57,6 @@ def _locale_is_compatible(l1, l2):
 def _get_review_score(review, item):
     """ Gets a review score given certain parameters """
     score = 0
-    if not _locale_is_compatible(review.locale, item['locale']):
-        score = score - 1000
     if review.version != item['version']:
         score = score + 100
     if review.distro != item['distro']:
@@ -235,6 +233,10 @@ def fetch():
     items_new = []
     for review in reviews:
         if review.reported > 0:
+            continue
+
+        # the user isn't going to be able to read this
+        if not _locale_is_compatible(review.locale, item['locale']):
             continue
 
         # limit to user specified karma
