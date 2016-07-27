@@ -307,7 +307,8 @@ def all(user_hash=None):
                     mimetype="application/json")
 
 @api.route('/api/moderate/<user_hash>')
-def moderate(user_hash):
+@api.route('/api/moderate/<user_hash>/<locale>')
+def moderate(user_hash, locale=None):
     """
     Return all the reviews on the server the user can moderate.
     """
@@ -321,6 +322,8 @@ def moderate(user_hash):
     # only return reviews the user has not already voted on
     items_new = []
     for review in reviews:
+        if locale and not _locale_is_compatible(review.locale, locale):
+            continue
         if not db.vote_exists(review.review_id, user_hash):
             item = review.__dict__
             item['user_skey'] = _get_user_key(user_hash, review.app_id)
