@@ -20,10 +20,6 @@ class CursorError(Exception):
     def __str__(self):
         return repr(self.value)
 
-def _combine_karma(karma_up, karma_down):
-    """ This is required because society is broken """
-    return (karma_up * 5) - karma_down
-
 def _create_review(e):
     """ Parse a review """
     review = OdrsReview()
@@ -35,7 +31,8 @@ def _create_review(e):
     review.description = e[5]
     review.version = e[6]
     review.distro = e[7]
-    review.karma = _combine_karma(int(e[8]), int(e[9]))
+    review.karma_up = int(e[8])
+    review.karma_down = int(e[9])
     review.user_hash = e[10]
     review.user_display = e[11]
     review.rating = int(e[12])

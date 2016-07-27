@@ -7,6 +7,7 @@
 import json
 import os
 import hashlib
+import math
 
 from flask import Blueprint, Response, request
 
@@ -56,12 +57,23 @@ def _locale_is_compatible(l1, l2):
 
 def _get_review_score(review, item):
     """ Gets a review score given certain parameters """
-    score = 0
+    ku = review.karma_up
+    kd = review.karma_down
+
+    # hardcode some penalties
     if review.version != item['version']:
-        score = score + 100
+        kd = kd + 1
     if review.distro != item['distro']:
-        score = score + 100
-    return score + (review.karma * 2)
+        kd = kd + 1
+
+    # algorithm from http://www.evanmiller.org/how-not-to-sort-by-average-rating.html
+    wilson = 0
+    if ku > 0 or kd > 0:
+        wilson = ((ku + 1.9208) / (ku + kd) -
+                  1.96 * math.sqrt((ku * kd) / (ku + kd) + 0.9604) /
+                  (ku + kd)) / (1 + 3.8416 / (ku + kd))
+        wilson *= 100
+    return int(wilson)
 
 @api.errorhandler(400)
 def json_error(msg=None, errcode=400):

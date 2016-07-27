@@ -19,6 +19,8 @@
     <th>Application</th>
     <th>Version</th>
     <th>Rating</th>
+    <th>K&uarr;</th>
+    <th>K&darr;</th>
     <th>Distro</th>
     <th>Locale</th>
     <th>Name</th>
@@ -38,15 +40,13 @@
     </td>
     <td class="history">{{ r.app_id.replace('.desktop', '') }}</td>
     <td class="history">{{ r.version }}</td>
-    <td class="history">
+    <td class="history">{{ format_rating(r.rating) }}</td>
+    <td class="history">{{ r.karma_up }}</td>
 {% if r.reported > 0 %}
-    <i class="important">
-    {{ format_rating(r.rating) }} [{{ r.karma }}]
-    </i>
+    <td class="history"><i class="important">{{ r.karma_down }}</i></td>
 {% else %}
-    {{ format_rating(r.rating) }} [{{ r.karma }}]
+    <td class="history">{{ r.karma_down }}</td>
 {% endif %}
-    </td>
     <td class="history">{{ r.distro }}</td>
     <td class="history">{{ r.locale }}</td>
     <td class="history">{{ r.user_display }}</td>

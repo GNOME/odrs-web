@@ -14,7 +14,8 @@ class OdrsReview(object):
         self.description = None
         self.version = None
         self.distro = None
-        self.karma = 0
+        self.karma_up = 0
+        self.karma_down = 0
         self.user_hash = None
         self.user_display = None
         self.rating = 0
