@@ -149,7 +149,7 @@ def stats():
     except CursorError as e:
         return error_internal(str(e))
     results = []
-    for item in stats:
+    for item in sorted(stats):
         results.append((item, stats[item]))
     return render_template('stats.html', results=results)
 
