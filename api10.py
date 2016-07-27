@@ -206,7 +206,7 @@ def fetch():
         item = json.loads(request.data.decode('utf8'))
     except ValueError as e:
         return json_error(str(e))
-    for key in ['app_id', 'user_hash', 'locale', 'karma', 'distro', 'limit', 'version']:
+    for key in ['app_id', 'user_hash', 'locale', 'distro', 'limit', 'version']:
         if not key in item:
             return json_error('invalid data, expected %s' % key)
         if item[key] is None:
@@ -239,9 +239,7 @@ def fetch():
         if not _locale_is_compatible(review.locale, item['locale']):
             continue
 
-        # limit to user specified karma
-        if review.karma < item['karma']:
-            continue
+        # return all results
         item_new = review.__dict__
         item_new['user_skey'] = _get_user_key(item['user_hash'], review.app_id)
         item_new['score'] = _get_review_score(review, item)
