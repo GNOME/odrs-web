@@ -126,7 +126,7 @@ def popularity():
     except CursorError as e:
         return error_internal(str(e))
     results1 = []
-    for review in db.get_stats_fetch('fetching review'):
+    for review in db.get_analytics_fetch():
         results1.append((review[0].replace('.desktop', ''), review[1]))
     results2 = []
     for review in db.get_stats_fetch('reviewed'):

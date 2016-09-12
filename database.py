@@ -614,3 +614,19 @@ class ReviewsDatabase(object):
                 tmp = tmp + int(r[0])
             array.append(tmp)
         return array
+
+    def get_analytics_fetch(self, limit=50):
+        """ Returns interesting statistics for the webapp """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT DISTINCT app_id, SUM(fetch_cnt) AS total "
+                        "FROM analytics WHERE app_id IS NOT NULL "
+                        "GROUP BY app_id ORDER BY total DESC LIMIT %s;",
+                        (limit,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        data = []
+        for en in res:
+            data.append((en[0], en[1]))
+        return data
