@@ -71,10 +71,11 @@ can be used on the new instance.
               -P ${OPENSHIFT_MYSQL_DB_PORT:-3306} \
               -u ${OPENSHIFT_MYSQL_DB_USERNAME:-'admin'} \
               --password="$OPENSHIFT_MYSQL_DB_PASSWORD" \
-              odrs > app-root/data/backup.sql
-    rhc scp --app ${OPENSHIFT_APP}
+              odrs > app-root/data/backup-`date +%Y%m%d`.sql
+    exit
+    rhc scp --app ${OPENSHIFT_APP} \
             --namespace ${OPENSHIFT_NAMESPACE} \
-            download . app-root/data/backup.sql
+            download . app-root/data/backup-`date +%Y%m%d`.sql
 
 ## How do I restore from a backup ##
 
