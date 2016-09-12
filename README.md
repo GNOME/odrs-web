@@ -56,6 +56,12 @@ To set up the database tables do:
       message TEXT DEFAULT NULL,
       UNIQUE KEY id (eventlog_id)
     ) CHARSET=utf8;
+    CREATE TABLE analytics (
+      datestr INT DEFAULT 0,
+      app_id VARCHAR(64) DEFAULT NULL,
+      fetch_cnt INT DEFAULT 1,
+      UNIQUE (datestr,app_id)
+    ) CHARSET=utf8;
     CREATE INDEX date_created_idx ON eventlog2 (date_created);
 
 ## How do I backup the data ##
@@ -81,8 +87,8 @@ can be used on the new instance.
 
 If this is a fresh instance you want to set up using:
 
-    export OPENSHIFT_NAMESPACE=odrs
-    export OPENSHIFT_APP=testing|production
+    export OPENSHIFT_NAMESPACE=xdgapp
+    export OPENSHIFT_APP=apps
     rhc delete-app --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE}
     rhc create-app --type python-3.3 --scaling \
         --app ${OPENSHIFT_APP} --namespace ${OPENSHIFT_NAMESPACE} \

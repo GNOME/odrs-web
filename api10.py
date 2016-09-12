@@ -236,8 +236,7 @@ def fetch():
 
     try:
         db = ReviewsDatabase(os.environ)
-        db.event_info(_get_client_address(), item['user_hash'], item['app_id'],
-                      "fetching review")
+        db.analytics_inc_fetch(item['app_id'])
         reviews = db.review_get_for_app_id(item['app_id'])
     except CursorError as e:
         return json_error(str(e))

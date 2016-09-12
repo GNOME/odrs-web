@@ -68,6 +68,9 @@ def _password_hash(value):
     salt = 'odrs%%%'
     return hashlib.sha1(salt.encode('utf-8') + value.encode('utf-8')).hexdigest()
 
+def _get_datestr_from_dt(when):
+    return int("%04i%02i%02i" % (when.year, when.month, when.day))
+
 class ReviewsDatabase(object):
 
     def __init__(self, environ):
@@ -281,6 +284,19 @@ class ReviewsDatabase(object):
     def event_info(self, user_addr=None, user_hash=None, app_id=None, message=None):
         """ Adds an info item to the event log """
         self.event_warn(user_addr, user_hash, app_id, message, False)
+
+    def analytics_inc_fetch(self, app_id, when=None):
+        """ Increments the fetch count on one specific application """
+        try:
+            cur = self._db.cursor()
+            if not when:
+                when = datetime.date.today()
+            datestr = _get_datestr_from_dt(when)
+            cur.execute("INSERT INTO analytics (datestr,app_id) VALUES (%s, %s) "
+                        "ON DUPLICATE KEY UPDATE fetch_cnt=fetch_cnt+1;",
+                        (datestr, app_id,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
 
     def user_add(self, user_hash):
         """ Add a user to the database """
@@ -557,7 +573,6 @@ class ReviewsDatabase(object):
     def get_stats_by_interval(self, size, interval, msg):
         """ Gets stats data """
         cnt = []
-        cnt_unique = []
         now = datetime.date.today()
 
         # yes, there's probably a way to do this in one query
@@ -566,17 +581,36 @@ class ReviewsDatabase(object):
             start = now - datetime.timedelta((i * interval) + interval - 1)
             end = now - datetime.timedelta((i * interval) - 1)
             try:
-                cur.execute("SELECT COUNT(*), COUNT(DISTINCT(user_hash)) FROM eventlog2 "
+                cur.execute("SELECT COUNT(*) FROM eventlog2 "
                             "WHERE message = %s AND date_created BETWEEN %s "
                             "AND %s", (msg, start, end,))
             except mdb.Error as e:
                 raise CursorError(cur, e)
             res = cur.fetchone()
             cnt.append(int(res[0]))
-            cnt_unique.append(int(res[1]))
+        return cnt
 
-        # pack the data
-        data = []
-        data.append(cnt)
-        data.append(cnt_unique)
-        return data
+    def get_analytics_by_interval(self, size, interval):
+        """ Gets analytics data """
+        array = []
+        now = datetime.date.today()
+
+        # yes, there's probably a way to do this in one query
+        cur = self._db.cursor()
+        for i in range(size):
+            start = _get_datestr_from_dt(now - datetime.timedelta((i * interval) + interval - 1))
+            end = _get_datestr_from_dt(now - datetime.timedelta((i * interval) - 1))
+            try:
+                cur.execute("SELECT fetch_cnt FROM analytics WHERE "
+                            "datestr BETWEEN %s "
+                            "AND %s", (start, end,))
+            except mdb.Error as e:
+                raise CursorError(cur, e)
+            res = cur.fetchall()
+
+            # add all these up
+            tmp = 0
+            for r in res:
+                tmp = tmp + int(r[0])
+            array.append(tmp)
+        return array

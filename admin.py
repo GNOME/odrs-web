@@ -91,13 +91,12 @@ def graph_month():
         db = ReviewsDatabase(os.environ)
     except CursorError as e:
         return error_internal(str(e))
-    data_fetch = db.get_stats_by_interval(30, 1, 'fetching review')
+    data_fetch = db.get_analytics_by_interval(30, 1)
     data_review = db.get_stats_by_interval(30, 1, 'reviewed')
     return render_template('graph-month.html',
                            labels=_get_chart_labels_days()[::-1],
-                           data_requests=data_fetch[0][::-1],
-                           data_users=data_fetch[1][::-1],
-                           data_submitted=data_review[0][::-1])
+                           data_requests=data_fetch[::-1],
+                           data_submitted=data_review[::-1])
 
 @admin.route('/graph_year')
 @login_required
@@ -109,13 +108,12 @@ def graph_year():
         db = ReviewsDatabase(os.environ)
     except CursorError as e:
         return error_internal(str(e))
-    data_fetch = db.get_stats_by_interval(12, 30, 'fetching review')
+    data_fetch = db.get_analytics_by_interval(12, 30)
     data_review = db.get_stats_by_interval(12, 30, 'reviewed')
     return render_template('graph-year.html',
                            labels=_get_chart_labels_months()[::-1],
-                           data_requests=data_fetch[0][::-1],
-                           data_users=data_fetch[1][::-1],
-                           data_submitted=data_review[0][::-1])
+                           data_requests=data_fetch[::-1],
+                           data_submitted=data_review[::-1])
 
 @admin.route('/popularity')
 @login_required

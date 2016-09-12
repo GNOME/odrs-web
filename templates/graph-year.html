@@ -26,23 +26,13 @@ var data = {
     datasets: [
         {
             label: "Requests",
-            fillColor: "rgba(120,120,120,0.15)",
-            strokeColor: "rgba(120,120,120,0.15)",
-            pointColor: "rgba(120,120,120,0.20)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(220,220,220,1)",
-            data: {{data_requests|safe}}
-        },
-        {
-            label: "Users",
             fillColor: "rgba(20,120,220,0.2)",
             strokeColor: "rgba(20,120,120,0.1)",
             pointColor: "rgba(20,120,120,0.3)",
             pointStrokeColor: "#fff",
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(220,220,220,1)",
-            data: {{data_users|safe}}
+            data: {{data_requests|safe}}
         },
         {
             label: "Submitted",
