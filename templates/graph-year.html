@@ -2,7 +2,7 @@
 {% block title %}Analytics{% endblock %}
 
 {% block page_header %}
-<h1>Analytics</h1>
+<h1>Review Activity (month)</h1>
 {% endblock %}
 
 {% block content %}
@@ -11,13 +11,7 @@
 Chart.defaults.global.animation = false;
 </script>
 
-<h2>Review Activity (month)</h2>
-<p>
-This graph shows the same requests handled by this service for each month.
-Clients typically cache metadata for 30 days and then will re-request
-reviews as required.
-</p>
-
+<h2>Review Requests</h2>
 <canvas id="reviewsChart" width="1200" height="400"></canvas>
 <script>
 var ctx = document.getElementById("reviewsChart").getContext("2d");
@@ -34,6 +28,18 @@ var data = {
             pointHighlightStroke: "rgba(220,220,220,1)",
             data: {{data_requests|safe}}
         },
+    ]
+};
+var myLineChartDays = new Chart(ctx).Line(data, null);
+</script>
+
+<h2>Submitted Reviews</h2>
+<canvas id="reviewsChart2" width="1200" height="400"></canvas>
+<script>
+var ctx = document.getElementById("reviewsChart2").getContext("2d");
+var data = {
+    labels: {{labels|safe}},
+    datasets: [
         {
             label: "Submitted",
             fillColor: "rgba(251,14,5,0.2)",
@@ -46,7 +52,7 @@ var data = {
         },
     ]
 };
-var myLineChartDays = new Chart(ctx).Line(data, null);
+var myLineChartDays2 = new Chart(ctx).Line(data, null);
 </script>
 
 {% endblock %}
