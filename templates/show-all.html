@@ -49,7 +49,11 @@
 {% endif %}
     <td class="history">{{ r.distro }}</td>
     <td class="history">{{ r.locale }}</td>
+{% if r.user_display %}
     <td class="history">{{ r.user_display }}</td>
+{% else %}
+    <td class="history"><i>Unknown</i></td>
+{% endif %}
     <td class="history">{{ format_truncate(r.summary, 20) }}</td>
     <td class="history">{{ format_truncate(r.description, 40) }}</td>
   </tr>

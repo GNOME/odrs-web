@@ -166,10 +166,16 @@ def submit():
         review.summary = item['summary']
         review.description = item['description']
         review.user_hash = item['user_hash']
-        review.user_display = item['user_display']
         review.version = item['version']
         review.distro = item['distro']
         review.rating = item['rating']
+
+        # check if valid
+        user_display_ignore = ['root',
+                               'Live System User',
+                               'Unknown']
+        if item['user_display'] not in user_display_ignore:
+            review.user_display = item['user_display']
 
         # log and add
         db.event_info(_get_client_address(),

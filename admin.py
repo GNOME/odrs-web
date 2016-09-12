@@ -233,7 +233,10 @@ def modify(review_id):
         return error_internal('no review with that ID')
     review.distro = request.form['distro']
     review.locale = request.form['locale']
-    review.user_display = request.form['user_display']
+    if len(request.form['user_display']) == 0:
+        review.user_display = None
+    else:
+        review.user_display = request.form['user_display']
     review.user_hash = request.form['user_hash']
     review.description = request.form['description']
     review.summary = request.form['summary']
@@ -287,6 +290,21 @@ def englishify(review_id):
         review.locale = 'en'
     else:
         review.locale = 'en_' + parts[1]
+    db.review_modify(review)
+    return redirect(url_for('.review', review_id=review_id))
+
+@admin.route('/anonify/<review_id>')
+@login_required
+def anonify(review_id):
+    """ Removes the username from the review """
+    try:
+        db = ReviewsDatabase(os.environ)
+        review = db.review_get_for_id(review_id)
+    except CursorError as e:
+        return error_internal(str(e))
+    if not review:
+        return error_internal('no review with that ID')
+    review.user_display = None
     db.review_modify(review)
     return redirect(url_for('.review', review_id=review_id))
 

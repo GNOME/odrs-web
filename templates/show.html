@@ -72,7 +72,16 @@
   <tr>
     <th>User Display</th>
     <td>
-      <textarea cols="80" rows="1" name="user_display">{{ r.user_display }}</textarea>
+{% if r.user_display %}
+      <textarea cols="40" rows="1" name="user_display">{{ r.user_display }}</textarea>
+{% if current_user.is_authenticated %}
+      <a href="/admin/anonify/{{ r.review_id }}">
+        <button class="inline" type="button">Anonify</button>
+      </a>
+{% endif %}
+{% else %}
+      <textarea cols="40" rows="1" name="user_display"></textarea>
+{% endif %}
     </td>
   </tr>
   <tr>
