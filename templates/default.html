@@ -4,33 +4,70 @@
      Licensed under the GNU General Public License Version 2 -->
 <html lang="en">
 <head>
-<title>{% block title %}{% endblock %}</title>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<link rel="stylesheet" href="/style.css" type="text/css" media="screen"/>
-<link rel="shortcut icon" href="/favicon.ico"/>
+  <title>{% block title %}{% endblock %}</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+  <!--<base href="https://odrs.gnome.org/" />-->
+  <base href="http://127.0.0.1:5000/" />
+  <link href="layout.css" rel="stylesheet" type="text/css" media="screen" />
+  <link href="style.css" rel="stylesheet" type="text/css" media="all" />
+  <link rel="icon" type="image/png" href="https://www.gnome.org/img/logo/foot-16.png" />
+  <link rel="SHORTCUT ICON" type="image/png" href=
+  "https://www.gnome.org/img/logo/foot-16.png" />
 </head>
 <body>
 
-{% block navigation %}
-<ul class="navigation">
-  <li class="navigation"><a class="navigation" href="/">Home</a></li>
-  <li class="navigation"><a class="navigation" href="/admin/show/all">All Reviews</a></li>
-{% if current_user.is_authenticated %}
-  <li class="navigation"><a class="navigation" href="/admin/show/reported">Reported</a></li>
-  <li class="navigation"><a class="navigation" href="/admin/stats">Statistics</a></li>
-  <li class="navigation"><a class="navigation" href="/admin/popularity">Popularity</a></li>
-  <li class="navigation"><a class="navigation" href="/admin/users/all">Users</a></li>
-  <li class="navigation"><a class="navigation" href="/admin/distros">Distributions</a></li>
-  <li class="navigation"><a class="navigation" href="/admin/graph_month">Graph Month</a></li>
-  <li class="navigation"><a class="navigation" href="/admin/graph_year">Graph Year</a></li>
-  <li class="navigation2"><a class="navigation" href="/logout">Logout</a></li>
-{% else %}
-  <li class="navigation2"><a class="navigation" href="/login">Login</a></li>
-{% endif %}
-</ul>
-{% endblock %}
+<body id="mail_gnome">
+  <div id="except_footer">
+    <div id="header" class="container_12">
+      <div id="global_domain_bar">
+        <div class="maxwidth">
+          <div class="tab">
+            <a class="root" href="https://www.gnome.org/">GNOME.org</a>
+          </div>
+        </div>
+      </div>
+    </div><!-- header -->
 
-{% block page_header %}{% endblock %}
+    <div id="logo_bar" class="container_12">
+      <div id="logo" class="grid_3">
+        <a title="Go to home page" href="https://odrs.gnome.org/"><img src="gnome-odrs.png" alt="GNOME: Open Desktop Review Server" /></a>
+      </div>
+
+      <div id="top_bar" class="grid_9">
+        <div class="left">
+          <div class="menu-globalnav-container">
+            <ul id="menu-globalnav" class="menu">
+              <li><a href="/">Home</a></li>
+              <li><a href="/admin/show/all">All Reviews</a></li>
+{% if current_user.is_authenticated %}
+              <li><a href="/admin/show/reported">Reported</a></li>
+              <li><a href="/admin/stats">Statistics</a></li>
+              <li><a href="/admin/users/all">Users</a></li>
+              <li><a href="/admin/distros">Distributions</a></li>
+              <li><a href="/admin/graph_month">Usage</a></li>
+{% endif %}
+            </ul>
+          </div>
+        </div>
+        <div class="right">
+          <div class="menu-globalnav-container">
+            <ul id="menu-globalnav" class="menu">
+{% if current_user.is_authenticated %}
+              <li class="navigation2"><a href="/logout">Logout</a></li>
+{% else %}
+              <li class="navigation2"><a href="/login">Login</a></li>
+{% endif %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="body">
+      <div id="content">
+
+{% block navigation %}
+{% endblock %}
 
 <!-- any flashed messages -->
 <div id="messages">
@@ -41,8 +78,128 @@
 
 {% block content %}{% endblock %}
 
-<p class="footer">
- Copyright <a href="mailto:richard@hughsie.com">Richard Hughes 2016</a>
-</p>
+      </div><!-- end of content --> </div>
+    </div><!--end of except_footer-->
+
+  <div id="footer_community"></div>
+
+  <div id="footer_grass"></div>
+
+  <div id="footer">
+    <div class="container_12" id="container_12">
+      <div class="links grid_9">
+        <div class="menu-footer-container">
+          <ul id="menu-footer" class="menu">
+            <li id="menu-item-1048" class=
+            "menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-1048">
+            <a href="/">The GNOME Project</a>
+
+              <ul class="sub-menu">
+                <li id="menu-item-1049" class=
+                "menu-item menu-item-type-post_type menu-item-object-page menu-item-1049">
+                <a href="https://www.gnome.org/about/">About Us</a></li>
+
+                <li id="menu-item-1050" class=
+                "menu-item menu-item-type-post_type menu-item-object-page menu-item-1050">
+                <a href="https://www.gnome.org/get-involved/">Get Involved</a></li>
+
+                <li id="menu-item-1051" class=
+                "menu-item menu-item-type-post_type menu-item-object-page menu-item-1051">
+                <a href="https://www.gnome.org/teams/">Teams</a></li>
+
+                <li id="menu-item-1053" class=
+                "menu-item menu-item-type-post_type menu-item-object-page menu-item-1053">
+                <a href="https://www.gnome.org/support-gnome/">Support GNOME</a></li>
+
+                <li id="menu-item-1054" class=
+                "menu-item menu-item-type-post_type menu-item-object-page menu-item-1054">
+                <a href="https://www.gnome.org/contact/">Contact Us</a></li>
+
+                <li id="menu-item-2246" class=
+                "menu-item menu-item-type-post_type menu-item-object-page menu-item-2246">
+                <a href="https://www.gnome.org/foundation/">The GNOME Foundation</a></li>
+              </ul>
+            </li>
+
+            <li id="menu-item-1047" class=
+            "menu-item menu-item-type-custom menu-item-object-custom menu-item-1047">
+              <a href="#">Resources</a>
+
+              <ul class="sub-menu">
+                <li id="menu-item-1055" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1055">
+                <a href="https://developer.gnome.org">Developer Center</a></li>
+
+                <li id="menu-item-1056" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1056">
+                <a href="https://help.gnome.org">Documentation</a></li>
+
+                <li id="menu-item-1057" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1057">
+                <a href="https://wiki.gnome.org">Wiki</a></li>
+
+                <li id="menu-item-1058" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1058">
+                <a href="https://mail.gnome.org/mailman/listinfo">Mailing Lists</a></li>
+
+                <li id="menu-item-1059" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1059">
+                <a href="https://wiki.gnome.org/GnomeIrcChannels">IRC Channels</a></li>
+
+                <li id="menu-item-1060" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1060">
+                <a href="https://bugzilla.gnome.org/">Bug Tracker</a></li>
+
+                <li id="menu-item-1061" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1061">
+                <a href="https://git.gnome.org/browse/">Development Code</a></li>
+
+                <li id="menu-item-1062" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1062">
+                <a href="https://wiki.gnome.org/Jhbuild">Build Tool</a></li>
+              </ul>
+            </li>
+
+            <li id="menu-item-1046" class=
+            "menu-item menu-item-type-custom menu-item-object-custom menu-item-1046">
+              <a href="/news">News</a>
+
+              <ul class="sub-menu">
+                <li id="menu-item-1063" class=
+                "menu-item menu-item-type-post_type menu-item-object-page menu-item-1063">
+                <a href="https://www.gnome.org/press/">Press Releases</a></li>
+
+                <li id="menu-item-1064" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1064">
+                <a href="https://www.gnome.org/start/stable">Latest Release</a></li>
+
+                <li id="menu-item-1065" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1065">
+                <a href="https://planet.gnome.org">Planet GNOME</a></li>
+
+                <li id="menu-item-1067" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1067">
+                <a href="https://news.gnome.org">Development News</a></li>
+
+                <li id="menu-item-1068" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1068">
+                <a href="https://identi.ca/gnome">Identi.ca</a></li>
+
+                <li id="menu-item-1069" class=
+                "menu-item menu-item-type-custom menu-item-object-custom menu-item-1069">
+                <a href="https://twitter.com/gnome">Twitter</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div id="footnotes" class="grid_9">
+       <p> Copyright &copy; 2015 - 2016 <a href="https://www.gnome.org/"><strong>The GNOME Project</strong></a>.<br />
+       <small><a href="http://validator.w3.org/check/referer">Optimised</a> for <a href=
+        "http://www.w3.org/">standards</a>. Hosted by <a href="http://www.redhat.com/">Red Hat</a>.
+      </div>
+    </div>
+  </div>
 </body>
 </html>

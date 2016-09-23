@@ -1,10 +1,6 @@
 {% extends "default.html" %}
 {% block title %}All Reviews{% endblock %}
 
-{% block page_header %}
-<h1>All Reviews</h1>
-{% endblock %}
-
 {% block content %}
 
 {% if reviews|length == 0 %}
@@ -12,7 +8,7 @@
   There are no results for this query.
 </p>
 {% else %}
-<table class="history">
+<table>
   <tr>
     <th>#</th>
     <th>Created / Deleted</th>
@@ -25,37 +21,35 @@
     <th>Locale</th>
     <th>Name</th>
     <th>Summary</th>
-    <th>Description</th>
   </tr>
 
 {% for r in reviews %}
   <tr>
-    <td class="history"><a href="/admin/review/{{ r.review_id }}">{{ r.review_id }}</a></td>
-    <td class="history">
+    <td><a href="/admin/review/{{ r.review_id }}">{{ r.review_id }}</a></td>
+    <td>
       {{ format_timestamp(r.date_created) }}
 {% if r.date_deleted %}
       <br/>
       <i class="important">{{ format_timestamp(r.date_deleted) }}</i>
 {% endif %}
     </td>
-    <td class="history">{{ r.app_id.replace('.desktop', '') }}</td>
-    <td class="history">{{ r.version }}</td>
-    <td class="history">{{ format_rating(r.rating) }}</td>
-    <td class="history">{{ r.karma_up }}</td>
+    <td>{{ r.app_id.replace('.desktop', '').replace('.Application', '') }}</td>
+    <td>{{ r.version }}</td>
+    <td>{{ format_rating(r.rating) }}</td>
+    <td>{{ r.karma_up }}</td>
 {% if r.reported > 0 %}
-    <td class="history"><i class="important">{{ r.karma_down }}</i></td>
+    <td><i class="important">{{ r.karma_down }}</i></td>
 {% else %}
-    <td class="history">{{ r.karma_down }}</td>
+    <td>{{ r.karma_down }}</td>
 {% endif %}
-    <td class="history">{{ r.distro }}</td>
-    <td class="history">{{ r.locale }}</td>
+    <td>{{ r.distro.replace(' GNU/Linux', '') }}</td>
+    <td>{{ r.locale }}</td>
 {% if r.user_display %}
-    <td class="history">{{ r.user_display }}</td>
+    <td>{{ format_truncate(r.user_display, 15) }}</td>
 {% else %}
-    <td class="history"><i>Unknown</i></td>
+    <td><i>Unknown</i></td>
 {% endif %}
-    <td class="history">{{ format_truncate(r.summary, 20) }}</td>
-    <td class="history">{{ format_truncate(r.description, 40) }}</td>
+    <td>{{ format_truncate(r.summary, 15) }}</td>
   </tr>
 {% endfor %}
 

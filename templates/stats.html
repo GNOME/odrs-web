@@ -1,23 +1,30 @@
 {% extends "default.html" %}
 {% block title %}Statistics{% endblock %}
 
-{% block page_header %}
-<h1>Service Statistics</h1>
-{% endblock %}
-
 {% block content %}
 
-<table class="history">
-  <tr>
-    <th>Event</th>
-    <th>Value</th>
-  </tr>
-{% for key, value in results %}
+<h2>Web Service Statistics</h2>
+<table>
+{% for key, value in results_stats %}
   <tr>
     <td> {{ key }} </td>
     <td> {{ value }} </td>
   </tr>
 {% endfor %}
 </table>
+
+<h2>Popularity By Page View</h2>
+<ol>
+{% for name, cnt in results_viewed %}
+  <li>{{ name }} ({{ cnt }})</li>
+{% endfor %}
+</ol>
+
+<h2>Popularity By Submitted Reviews</h2>
+<ol>
+{% for name, cnt in results_submitted %}
+  <li>{{ name }} ({{ cnt }})</li>
+{% endfor %}
+</ol>
 
 {% endblock %}

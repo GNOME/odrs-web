@@ -1,14 +1,10 @@
 {% extends "default.html" %}
 {% block title %}Users{% endblock %}
 
-{% block page_header %}
-<h1>User Statistics</h1>
-{% endblock %}
-
 {% block content %}
 
 <h2>Most Awesome Users</h2>
-<table class="history">
+<table>
   <tr>
     <th>User</th>
     <th>Karma</th>
@@ -16,7 +12,7 @@
     <th>Created</th>
     <th>Banned</th>
   </tr>
-{% for u in users1 %}
+{% for u in users_awesome %}
   <tr>
     <td> {{ u.id }} </td>
     <td> {{ u.karma }} </td>
@@ -36,7 +32,7 @@
 </table>
 
 <h2>Haters Gonna Hate</h2>
-<table class="history">
+<table>
   <tr>
     <th>User</th>
     <th>Karma</th>
@@ -44,7 +40,7 @@
     <th>Created</th>
     <th>Banned</th>
   </tr>
-{% for u in users2 %}
+{% for u in users_haters %}
   <tr>
     <td> {{ u.id }} </td>
     <td> {{ u.karma }} </td>

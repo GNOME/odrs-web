@@ -115,26 +115,6 @@ def graph_year():
                            data_requests=data_fetch[::-1],
                            data_submitted=data_review[::-1])
 
-@admin.route('/popularity')
-@login_required
-def popularity():
-    """
-    Return the popularity page as HTML.
-    """
-    try:
-        db = ReviewsDatabase(os.environ)
-    except CursorError as e:
-        return error_internal(str(e))
-    results1 = []
-    for review in db.get_analytics_fetch():
-        results1.append((review[0].replace('.desktop', ''), review[1]))
-    results2 = []
-    for review in db.get_stats_fetch('reviewed'):
-        results2.append((review[0].replace('.desktop', ''), review[1]))
-    return render_template('popularity.html',
-                           results1=results1,
-                           results2=results2)
-
 @admin.route('/stats')
 @login_required
 def stats():
@@ -146,10 +126,25 @@ def stats():
         stats = db.get_stats()
     except CursorError as e:
         return error_internal(str(e))
-    results = []
+
+    # stats
+    results_stats = []
     for item in sorted(stats):
-        results.append((item, stats[item]))
-    return render_template('stats.html', results=results)
+        results_stats.append((item, stats[item]))
+
+    # popularity view
+    results_viewed = []
+    for review in db.get_analytics_fetch():
+        results_viewed.append((review[0].replace('.desktop', ''), review[1]))
+
+    # popularity reviews
+    results_submitted = []
+    for review in db.get_stats_fetch('reviewed'):
+        results_submitted.append((review[0].replace('.desktop', ''), review[1]))
+    return render_template('stats.html',
+                           results_stats=results_stats,
+                           results_viewed=results_viewed,
+                           results_submitted=results_submitted)
 
 @admin.route('/distros')
 @login_required
@@ -419,8 +414,8 @@ def users_all():
     """
     try:
         db = ReviewsDatabase(os.environ)
-        users1 = db.get_users_by_karma(best=True)
-        users2 = db.get_users_by_karma(best=False)
+        users_awesome = db.get_users_by_karma(best=True)
+        users_haters = db.get_users_by_karma(best=False)
     except CursorError as e:
         return error_internal(str(e))
-    return render_template('users.html', users1=users1, users2=users2)
+    return render_template('users.html', users_awesome=users_awesome, users_haters=users_haters)

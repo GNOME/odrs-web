@@ -1,9 +1,5 @@
 {% extends "default.html" %}
-{% block title %}Statistics{% endblock %}
-
-{% block page_header %}
-<h1>Reviews from Distributions</h1>
-{% endblock %}
+{% block title %}Reviews from Distributions{% endblock %}
 
 {% block content %}
 <script src="/static/Chart.js"></script>
@@ -11,7 +7,8 @@
 Chart.defaults.global.animation = false;
 </script>
 
-<canvas id="reviewsChart" width="800" height="400"></canvas>
+<h2>Where Reviews Come From</h2>
+<canvas id="reviewsChart" width="900" height="400"></canvas>
 <script>
 var ctx = document.getElementById("reviewsChart").getContext("2d");
 var data = {

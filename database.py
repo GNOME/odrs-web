@@ -493,7 +493,7 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
-        item['AllReviews'] = int(res[0][0])
+        item['Active reviews'] = int(res[0][0])
 
         # unique reviewers
         try:
@@ -501,7 +501,7 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
-        item['UniqueReviewers'] = int(res[0][0])
+        item['Unique reviewers'] = int(res[0][0])
 
         # total votes
         try:
@@ -509,13 +509,13 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
-        item['VotesUp'] = int(res[0][0])
+        item['User upvotes'] = int(res[0][0])
         try:
             cur.execute("SELECT COUNT(*) FROM votes WHERE val = -1;")
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
-        item['VotesDown'] = int(res[0][0])
+        item['User downvotes'] = int(res[0][0])
 
         # unique voters
         try:
@@ -523,7 +523,7 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
-        item['UniqueVoters'] = int(res[0][0])
+        item['Unique voters'] = int(res[0][0])
 
         # unique languages
         try:
@@ -531,7 +531,7 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
-        item['UniqueLocales'] = int(res[0][0])
+        item['Unique languages'] = int(res[0][0])
 
         # unique distros
         try:
@@ -539,7 +539,7 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
-        item['UniqueDistros'] = int(res[0][0])
+        item['Unique distros'] = int(res[0][0])
 
         # unique apps
         try:
@@ -547,7 +547,7 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
-        item['UniqueApps'] = int(res[0][0])
+        item['Unique apps reviewed'] = int(res[0][0])
 
         # unique distros
         try:
@@ -555,7 +555,7 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
-        item['ReviewsReported'] = int(res[0][0])
+        item['Reported reviews'] = int(res[0][0])
 
         # star reviews
         for star in range(1, 6):
@@ -565,7 +565,7 @@ class ReviewsDatabase(object):
             except mdb.Error as e:
                 raise CursorError(cur, e)
             res = cur.fetchall()
-            item['RatingStars%03i' % star] = int(res[0][0])
+            item['%i star reviews' % star] = int(res[0][0])
 
         # done
         return item

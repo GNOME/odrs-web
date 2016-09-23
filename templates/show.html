@@ -1,14 +1,10 @@
 {% extends "default.html" %}
 {% block title %}Review #{{ review_id }}{% endblock %}
 
-{% block page_header %}
-<h1>Review #{{ r.review_id }}</h1>
-{% endblock %}
-
 {% block content %}
 
 <form name="myform" action="/admin/modify/{{ r.review_id }}" method="POST">
-<table class="history">
+<table>
   <tr>
     <th>Application</th>
     <td>
