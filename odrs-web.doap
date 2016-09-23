@@ -3,13 +3,18 @@
          xmlns:foaf="http://xmlns.com/foaf/0.1/"
          xmlns:gnome="http://api.gnome.org/doap-extensions#"
          xmlns="http://usefulinc.com/ns/doap#">
-  <name xml:lang="en">odrs-web</name>
-  <shortdesc xml:lang="en">Open Desktop Review Server</shortdesc>
-  <category rdf:resource="http://api.gnome.org/doap-extensions#apps" />
+  <name>Open Desktop Review Server Web Site</name>
+  <shortname>odrs-web</shortname>
+  <shortdesc>Open Desktop Review Server</shortdesc>
+
+  <homepage rdf:resource="http://odrs.gnome.org"/>
+  <category rdf:resource="http://api.gnome.org/doap-extensions#infrastructure" />
+
   <programming-language>python</programming-language>
   <description xml:lang="en">
    A Flask web service for submitting application reviews.
   </description>
+
   <maintainer>
     <foaf:Person>
       <foaf:name>Richard Hughes</foaf:name>
@@ -18,5 +23,6 @@
       <gnome:userid>rhughes</gnome:userid>
     </foaf:Person>
   </maintainer>
+
   <license rdf:resource="http://www.gnu.org/licenses/gpl-2.0.txt" />
 </Project>
