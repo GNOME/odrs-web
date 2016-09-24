@@ -16,14 +16,14 @@
 <h2>Popularity By Page View</h2>
 <ol>
 {% for name, cnt in results_viewed %}
-  <li>{{ name }} ({{ cnt }})</li>
+  <li>{{ name.replace('.desktop', '') }} ({{ cnt }})</li>
 {% endfor %}
 </ol>
 
 <h2>Popularity By Submitted Reviews</h2>
 <ol>
 {% for name, cnt in results_submitted %}
-  <li>{{ name }} ({{ cnt }})</li>
+  <li>{{ name.replace('.desktop', '') }} (<a href="admin/show/app/{{ name }}">{{ cnt }}</a>)</li>
 {% endfor %}
 </ol>
 

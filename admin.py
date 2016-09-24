@@ -135,12 +135,12 @@ def stats():
     # popularity view
     results_viewed = []
     for review in db.get_analytics_fetch():
-        results_viewed.append((review[0].replace('.desktop', ''), review[1]))
+        results_viewed.append((review[0], review[1]))
 
     # popularity reviews
     results_submitted = []
     for review in db.get_stats_fetch('reviewed'):
-        results_submitted.append((review[0].replace('.desktop', ''), review[1]))
+        results_submitted.append((review[0], review[1]))
     return render_template('stats.html',
                            results_stats=results_stats,
                            results_viewed=results_viewed,
