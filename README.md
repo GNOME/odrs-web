@@ -37,7 +37,7 @@ To set up the database tables do:
       review_id INT DEFAULT 0,
       UNIQUE KEY id (vote_id)
     ) CHARSET=utf8;
-    CREATE TABLE users2 (
+    CREATE TABLE users (
       user_id INT NOT NULL AUTO_INCREMENT,
       date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       user_hash TEXT DEFAULT NULL,
@@ -46,7 +46,7 @@ To set up the database tables do:
       password TEXT DEFAULT NULL,
       UNIQUE KEY id (user_id)
     ) CHARSET=utf8;
-    CREATE TABLE eventlog2 (
+    CREATE TABLE eventlog (
       eventlog_id INT NOT NULL AUTO_INCREMENT,
       date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       user_addr TEXT DEFAULT NULL,
@@ -62,7 +62,7 @@ To set up the database tables do:
       fetch_cnt INT DEFAULT 1,
       UNIQUE (datestr,app_id)
     ) CHARSET=utf8;
-    CREATE INDEX date_created_idx ON eventlog2 (date_created);
+    CREATE INDEX date_created_idx ON eventlog (date_created);
 
 ## How do I backup the data ##
 
@@ -114,9 +114,9 @@ Then restore the data with:
 ## Can I clean up the event log a bit? ##
 
     mysql
-      DELETE FROM eventlog2 WHERE message = 'already reviewed';
-      DELETE FROM eventlog2 WHERE message = 'duplicate vote';
-      DELETE FROM eventlog2 WHERE message = 'getting';
+      DELETE FROM eventlog WHERE message = 'already reviewed';
+      DELETE FROM eventlog WHERE message = 'duplicate vote';
+      DELETE FROM eventlog WHERE message = 'getting';
 
 ## How to I use distro packages ##
 

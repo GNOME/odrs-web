@@ -274,7 +274,7 @@ class ReviewsDatabase(object):
         """ Adds a warning to the event log """
         try:
             cur = self._db.cursor()
-            cur.execute("INSERT INTO eventlog2 (user_addr, user_hash, app_id, "
+            cur.execute("INSERT INTO eventlog (user_addr, user_hash, app_id, "
                         "message, important) "
                         "VALUES (%s, %s, %s, %s, %s);",
                         (user_addr, user_hash, app_id, message, important,))
@@ -302,7 +302,7 @@ class ReviewsDatabase(object):
         """ Add a user to the database """
         try:
             cur = self._db.cursor()
-            cur.execute("INSERT INTO users2 (user_hash) VALUES (%s);",
+            cur.execute("INSERT INTO users (user_hash) VALUES (%s);",
                         (user_hash,))
         except mdb.Error as e:
             raise CursorError(cur, e)
@@ -313,7 +313,7 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("SELECT user_id, date_created, "
                         "user_hash, karma, is_banned "
-                        "FROM users2 ORDER BY user_id DESC;")
+                        "FROM users ORDER BY user_id DESC;")
         except mdb.Error as e:
             raise CursorError(cur, e)
         res = cur.fetchall()
@@ -330,7 +330,7 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("SELECT user_id, date_created, "
                         "user_hash, karma, is_banned "
-                        "FROM users2 WHERE user_hash=%s and password=%s;",
+                        "FROM users WHERE user_hash=%s and password=%s;",
                         (username,
                          _password_hash(password),))
         except mdb.Error as e:
@@ -346,7 +346,7 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("SELECT user_id, date_created, "
                         "user_hash, karma, is_banned "
-                        "FROM users2 WHERE user_id=%s;",
+                        "FROM users WHERE user_id=%s;",
                         (user_hash,))
         except mdb.Error as e:
             raise CursorError(cur, e)
@@ -361,7 +361,7 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             cur.execute("SELECT user_id, date_created, "
                         "user_hash, karma, is_banned "
-                        "FROM users2 WHERE user_hash=%s ORDER BY user_id DESC;",
+                        "FROM users WHERE user_hash=%s ORDER BY user_id DESC;",
                         (user_hash,))
         except mdb.Error as e:
             raise CursorError(cur, e)
@@ -376,11 +376,11 @@ class ReviewsDatabase(object):
             cur = self._db.cursor()
             if best:
                 cur.execute("SELECT user_id, date_created, "
-                            "user_hash, karma, is_banned FROM users2 "
+                            "user_hash, karma, is_banned FROM users "
                             "WHERE karma != 0 ORDER BY karma DESC LIMIT 10;")
             else:
                 cur.execute("SELECT user_id, date_created, "
-                            "user_hash, karma, is_banned FROM users2 "
+                            "user_hash, karma, is_banned FROM users "
                             "WHERE karma != 0 ORDER BY karma ASC LIMIT 10;")
         except mdb.Error as e:
             raise CursorError(cur, e)
@@ -402,7 +402,7 @@ class ReviewsDatabase(object):
         # update the karma value
         try:
             cur = self._db.cursor()
-            cur.execute("UPDATE users2 SET karma = karma + %s "
+            cur.execute("UPDATE users SET karma = karma + %s "
                         "WHERE user_hash = %s;", (val, user_hash,))
         except mdb.Error as e:
             raise CursorError(cur, e)
@@ -457,7 +457,7 @@ class ReviewsDatabase(object):
         try:
             cur = self._db.cursor()
             cur.execute("SELECT DISTINCT app_id, COUNT(app_id) as total "
-                        "FROM eventlog2 WHERE app_id IS NOT NULL "
+                        "FROM eventlog WHERE app_id IS NOT NULL "
                         "AND message=%s GROUP BY app_id "
                         "ORDER BY total DESC LIMIT %s;",
                         (msg, limit,))
@@ -581,7 +581,7 @@ class ReviewsDatabase(object):
             start = now - datetime.timedelta((i * interval) + interval - 1)
             end = now - datetime.timedelta((i * interval) - 1)
             try:
-                cur.execute("SELECT COUNT(*) FROM eventlog2 "
+                cur.execute("SELECT COUNT(*) FROM eventlog "
                             "WHERE message = %s AND date_created BETWEEN %s "
                             "AND %s", (msg, start, end,))
             except mdb.Error as e:
