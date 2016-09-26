@@ -43,7 +43,8 @@ def login():
         user = db.user_get_with_login(request.form['username'],
                                       request.form['password'])
     except CursorError as e:
-        return json_error(str(e))
+        flash(str(e))
+        return render_template('error.html'), 503
     if not user:
         flash('Credentials are not valid.')
         return redirect(url_for('.login'))
