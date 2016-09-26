@@ -6,5 +6,14 @@
 
 import sys
 import os
+
 sys.path.insert(0, os.path.join(os.environ['HOME'], 'html'))
-from flaskapp import app as application
+from flaskapp import app as _application
+
+def application(environ, start_response):
+    for key in ['MYSQL_DB_HOST',
+                'MYSQL_DB_USERNAME',
+                'MYSQL_DB_PASSWORD',
+                'ODRS_REVIEWS_SECRET']:
+        os.environ[key] = environ[key]
+    return _application(environ, start_response)
