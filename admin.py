@@ -164,7 +164,7 @@ def distros():
         for suffix in [' Linux', ' GNU/Linux', ' OS', ' Linux']:
             if name.endswith(suffix):
                 name = name[:-len(suffix)]
-        labels.append(name)
+        labels.append(str(name))
         data.append(s[1])
     return render_template('distros.html', labels=labels, data=data)
 
