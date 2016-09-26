@@ -78,12 +78,11 @@ class ReviewsDatabase(object):
         assert environ
         self._db = None
         try:
-            if 'OPENSHIFT_MYSQL_DB_HOST' in environ:
-                self._db = mdb.connect(environ['OPENSHIFT_MYSQL_DB_HOST'],
-                                       environ['OPENSHIFT_MYSQL_DB_USERNAME'],
-                                       environ['OPENSHIFT_MYSQL_DB_PASSWORD'],
+            if 'MYSQL_DB_HOST' in environ:
+                self._db = mdb.connect(environ['MYSQL_DB_HOST'],
+                                       environ['MYSQL_DB_USERNAME'],
+                                       environ['MYSQL_DB_PASSWORD'],
                                        'odrs',
-                                       int(environ['OPENSHIFT_MYSQL_DB_PORT']),
                                        use_unicode=True, charset='utf8')
             else:
                 self._db = mdb.connect('localhost', 'test', 'test', 'odrs',
