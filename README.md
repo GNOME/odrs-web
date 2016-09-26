@@ -35,6 +35,11 @@ can be used on the new instance.
 
 ## How to I use distro packages ##
 
+    pkcon install python2-PyMySQL python-flask python-flask-wtf \
+      python-flask-login
+
+...or, if you're using python3:
+
     pkcon install python3-PyMySQL python3-flask python3-flask-wtf \
       python3-flask-login
 
