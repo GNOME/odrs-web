@@ -15,8 +15,8 @@ from database import ReviewsDatabase, CursorError
 from user import OdrsUser
 
 app = Flask(__name__)
-app.secret_key = os.environ['ODRS_REVIEWS_SECRET']
 app.config.from_object(__name__)
+app.secret_key = os.environ['ODRS_REVIEWS_SECRET']
 app.register_blueprint(api10, url_prefix='/1.0/reviews')
 app.register_blueprint(admin, url_prefix='/admin')
 
