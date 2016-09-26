@@ -15,7 +15,7 @@ from database import ReviewsDatabase, CursorError
 from user import OdrsUser
 
 app = Flask(__name__)
-app.config.from_pyfile('flaskapp.cfg')
+app.config.from_object(__name__)
 app.register_blueprint(api10, url_prefix='/1.0/reviews')
 app.register_blueprint(admin, url_prefix='/admin')
 
@@ -75,8 +75,7 @@ def static_resource(resource):
     return send_from_directory('static/', resource)
 
 if __name__ == '__main__':
-    if not 'OPENSHIFT_APP_DNS' in os.environ:
-        app.debug = True
+    app.debug = True
 
     # we need this
     if not 'ODRS_REVIEWS_SECRET' in os.environ:
