@@ -19,6 +19,10 @@ app.config.from_object(__name__)
 app.register_blueprint(api10, url_prefix='/1.0/reviews')
 app.register_blueprint(admin, url_prefix='/admin')
 
+# use the hash as the session key
+if 'ODRS_REVIEWS_SECRET' in os.environ:
+    app.secret_key = os.environ['ODRS_REVIEWS_SECRET']
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -79,6 +83,7 @@ if __name__ == '__main__':
 
     # we need this
     if not 'ODRS_REVIEWS_SECRET' in os.environ:
+        os.environ['ODRS_REVIEWS_SECRET'] = 'dummy'
         print('NO ODRS_REVIEWS_SECRET DEFINED, WE ARE INSECURE')
 
     app.run()
