@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS reviews;
 CREATE TABLE reviews (
   review_id INT NOT NULL AUTO_INCREMENT,
   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -17,6 +18,7 @@ CREATE TABLE reviews (
   reported INT DEFAULT 0,
   UNIQUE KEY id (review_id)
 ) CHARSET=utf8;
+DROP TABLE IF EXISTS votes;
 CREATE TABLE votes (
   vote_id INT NOT NULL AUTO_INCREMENT,
   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -25,6 +27,7 @@ CREATE TABLE votes (
   review_id INT DEFAULT 0,
   UNIQUE KEY id (vote_id)
 ) CHARSET=utf8;
+DROP TABLE IF EXISTS users;
 CREATE TABLE users (
   user_id INT NOT NULL AUTO_INCREMENT,
   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -34,6 +37,7 @@ CREATE TABLE users (
   password TEXT DEFAULT NULL,
   UNIQUE KEY id (user_id)
 ) CHARSET=utf8;
+DROP TABLE IF EXISTS eventlog;
 CREATE TABLE eventlog (
   eventlog_id INT NOT NULL AUTO_INCREMENT,
   date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -44,6 +48,7 @@ CREATE TABLE eventlog (
   message TEXT DEFAULT NULL,
   UNIQUE KEY id (eventlog_id)
 ) CHARSET=utf8;
+DROP TABLE IF EXISTS analytics;
 CREATE TABLE analytics (
   datestr INT DEFAULT 0,
   app_id VARCHAR(64) DEFAULT NULL,
