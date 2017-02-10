@@ -626,7 +626,6 @@ input:-moz-read-write, textarea:-moz-read-write {
 }
 
 input {
-    -moz-appearance: textfield;
     -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
     -moz-user-select: text;
     background-color: -moz-field;
