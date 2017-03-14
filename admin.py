@@ -10,7 +10,7 @@ import calendar
 from math import ceil
 
 from flask import Blueprint, abort, request, flash, render_template, redirect, url_for
-from flask.ext.login import login_required
+from flask_login import login_required
 
 from database import ReviewsDatabase, CursorError
 
