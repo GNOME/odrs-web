@@ -278,7 +278,8 @@ def fetch():
 
     # sort and cut to limit
     sorted(items_new, key=lambda item: item['score'])
-    items_new = items_new[:item['limit']]
+    if item['limit'] > 0:
+        items_new = items_new[:item['limit']]
 
     dat = json.dumps(items_new, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
