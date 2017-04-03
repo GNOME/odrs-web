@@ -163,16 +163,18 @@ def submit():
         review = OdrsReview()
         review.app_id = item['app_id']
         review.locale = item['locale']
-        review.summary = item['summary']
-        review.description = item['description']
+        review.summary = _sanitised_input(item['summary'])
+        review.description = _sanitised_input(item['description'])
         review.user_hash = item['user_hash']
-        review.version = item['version']
+        review.version = _sanitised_version(item['version'])
         review.distro = item['distro']
         review.rating = item['rating']
 
         # check if valid
         user_display_ignore = ['root',
+                               'Administrator',
                                'Live System User',
+                               'user',
                                'Unknown']
         if item['user_display'] not in user_display_ignore:
             review.user_display = item['user_display']
