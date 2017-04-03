@@ -75,6 +75,44 @@ def _get_review_score(review, item):
         wilson *= 100
     return int(wilson)
 
+def _sanitised_input(val):
+
+    # remove trailing whitespace
+    val = val.strip()
+
+    # fix up style issues
+    val = val.replace('!!!', '!')
+    val = val.replace(':)', '')
+    val = val.replace('  ', ' ')
+
+    return val
+
+def _sanitised_summary(val):
+    val = _sanitised_input(val);
+    if val.endswith('.'):
+        val = val[:len(val)-1]
+    return val;
+
+def _sanitised_description(val):
+    return _sanitised_input(val);
+
+def _sanitised_version(val):
+
+    # remove epoch
+    idx = val.find(':')
+    if idx != -1:
+        val = val[idx+1:]
+
+    # remove distro addition
+    idx = val.find('+')
+    if idx != -1:
+        val = val[:idx]
+    idx = val.find('~')
+    if idx != -1:
+        val = val[:idx]
+
+    return val
+
 @api.errorhandler(400)
 def json_error(msg=None, errcode=400):
     """ Error handler: JSON output """
@@ -163,8 +201,8 @@ def submit():
         review = OdrsReview()
         review.app_id = item['app_id']
         review.locale = item['locale']
-        review.summary = _sanitised_input(item['summary'])
-        review.description = _sanitised_input(item['description'])
+        review.summary = _sanitised_summary(item['summary'])
+        review.description = _sanitised_description(item['description'])
         review.user_hash = item['user_hash']
         review.version = _sanitised_version(item['version'])
         review.distro = item['distro']
@@ -511,3 +549,10 @@ def ratings():
     return Response(response=dat,
                     status=200, \
                     mimetype="application/json")
+
+if __name__ == '__main__':
+    print ">>>%s<<<" % _sanitised_version("16.12.3")
+    print ">>>%s<<<" % _sanitised_version("4:16.12.3+p16.04+git20170325.0519-0")
+    print ">>>%s<<<" % _sanitised_version("16.11.0~ds0")
+    print ">>>%s<<<" % _sanitised_summary("   not sure why people include.   ")
+    print ">>>%s<<<" % _sanitised_description("   this is awesome :) !!!   ")
