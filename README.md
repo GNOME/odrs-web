@@ -1,6 +1,10 @@
-# Open Desktop Ratings Serice
+# Open Desktop Ratings Service
 
 A Flask web service for submitting application reviews
+
+## How do I write a client?
+
+See [API documentation](API.md).
 
 ## How do I set up the database ##
 
