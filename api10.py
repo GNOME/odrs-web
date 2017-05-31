@@ -317,7 +317,7 @@ def fetch():
         items_new.append(item_new)
 
     # sort and cut to limit
-    sorted(items_new, key=lambda item: item['score'])
+    sorted(items_new, key=lambda item: item['score'], reverse=True)
     if item['limit'] > 0:
         items_new = items_new[:item['limit']]
 
