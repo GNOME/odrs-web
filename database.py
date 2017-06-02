@@ -406,6 +406,22 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
 
+    def user_ban(self, user_hash):
+        """ Ban a user """
+
+        # check it exists
+        user = self.user_get_by_hash(user_hash)
+        if not user:
+            return
+
+        # update the karma value
+        try:
+            cur = self._db.cursor()
+            cur.execute("UPDATE users SET is_banned = 1 "
+                        "WHERE user_hash = %s;", (user_hash,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+
     def reviews_get_rating_for_app_id(self, app_id, min_total=1):
         """ Gets the ratings information for the application """
         try:

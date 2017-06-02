@@ -237,6 +237,17 @@ def modify(review_id):
     db.review_modify(review)
     return redirect(url_for('.review', review_id=review_id))
 
+@admin.route('/user_ban/<user_hash>')
+@login_required
+def user_ban(user_hash):
+    """ Change details about a review """
+    try:
+        db = ReviewsDatabase(os.environ)
+        db.user_ban(user_hash)
+    except CursorError as e:
+        return error_internal(str(e))
+    return redirect(url_for('.show_reported'))
+
 @admin.route('/unreport/<review_id>')
 @login_required
 def unreport(review_id):
