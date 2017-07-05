@@ -375,6 +375,8 @@ def moderate(user_hash, locale=None):
             item = review.__dict__
             item['user_skey'] = _get_user_key(user_hash, review.app_id)
             items_new.append(item)
+        if len(items_new) > 250:
+            break
 
     dat = json.dumps(items_new, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
