@@ -282,6 +282,15 @@ def fetch():
     except CursorError as e:
         return json_error(str(e))
 
+    # also add any compat IDs
+    if 'compat_ids' in item:
+        for app_id in item['compat_ids']:
+            try:
+                reviews_tmp = db.review_get_for_app_id(app_id)
+            except CursorError as e:
+                return json_error(str(e))
+            reviews.extend(reviews_tmp)
+
     # if user does not exist then create
     user = db.user_get_by_hash(item['user_hash'])
     if not user:
