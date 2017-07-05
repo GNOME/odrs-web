@@ -1,6 +1,8 @@
 #!/usr/bin/python2
 # -*- coding: utf-8 -*-
 #
+# pylint: disable=invalid-name
+#
 # Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
 # Licensed under the GNU General Public License Version 3
 
@@ -31,8 +33,7 @@ def _get_client_address():
     """ Gets user IP address """
     if request.headers.getlist("X-Forwarded-For"):
         return request.headers.getlist("X-Forwarded-For")[0]
-    else:
-        return request.remote_addr
+    return request.remote_addr
 
 def _locale_is_compatible(l1, l2):
     """ Returns True if the locale is compatible """
@@ -88,13 +89,13 @@ def _sanitised_input(val):
     return val
 
 def _sanitised_summary(val):
-    val = _sanitised_input(val);
+    val = _sanitised_input(val)
     if val.endswith('.'):
         val = val[:len(val)-1]
-    return val;
+    return val
 
 def _sanitised_description(val):
-    return _sanitised_input(val);
+    return _sanitised_input(val)
 
 def _sanitised_version(val):
 
