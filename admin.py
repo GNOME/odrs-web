@@ -1,20 +1,20 @@
 #!/usr/bin/python2
 # -*- coding: utf-8 -*-
 #
-# pylint: disable=invalid-name,missing-docstring
-#
-# Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
-# Licensed under the GNU General Public License Version 2
+# Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+# Licensed under the GNU General Public License Version 3
 
+import os
 import datetime
 import calendar
 from math import ceil
 
-from flask import abort, request, flash, render_template, redirect, url_for
+from flask import Blueprint, abort, request, flash, render_template, redirect, url_for
 from flask_login import login_required
 
-from app import app, db
-from .db import CursorError
+from database import ReviewsDatabase, CursorError
+
+admin = Blueprint('admin', __name__, url_prefix='/admin')
 
 def _get_chart_labels_months():
     """ Gets the chart labels """
@@ -68,25 +68,29 @@ class Pagination(object):
                 yield num
                 last = num
 
-@app.errorhandler(400)
+@admin.errorhandler(400)
 def error_internal(msg=None, errcode=400):
     """ Error handler: Internal """
     flash("Internal error: %s" % msg)
     return render_template('error.html'), errcode
 
-@app.errorhandler(401)
+@admin.errorhandler(401)
 def error_permission_denied(msg=None):
     """ Error handler: Permission Denied """
     flash("Permission denied: %s" % msg)
     return render_template('error.html'), 401
 
 
-@app.route('/admin/graph_month')
+@admin.route('/graph_month')
 @login_required
 def graph_month():
     """
     Show nice graph graphs.
     """
+    try:
+        db = ReviewsDatabase(os.environ)
+    except CursorError as e:
+        return error_internal(str(e))
     data_fetch = db.get_analytics_by_interval(30, 1)
     data_review = db.get_stats_by_interval(30, 1, 'reviewed')
     return render_template('graph-month.html',
@@ -94,12 +98,16 @@ def graph_month():
                            data_requests=data_fetch[::-1],
                            data_submitted=data_review[::-1])
 
-@app.route('/admin/graph_year')
+@admin.route('/graph_year')
 @login_required
 def graph_year():
     """
     Show nice graph graphs.
     """
+    try:
+        db = ReviewsDatabase(os.environ)
+    except CursorError as e:
+        return error_internal(str(e))
     data_fetch = db.get_analytics_by_interval(12, 30)
     data_review = db.get_stats_by_interval(12, 30, 'reviewed')
     return render_template('graph-year.html',
@@ -107,13 +115,14 @@ def graph_year():
                            data_requests=data_fetch[::-1],
                            data_submitted=data_review[::-1])
 
-@app.route('/admin/stats')
+@admin.route('/stats')
 @login_required
-def show_stats():
+def stats():
     """
     Return the statistics page as HTML.
     """
     try:
+        db = ReviewsDatabase(os.environ)
         stats = db.get_stats()
     except CursorError as e:
         return error_internal(str(e))
@@ -137,13 +146,14 @@ def show_stats():
                            results_viewed=results_viewed,
                            results_submitted=results_submitted)
 
-@app.route('/admin/distros')
+@admin.route('/distros')
 @login_required
 def distros():
     """
     Return the statistics page as HTML.
     """
     try:
+        db = ReviewsDatabase(os.environ)
         stats = db.get_stats_distro(8)
     except CursorError as e:
         return error_internal(str(e))
@@ -158,7 +168,7 @@ def distros():
         data.append(s[1])
     return render_template('distros.html', labels=labels, data=data)
 
-@app.context_processor
+@admin.context_processor
 def utility_processor():
     def format_rating(rating):
         nr_stars = int(rating / 20)
@@ -189,12 +199,13 @@ def utility_processor():
                 format_timestamp=format_timestamp,
                 url_for_other_page=url_for_other_page)
 
-@app.route('/admin/review/<review_id>')
-def admin_show_review(review_id):
+@admin.route('/review/<review_id>')
+def review(review_id):
     """
     Show a specific review as HTML.
     """
     try:
+        db = ReviewsDatabase(os.environ)
         review = db.review_get_for_id(review_id)
     except CursorError as e:
         return error_internal(str(e))
@@ -202,11 +213,12 @@ def admin_show_review(review_id):
         return error_internal('no review with that ID')
     return render_template('show.html', r=review)
 
-@app.route('/admin/modify/<review_id>', methods=['POST'])
+@admin.route('/modify/<review_id>', methods=['POST'])
 @login_required
-def admin_modify(review_id):
+def modify(review_id):
     """ Change details about a review """
     try:
+        db = ReviewsDatabase(os.environ)
         review = db.review_get_for_id(review_id)
     except CursorError as e:
         return error_internal(str(e))
@@ -225,21 +237,23 @@ def admin_modify(review_id):
     db.review_modify(review)
     return redirect(url_for('.review', review_id=review_id))
 
-@app.route('/admin/user_ban/<user_hash>')
+@admin.route('/user_ban/<user_hash>')
 @login_required
-def admin_user_ban(user_hash):
+def user_ban(user_hash):
     """ Change details about a review """
     try:
+        db = ReviewsDatabase(os.environ)
         db.user_ban(user_hash)
     except CursorError as e:
         return error_internal(str(e))
     return redirect(url_for('.show_reported'))
 
-@app.route('/admin/unreport/<review_id>')
+@admin.route('/unreport/<review_id>')
 @login_required
-def admin_unreport(review_id):
+def unreport(review_id):
     """ Unreport a perfectly valid review """
     try:
+        db = ReviewsDatabase(os.environ)
         review = db.review_get_for_id(review_id)
     except CursorError as e:
         return error_internal(str(e))
@@ -249,11 +263,12 @@ def admin_unreport(review_id):
     db.review_modify(review)
     return redirect(url_for('.review', review_id=review_id))
 
-@app.route('/admin/unremove/<review_id>')
+@admin.route('/unremove/<review_id>')
 @login_required
-def admin_unremove(review_id):
+def unremove(review_id):
     """ Unreport a perfectly valid review """
     try:
+        db = ReviewsDatabase(os.environ)
         review = db.review_get_for_id(review_id)
     except CursorError as e:
         return error_internal(str(e))
@@ -263,11 +278,12 @@ def admin_unremove(review_id):
     db.review_modify(review)
     return redirect(url_for('.review', review_id=review_id))
 
-@app.route('/admin/englishify/<review_id>')
+@admin.route('/englishify/<review_id>')
 @login_required
-def admin_englishify(review_id):
+def englishify(review_id):
     """ Marks a review as writen in English """
     try:
+        db = ReviewsDatabase(os.environ)
         review = db.review_get_for_id(review_id)
     except CursorError as e:
         return error_internal(str(e))
@@ -281,11 +297,12 @@ def admin_englishify(review_id):
     db.review_modify(review)
     return redirect(url_for('.review', review_id=review_id))
 
-@app.route('/admin/anonify/<review_id>')
+@admin.route('/anonify/<review_id>')
 @login_required
-def admin_anonify(review_id):
+def anonify(review_id):
     """ Removes the username from the review """
     try:
+        db = ReviewsDatabase(os.environ)
         review = db.review_get_for_id(review_id)
     except CursorError as e:
         return error_internal(str(e))
@@ -295,11 +312,12 @@ def admin_anonify(review_id):
     db.review_modify(review)
     return redirect(url_for('.review', review_id=review_id))
 
-@app.route('/admin/delete/<review_id>/force')
+@admin.route('/delete/<review_id>/force')
 @login_required
-def admin_delete_force(review_id):
+def delete_force(review_id):
     """ Delete a review """
     try:
+        db = ReviewsDatabase(os.environ)
         review = db.review_get_for_id(review_id)
     except CursorError as e:
         return error_internal(str(e))
@@ -308,19 +326,20 @@ def admin_delete_force(review_id):
     db.review_delete(review)
     return redirect(url_for('.show_all'))
 
-@app.route('/admin/delete/<review_id>')
+@admin.route('/delete/<review_id>')
 @login_required
-def admin_delete(review_id):
+def delete(review_id):
     """ Ask for confirmation to delete a review """
     return render_template('delete.html', review_id=review_id)
 
-@app.route('/admin/show/all', defaults={'page': 1})
-@app.route('/admin/show/all/page/<int:page>')
-def admin_show_all(page):
+@admin.route('/show/all', defaults={'page': 1})
+@admin.route('/show/all/page/<int:page>')
+def show_all(page):
     """
     Return all the reviews on the server as HTML.
     """
     try:
+        db = ReviewsDatabase(os.environ)
         reviews = db.review_get_all()
     except CursorError as e:
         return error_internal(str(e))
@@ -334,13 +353,14 @@ def admin_show_all(page):
                            pagination=pagination,
                            reviews=reviews)
 
-@app.route('/admin/show/reported')
-def admin_show_reported():
+@admin.route('/show/reported')
+def show_reported():
     """
     Return all the reported reviews on the server as HTML.
     """
     reviews_filtered = []
     try:
+        db = ReviewsDatabase(os.environ)
         reviews = db.review_get_all()
         for review in reviews:
             if review.reported > 0:
@@ -349,13 +369,14 @@ def admin_show_reported():
         return error_internal(str(e))
     return render_template('show-all.html', reviews=reviews_filtered)
 
-@app.route('/admin/show/user/<user_hash>')
-def admin_show_user(user_hash):
+@admin.route('/show/user/<user_hash>')
+def show_user(user_hash):
     """
     Return all the reviews from a user on the server as HTML.
     """
     reviews_filtered = []
     try:
+        db = ReviewsDatabase(os.environ)
         reviews = db.review_get_all()
         for review in reviews:
             if review.user_hash == user_hash:
@@ -364,13 +385,14 @@ def admin_show_user(user_hash):
         return error_internal(str(e))
     return render_template('show-all.html', reviews=reviews_filtered)
 
-@app.route('/admin/show/app/<app_id>')
-def admin_show_app(app_id):
+@admin.route('/show/app/<app_id>')
+def show_app(app_id):
     """
     Return all the reviews from a user on the server as HTML.
     """
     reviews_filtered = []
     try:
+        db = ReviewsDatabase(os.environ)
         reviews = db.review_get_all()
         for review in reviews:
             if review.app_id == app_id:
@@ -379,13 +401,14 @@ def admin_show_app(app_id):
         return error_internal(str(e))
     return render_template('show-all.html', reviews=reviews_filtered)
 
-@app.route('/admin/show/lang/<locale>')
-def admin_show_lang(locale):
+@admin.route('/show/lang/<locale>')
+def show_lang(locale):
     """
     Return all the reviews from a user on the server as HTML.
     """
     reviews_filtered = []
     try:
+        db = ReviewsDatabase(os.environ)
         reviews = db.review_get_all()
         for review in reviews:
             if review.locale == locale:
@@ -394,13 +417,14 @@ def admin_show_lang(locale):
         return error_internal(str(e))
     return render_template('show-all.html', reviews=reviews_filtered)
 
-@app.route('/admin/users/all')
+@admin.route('/users/all')
 @login_required
-def admin_users_all():
+def users_all():
     """
     Return all the users as HTML.
     """
     try:
+        db = ReviewsDatabase(os.environ)
         users_awesome = db.get_users_by_karma(best=True)
         users_haters = db.get_users_by_karma(best=False)
     except CursorError as e:
