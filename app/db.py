@@ -1,18 +1,19 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+# pylint: disable=invalid-name,missing-docstring
+#
+# Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
 # Licensed under the GNU General Public License Version 3
 
-import pymysql as mdb
-import pymysql.cursors
+import os
 import cgi
 import datetime
 import hashlib
 
-from user import OdrsUser
-from event import OdrsEvent
-from review import OdrsReview
+import pymysql as mdb
+
+from .models import User, Event, Review
 
 class CursorError(Exception):
     def __init__(self, cur, e):
@@ -22,7 +23,7 @@ class CursorError(Exception):
 
 def _create_review(e):
     """ Parse a review """
-    review = OdrsReview()
+    review = Review()
     review.review_id = int(e[0])
     review.date_created = int(e[1].strftime("%s"))
     review.app_id = e[2]
@@ -43,7 +44,7 @@ def _create_review(e):
 
 def _create_event(e):
     """ Parse an event """
-    event = OdrsEvent()
+    event = Event()
     event.eventlog_id = int(e[0])
     event.date_created = int(e[1].strftime("%s"))
     event.user_addr = e[2]
@@ -55,7 +56,7 @@ def _create_event(e):
 
 def _create_user(e):
     """ Parse a user """
-    user = OdrsUser()
+    user = User()
     user.id = int(e[0])
     user.date_created = int(e[1].strftime("%s"))
     user.user_hash = e[2]
@@ -71,17 +72,16 @@ def _password_hash(value):
 def _get_datestr_from_dt(when):
     return int("%04i%02i%02i" % (when.year, when.month, when.day))
 
-class ReviewsDatabase(object):
+class Database(object):
 
-    def __init__(self, environ):
+    def __init__(self, app):
         """ Constructor for object """
-        assert environ
         self._db = None
         try:
-            if 'MYSQL_DB_HOST' in environ:
-                self._db = mdb.connect(environ['MYSQL_DB_HOST'],
-                                       environ['MYSQL_DB_USERNAME'],
-                                       environ['MYSQL_DB_PASSWORD'],
+            if 'MYSQL_DB_HOST' in os.environ:
+                self._db = mdb.connect(os.environ['MYSQL_DB_HOST'],
+                                       os.environ['MYSQL_DB_USERNAME'],
+                                       os.environ['MYSQL_DB_PASSWORD'],
                                        'odrs',
                                        use_unicode=True, charset='utf8')
             else:

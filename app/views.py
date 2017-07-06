@@ -1,22 +1,23 @@
 #!/usr/bin/python2
 # -*- coding: utf-8 -*-
 #
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,missing-docstring
 #
-# Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
-# Licensed under the GNU General Public License Version 3
+# Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+# Licensed under the GNU General Public License Version 2
 
 import json
 import os
 import hashlib
 import math
 
-from flask import Blueprint, Response, request
+from flask import request, url_for, redirect, flash, render_template, send_from_directory, Response
+from flask_login import login_user, logout_user
 
-from database import ReviewsDatabase, CursorError
-from review import OdrsReview
+from app import app, db
 
-api = Blueprint('api10', __name__, url_prefix='/')
+from .db import CursorError
+from .models import Review
 
 def _get_user_key(user_hash, app_id):
     salt = os.environ['ODRS_REVIEWS_SECRET']
@@ -114,7 +115,53 @@ def _sanitised_version(val):
 
     return val
 
-@api.errorhandler(400)
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method != 'POST':
+        return render_template('login.html')
+    username = request.form['username']
+    password = request.form['password']
+    try:
+        user = db.user_get_with_login(request.form['username'],
+                                      request.form['password'])
+    except CursorError as e:
+        flash(str(e))
+        return render_template('error.html'), 503
+    if not user:
+        flash('Credentials are not valid.')
+        return redirect(url_for('.login'))
+    login_user(user, remember=False)
+    flash('Logged in successfully.')
+    return redirect(url_for('.index'))
+
+@app.route("/logout")
+def logout():
+    logout_user()
+    flash('Logged out successfully.')
+    return redirect(url_for('.index'))
+
+@app.errorhandler(404)
+def error_page_not_found(msg=None):
+    """ Error handler: File not found """
+    flash(msg)
+    return render_template('error.html'), 404
+
+@app.route('/')
+def index():
+    """ start page """
+    return render_template('index.html')
+
+@app.route('/oars')
+def oars_index():
+    """ OARS page """
+    return render_template('oars.html')
+
+@app.route('/<path:resource>')
+def static_resource(resource):
+    """ Return a static image or resource """
+    return send_from_directory('static/', os.path.basename(resource))
+
+@app.errorhandler(400)
 def json_error(msg=None, errcode=400):
     """ Error handler: JSON output """
     item = {}
@@ -126,7 +173,7 @@ def json_error(msg=None, errcode=400):
                     status=errcode, \
                     mimetype="application/json")
 
-@api.errorhandler(401)
+@app.errorhandler(401)
 def error_permission_denied(msg=None):
     """ Error handler: Permission Denied """
     return json_error(msg, 401)
@@ -150,7 +197,7 @@ def _check_str(val):
         return False
     return True
 
-@api.route('/api/submit', methods=['POST'])
+@app.route('/1.0/reviews/api/submit', methods=['POST'])
 def submit():
     """
     Submits a new review.
@@ -183,7 +230,6 @@ def submit():
         if not _check_str(item[key]):
             return json_error('%s is not a valid string' % key)
     try:
-        db = ReviewsDatabase(os.environ)
 
         # user has already reviewed
         if db.review_exists(item['app_id'], item['user_hash']):
@@ -199,7 +245,7 @@ def submit():
             return json_error('account has been disabled due to abuse')
 
         # create new
-        review = OdrsReview()
+        review = Review()
         review.app_id = item['app_id']
         review.locale = item['locale']
         review.summary = _sanitised_summary(item['summary'])
@@ -228,14 +274,13 @@ def submit():
         return json_error(str(e))
     return json_success()
 
-@api.route('/api/app/<app_id>/<user_hash>')
-@api.route('/api/app/<app_id>')
-def app(app_id, user_hash=None):
+@app.route('/1.0/reviews/api/app/<app_id>/<user_hash>')
+@app.route('/1.0/reviews/api/app/<app_id>')
+def show_app(app_id, user_hash=None):
     """
     Return details about an application.
     """
     try:
-        db = ReviewsDatabase(os.environ)
         db.event_info(_get_client_address(), user_hash, app_id, "getting")
         reviews = db.review_get_for_app_id(app_id)
     except CursorError as e:
@@ -256,7 +301,7 @@ def app(app_id, user_hash=None):
                     status=200, \
                     mimetype="application/json")
 
-@api.route('/api/fetch', methods=['POST'])
+@app.route('/1.0/reviews/api/fetch', methods=['POST'])
 def fetch():
     """
     Return details about an application.
@@ -276,7 +321,6 @@ def fetch():
         return json_error('the user_hash is invalid')
 
     try:
-        db = ReviewsDatabase(os.environ)
         db.analytics_inc_fetch(item['app_id'])
         reviews = db.review_get_for_app_id(item['app_id'])
     except CursorError as e:
@@ -336,14 +380,13 @@ def fetch():
                     status=200, \
                     mimetype="application/json")
 
-@api.route('/api/all/<user_hash>')
-@api.route('/api/all')
+@app.route('/1.0/reviews/api/all/<user_hash>')
+@app.route('/1.0/reviews/api/all')
 def all(user_hash=None):
     """
     Return all the reviews on the server as a JSON object.
     """
     try:
-        db = ReviewsDatabase(os.environ)
         db.event_info(_get_client_address(), user_hash, None, "getting all reviews")
         reviews = db.review_get_all()
     except CursorError as e:
@@ -362,14 +405,13 @@ def all(user_hash=None):
                     status=200, \
                     mimetype="application/json")
 
-@api.route('/api/moderate/<user_hash>')
-@api.route('/api/moderate/<user_hash>/<locale>')
+@app.route('/1.0/reviews/api/moderate/<user_hash>')
+@app.route('/1.0/reviews/api/moderate/<user_hash>/<locale>')
 def moderate(user_hash, locale=None):
     """
     Return all the reviews on the server the user can moderate.
     """
     try:
-        db = ReviewsDatabase(os.environ)
         db.event_info(_get_client_address(), user_hash, None, "getting moderatable reviews")
         reviews = db.review_get_all()
     except CursorError as e:
@@ -412,12 +454,6 @@ def vote(val):
     if not len(item['user_skey']) == 40:
         return json_error('the user_skey is invalid')
 
-    # connect to database early
-    try:
-        db = ReviewsDatabase(os.environ)
-    except CursorError as e:
-        return json_error(str(e))
-
     if item['user_skey'] != _get_user_key(item['user_hash'], item['app_id']):
         db.event_warn(_get_client_address(), item['user_hash'], None,
                       "invalid user_skey of %s" % item['user_skey'])
@@ -455,35 +491,35 @@ def vote(val):
         return json_error(str(e))
     return json_success('voted #%i %i' % (item['review_id'], val))
 
-@api.route('/api/upvote', methods=['POST'])
+@app.route('/1.0/reviews/api/upvote', methods=['POST'])
 def upvote():
     """
     Upvote an existing review by one karma point.
     """
     return vote(1)
 
-@api.route('/api/downvote', methods=['POST'])
+@app.route('/1.0/reviews/api/downvote', methods=['POST'])
 def downvote():
     """
     Downvote an existing review by one karma point.
     """
     return vote(-1)
 
-@api.route('/api/dismiss', methods=['POST'])
+@app.route('/1.0/reviews/api/dismiss', methods=['POST'])
 def dismiss():
     """
     Dismiss a review without rating it up or down.
     """
     return vote(0)
 
-@api.route('/api/report', methods=['POST'])
+@app.route('/1.0/reviews/api/report', methods=['POST'])
 def report():
     """
     Report a review for abuse.
     """
     return vote(-5)
 
-@api.route('/api/remove', methods=['POST'])
+@app.route('/1.0/reviews/api/remove', methods=['POST'])
 def remove():
     """
     Remove a review.
@@ -504,11 +540,6 @@ def remove():
     if not len(item['user_skey']) == 40:
         return json_error('the user_skey is invalid')
 
-    # connect to database early
-    try:
-        db = ReviewsDatabase(os.environ)
-    except CursorError as e:
-        return json_error(str(e))
     if item['user_skey'] != _get_user_key(item['user_hash'], item['app_id']):
         db.event_warn(_get_client_address(), item['user_hash'], None,
                       "invalid user_skey of %s" % item['user_skey'])
@@ -524,13 +555,12 @@ def remove():
         return json_error(str(e))
     return json_success('removed review #%i' % item['review_id'])
 
-@api.route('/api/ratings/<app_id>')
+@app.route('/1.0/reviews/api/ratings/<app_id>')
 def rating_for_id(app_id):
     """
     Get the star ratings for a specific application.
     """
     try:
-        db = ReviewsDatabase(os.environ)
         ratings = db.reviews_get_rating_for_app_id(app_id)
     except CursorError as e:
         return json_error(str(e))
@@ -540,14 +570,13 @@ def rating_for_id(app_id):
                     status=200, \
                     mimetype="application/json")
 
-@api.route('/api/ratings')
+@app.route('/1.0/reviews/api/ratings')
 def ratings():
     """
     Get the star ratings for a specific application.
     """
     item = {}
     try:
-        db = ReviewsDatabase(os.environ)
         app_ids = db.get_all_apps()
         for app_id in app_ids:
             ratings = db.reviews_get_rating_for_app_id(app_id, 2)
