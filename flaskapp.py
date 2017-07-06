@@ -6,8 +6,8 @@
 
 import os
 from flask import Flask, request, url_for, redirect, flash, render_template, send_from_directory, abort
-from flask.ext.login import LoginManager
-from flask.ext.login import login_required, login_user, logout_user
+from flask_login import LoginManager
+from flask_login import login_required, login_user, logout_user
 
 from api10 import api as api10
 from admin import admin
