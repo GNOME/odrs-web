@@ -51,7 +51,7 @@ CREATE TABLE eventlog (
 DROP TABLE IF EXISTS analytics;
 CREATE TABLE analytics (
   datestr INT DEFAULT 0,
-  app_id VARCHAR(64) DEFAULT NULL,
+  app_id VARCHAR(128) DEFAULT NULL,
   fetch_cnt INT DEFAULT 1,
   UNIQUE (datestr,app_id)
 ) CHARSET=utf8;
