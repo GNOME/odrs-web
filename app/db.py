@@ -1,18 +1,19 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+# pylint: disable=invalid-name,missing-docstring
+#
+# Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
 # Licensed under the GNU General Public License Version 3
 
-import pymysql as mdb
-import pymysql.cursors
+import os
 import cgi
 import datetime
 import hashlib
 
-from user import OdrsUser
-from event import OdrsEvent
-from review import OdrsReview
+import pymysql as mdb
+
+from .models import User, Event, Review
 
 class CursorError(Exception):
     def __init__(self, cur, e):
@@ -22,7 +23,7 @@ class CursorError(Exception):
 
 def _create_review(e):
     """ Parse a review """
-    review = OdrsReview()
+    review = Review()
     review.review_id = int(e[0])
     review.date_created = int(e[1].strftime("%s"))
     review.app_id = e[2]
@@ -43,7 +44,7 @@ def _create_review(e):
 
 def _create_event(e):
     """ Parse an event """
-    event = OdrsEvent()
+    event = Event()
     event.eventlog_id = int(e[0])
     event.date_created = int(e[1].strftime("%s"))
     event.user_addr = e[2]
@@ -55,7 +56,7 @@ def _create_event(e):
 
 def _create_user(e):
     """ Parse a user """
-    user = OdrsUser()
+    user = User()
     user.id = int(e[0])
     user.date_created = int(e[1].strftime("%s"))
     user.user_hash = e[2]
@@ -71,17 +72,16 @@ def _password_hash(value):
 def _get_datestr_from_dt(when):
     return int("%04i%02i%02i" % (when.year, when.month, when.day))
 
-class ReviewsDatabase(object):
+class Database(object):
 
-    def __init__(self, environ):
+    def __init__(self, app):
         """ Constructor for object """
-        assert environ
         self._db = None
         try:
-            if 'MYSQL_DB_HOST' in environ:
-                self._db = mdb.connect(environ['MYSQL_DB_HOST'],
-                                       environ['MYSQL_DB_USERNAME'],
-                                       environ['MYSQL_DB_PASSWORD'],
+            if 'MYSQL_DB_HOST' in os.environ:
+                self._db = mdb.connect(os.environ['MYSQL_DB_HOST'],
+                                       os.environ['MYSQL_DB_USERNAME'],
+                                       os.environ['MYSQL_DB_PASSWORD'],
                                        'odrs',
                                        use_unicode=True, charset='utf8')
             else:
@@ -91,198 +91,14 @@ class ReviewsDatabase(object):
         except mdb.Error as e:
             print("Error %d: %s" % (e.args[0], e.args[1]))
         assert self._db
+        self.users = DatabaseUsers(self._db)
+        self.reviews = DatabaseReviews(self._db)
+        self.eventlog = DatabaseEventlog(self._db)
 
-    def __del__(self):
+    def close(self):
         """ Clean up the database """
         if self._db:
             self._db.close()
-
-    def review_modify(self, review):
-        """ Modifies a review """
-        try:
-            cur = self._db.cursor()
-            cur.execute("UPDATE reviews SET version = %s, "
-                        "distro = %s, locale = %s, "
-                        "summary = %s, description = %s, "
-                        "user_display = %s, reported = %s, "
-                        "user_hash = %s, date_deleted = %s "
-                        "WHERE review_id = %s;",
-                        (review.version,
-                         review.distro,
-                         review.locale,
-                         review.summary,
-                         review.description,
-                         review.user_display,
-                         review.reported,
-                         review.user_hash,
-                         review.date_deleted or 0,
-                         review.review_id,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        return True
-
-    def review_add(self, review, user_addr):
-        """ Add a review to the database """
-        try:
-            cur = self._db.cursor()
-            cur.execute("INSERT INTO reviews (app_id, locale, summary, "
-                        "description, user_hash, user_display, version, "
-                        "distro, rating, user_addr) "
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
-                        (review.app_id,
-                         review.locale,
-                         review.summary,
-                         review.description,
-                         review.user_hash,
-                         review.user_display,
-                         review.version,
-                         review.distro,
-                         review.rating,
-                         user_addr,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-
-    def review_delete(self, review):
-        """ Deletes a review """
-        try:
-            cur = self._db.cursor()
-            cur.execute("DELETE FROM reviews WHERE review_id = %s;",
-                        (review.review_id,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        return True
-
-    def review_remove(self, review_id, user_hash):
-        """ Marks a review as removed """
-        try:
-            cur = self._db.cursor()
-            cur.execute("UPDATE reviews SET date_deleted = CURRENT_TIMESTAMP "
-                        "WHERE user_hash = %s AND review_id = %s;",
-                        (user_hash, review_id,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        return True
-
-    def review_get_for_app_id(self, app_id):
-        """ Returns all the reviews for an application (for client-side) """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
-                        "description, version, distro, karma_up, karma_down, "
-                        "user_hash, user_display, rating, date_deleted, reported "
-                        "FROM reviews WHERE app_id=%s AND "
-                        "date_deleted=0 ORDER BY date_created DESC;",
-                        (app_id,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchall()
-        if not res:
-            return []
-        reviews = []
-        for e in res:
-            reviews.append(_create_review(e))
-        return reviews
-
-    def review_get_for_id(self, review_id):
-        """ Returns a specific review """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
-                        "description, version, distro, karma_up, karma_down, "
-                        "user_hash, user_display, rating, date_deleted, reported "
-                        "FROM reviews WHERE review_id=%s LIMIT 1;",
-                        (review_id,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchall()
-        if not res:
-            return None
-        return _create_review(res[0])
-
-    def review_exists(self, app_id, user_hash):
-        """ Checks to see if a review exists for the application+user """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT review_id FROM reviews WHERE app_id=%s "
-                        "AND user_hash=%s AND date_deleted=0;",
-                        (app_id, user_hash,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchone()
-        if res is not None:
-            return True
-        return False
-
-    def vote_exists(self, review_id, user_hash):
-        """ Checks to see if a vote exists for the review+user """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT date_created "
-                        "FROM votes WHERE review_id=%s AND user_hash=%s;",
-                        (review_id, user_hash,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchone()
-        if res is not None:
-            return True
-        return False
-
-    def vote_add(self, review_id, val, user_hash):
-        """ Votes on a specific review and add to the votes database """
-        try:
-            cur = self._db.cursor()
-            if val == -5:
-                cur.execute("UPDATE reviews SET reported = reported + 1 "
-                            "WHERE review_id = %s;", (review_id,))
-            elif val == 1:
-                cur.execute("UPDATE reviews SET karma_up = karma_up + 1 "
-                            "WHERE review_id = %s;", (review_id,))
-            elif val == -1:
-                cur.execute("UPDATE reviews SET karma_down = karma_down + 1 "
-                            "WHERE review_id = %s;", (review_id,))
-            cur.execute("INSERT INTO votes (user_hash, review_id, val) "
-                        "VALUES (%s, %s, %s);",
-                        (user_hash, review_id, val,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-
-    def review_get_all(self):
-        """ Gets all non-removed reviews from the server for all applications """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
-                        "description, version, distro, karma_up, karma_down, "
-                        "user_hash, user_display, rating, date_deleted, reported "
-                        "FROM reviews ORDER BY date_created DESC;")
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchall()
-        if not res:
-            return []
-        reviews = []
-        for e in res:
-            reviews.append(_create_review(e))
-        return reviews
-
-    def event_warn(self,
-                   user_addr=None,
-                   user_hash=None,
-                   app_id=None,
-                   message=None,
-                   important=True):
-        """ Adds a warning to the event log """
-        try:
-            cur = self._db.cursor()
-            cur.execute("INSERT INTO eventlog (user_addr, user_hash, app_id, "
-                        "message, important) "
-                        "VALUES (%s, %s, %s, %s, %s);",
-                        (user_addr, user_hash, app_id, message, important,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-
-    def event_info(self, user_addr=None, user_hash=None, app_id=None, message=None):
-        """ Adds an info item to the event log """
-        self.event_warn(user_addr, user_hash, app_id, message, False)
 
     def analytics_inc_fetch(self, app_id, when=None):
         """ Increments the fetch count on one specific application """
@@ -296,160 +112,6 @@ class ReviewsDatabase(object):
                         (datestr, app_id,))
         except mdb.Error as e:
             raise CursorError(cur, e)
-
-    def user_add(self, user_hash):
-        """ Add a user to the database """
-        try:
-            cur = self._db.cursor()
-            cur.execute("INSERT INTO users (user_hash) VALUES (%s);",
-                        (user_hash,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-
-    def user_get_all(self):
-        """ Get all the users on the system """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT user_id, date_created, "
-                        "user_hash, karma, is_banned "
-                        "FROM users ORDER BY user_id DESC;")
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchall()
-        if not res:
-            return []
-        users = []
-        for e in res:
-            users.append(_create_user(e))
-        return users
-
-    def user_get_with_login(self, username, password):
-        """ Get information about a specific login """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT user_id, date_created, "
-                        "user_hash, karma, is_banned "
-                        "FROM users WHERE user_hash=%s and password=%s;",
-                        (username,
-                         _password_hash(password),))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchone()
-        if not res:
-            return None
-        return _create_user(res)
-
-    def user_get_by_id(self, user_hash):
-        """ Get information about a specific user """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT user_id, date_created, "
-                        "user_hash, karma, is_banned "
-                        "FROM users WHERE user_id=%s;",
-                        (user_hash,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchone()
-        if not res:
-            return None
-        return _create_user(res)
-
-    def user_get_by_hash(self, user_hash):
-        """ Get information about a specific user """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT user_id, date_created, "
-                        "user_hash, karma, is_banned "
-                        "FROM users WHERE user_hash=%s ORDER BY user_id DESC;",
-                        (user_hash,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchone()
-        if not res:
-            return None
-        return _create_user(res)
-
-    def get_users_by_karma(self, best=True):
-        """ Returns interesting statistics for the webapp """
-        try:
-            cur = self._db.cursor()
-            if best:
-                cur.execute("SELECT user_id, date_created, "
-                            "user_hash, karma, is_banned FROM users "
-                            "WHERE karma != 0 ORDER BY karma DESC LIMIT 10;")
-            else:
-                cur.execute("SELECT user_id, date_created, "
-                            "user_hash, karma, is_banned FROM users "
-                            "WHERE karma != 0 ORDER BY karma ASC LIMIT 10;")
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        results = cur.fetchall()
-        data = []
-        for res in results:
-            data.append(_create_user(res))
-        return data
-
-    def user_update_karma(self, user_hash, val):
-        """ Update the request time for a specific user ID """
-
-        # if not existing, create it
-        user = self.user_get_by_hash(user_hash)
-        if not user:
-            self.user_add(user_hash)
-            return
-
-        # update the karma value
-        try:
-            cur = self._db.cursor()
-            cur.execute("UPDATE users SET karma = karma + %s "
-                        "WHERE user_hash = %s;", (val, user_hash,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-
-    def user_ban(self, user_hash):
-        """ Ban a user """
-
-        # check it exists
-        user = self.user_get_by_hash(user_hash)
-        if not user:
-            return
-
-        # update the karma value
-        try:
-            cur = self._db.cursor()
-            cur.execute("UPDATE users SET is_banned = 1 "
-                        "WHERE user_hash = %s;", (user_hash,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-
-    def reviews_get_rating_for_app_id(self, app_id, min_total=1):
-        """ Gets the ratings information for the application """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT COUNT(*) total,"
-                        "       SUM(rating = 0) star0,"
-                        "       SUM(rating = 20) star1,"
-                        "       SUM(rating = 40) star2,"
-                        "       SUM(rating = 60) star3,"
-                        "       SUM(rating = 80) star4,"
-                        "       SUM(rating = 100) star5 "
-                        "FROM reviews WHERE app_id = %s "
-                        "AND date_deleted=0;", (app_id,))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchone()
-        if not res:
-            return []
-        item = {}
-        item['total'] = int(res[0])
-        if item['total'] < min_total:
-            return []
-        for i in range(6):
-            if res[i + 1]:
-                item['star%i' % i] = int(res[i + 1])
-            else:
-                item['star%i' % i] = 0
-        return item
 
     def get_stats_distro(self, limit=10):
         """ Returns distro stats for reviews """
@@ -482,19 +144,6 @@ class ReviewsDatabase(object):
         data = []
         for en in res:
             data.append((en[0], en[1]))
-        return data
-
-    def get_all_apps(self):
-        """ Returns interesting statistics for the webapp """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT DISTINCT(app_id) FROM reviews ORDER BY app_id;")
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchall()
-        data = []
-        for en in res:
-            data.append(en[0])
         return data
 
     def get_stats(self):
@@ -645,3 +294,376 @@ class ReviewsDatabase(object):
         for en in res:
             data.append((en[0], en[1]))
         return data
+
+class DatabaseEventlog(object):
+
+    def __init__(self, db):
+        """ Constructor for object """
+        self._db = db
+
+    def warn(self,
+             user_addr=None,
+             user_hash=None,
+             app_id=None,
+             message=None,
+             important=True):
+        """ Adds a warning to the event log """
+        try:
+            cur = self._db.cursor()
+            cur.execute("INSERT INTO eventlog (user_addr, user_hash, app_id, "
+                        "message, important) "
+                        "VALUES (%s, %s, %s, %s, %s);",
+                        (user_addr, user_hash, app_id, message, important,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+
+    def info(self, user_addr=None, user_hash=None, app_id=None, message=None):
+        """ Adds an info item to the event log """
+        self.warn(user_addr, user_hash, app_id, message, False)
+
+class DatabaseReviews(object):
+
+    def __init__(self, db):
+        """ Constructor for object """
+        self._db = db
+
+    def modify(self, review):
+        """ Modifies a review """
+        try:
+            cur = self._db.cursor()
+            cur.execute("UPDATE reviews SET version = %s, "
+                        "distro = %s, locale = %s, "
+                        "summary = %s, description = %s, "
+                        "user_display = %s, reported = %s, "
+                        "user_hash = %s, date_deleted = %s "
+                        "WHERE review_id = %s;",
+                        (review.version,
+                         review.distro,
+                         review.locale,
+                         review.summary,
+                         review.description,
+                         review.user_display,
+                         review.reported,
+                         review.user_hash,
+                         review.date_deleted or 0,
+                         review.review_id,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        return True
+
+    def add(self, review, user_addr):
+        """ Add a review to the database """
+        try:
+            cur = self._db.cursor()
+            cur.execute("INSERT INTO reviews (app_id, locale, summary, "
+                        "description, user_hash, user_display, version, "
+                        "distro, rating, user_addr) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
+                        (review.app_id,
+                         review.locale,
+                         review.summary,
+                         review.description,
+                         review.user_hash,
+                         review.user_display,
+                         review.version,
+                         review.distro,
+                         review.rating,
+                         user_addr,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+
+    def delete(self, review):
+        """ Deletes a review """
+        try:
+            cur = self._db.cursor()
+            cur.execute("DELETE FROM reviews WHERE review_id = %s;",
+                        (review.review_id,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        return True
+
+    def remove(self, review_id, user_hash):
+        """ Marks a review as removed """
+        try:
+            cur = self._db.cursor()
+            cur.execute("UPDATE reviews SET date_deleted = CURRENT_TIMESTAMP "
+                        "WHERE user_hash = %s AND review_id = %s;",
+                        (user_hash, review_id,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        return True
+
+    def get_for_app_id(self, app_id):
+        """ Returns all the reviews for an application (for client-side) """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
+                        "description, version, distro, karma_up, karma_down, "
+                        "user_hash, user_display, rating, date_deleted, reported "
+                        "FROM reviews WHERE app_id=%s AND "
+                        "date_deleted=0 ORDER BY date_created DESC;",
+                        (app_id,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        if not res:
+            return []
+        reviews = []
+        for e in res:
+            reviews.append(_create_review(e))
+        return reviews
+
+    def get_for_id(self, review_id):
+        """ Returns a specific review """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
+                        "description, version, distro, karma_up, karma_down, "
+                        "user_hash, user_display, rating, date_deleted, reported "
+                        "FROM reviews WHERE review_id=%s LIMIT 1;",
+                        (review_id,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        if not res:
+            return None
+        return _create_review(res[0])
+
+    def exists(self, app_id, user_hash):
+        """ Checks to see if a review exists for the application+user """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT review_id FROM reviews WHERE app_id=%s "
+                        "AND user_hash=%s AND date_deleted=0;",
+                        (app_id, user_hash,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if res is not None:
+            return True
+        return False
+
+
+    def vote_add(self, review_id, val, user_hash):
+        """ Votes on a specific review and add to the votes database """
+        try:
+            cur = self._db.cursor()
+            if val == -5:
+                cur.execute("UPDATE reviews SET reported = reported + 1 "
+                            "WHERE review_id = %s;", (review_id,))
+            elif val == 1:
+                cur.execute("UPDATE reviews SET karma_up = karma_up + 1 "
+                            "WHERE review_id = %s;", (review_id,))
+            elif val == -1:
+                cur.execute("UPDATE reviews SET karma_down = karma_down + 1 "
+                            "WHERE review_id = %s;", (review_id,))
+            cur.execute("INSERT INTO votes (user_hash, review_id, val) "
+                        "VALUES (%s, %s, %s);",
+                        (user_hash, review_id, val,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+
+    def vote_exists(self, review_id, user_hash):
+        """ Checks to see if a vote exists for the review+user """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT date_created "
+                        "FROM votes WHERE review_id=%s AND user_hash=%s;",
+                        (review_id, user_hash,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if res is not None:
+            return True
+        return False
+
+    def get_all(self):
+        """ Gets all non-removed reviews from the server for all applications """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT review_id, date_created, app_id, locale, summary, "
+                        "description, version, distro, karma_up, karma_down, "
+                        "user_hash, user_display, rating, date_deleted, reported "
+                        "FROM reviews ORDER BY date_created DESC;")
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        if not res:
+            return []
+        reviews = []
+        for e in res:
+            reviews.append(_create_review(e))
+        return reviews
+
+    def get_rating_for_app_id(self, app_id, min_total=1):
+        """ Gets the ratings information for the application """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT COUNT(*) total,"
+                        "       SUM(rating = 0) star0,"
+                        "       SUM(rating = 20) star1,"
+                        "       SUM(rating = 40) star2,"
+                        "       SUM(rating = 60) star3,"
+                        "       SUM(rating = 80) star4,"
+                        "       SUM(rating = 100) star5 "
+                        "FROM reviews WHERE app_id = %s "
+                        "AND date_deleted=0;", (app_id,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if not res:
+            return []
+        item = {}
+        item['total'] = int(res[0])
+        if item['total'] < min_total:
+            return []
+        for i in range(6):
+            if res[i + 1]:
+                item['star%i' % i] = int(res[i + 1])
+            else:
+                item['star%i' % i] = 0
+        return item
+
+    def get_all_apps(self):
+        """ Returns interesting statistics for the webapp """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT DISTINCT(app_id) FROM reviews ORDER BY app_id;")
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        data = []
+        for en in res:
+            data.append(en[0])
+        return data
+
+class DatabaseUsers(object):
+
+    def __init__(self, db):
+        """ Constructor for object """
+        self._db = db
+
+    def add(self, user_hash):
+        """ Add a user to the database """
+        try:
+            cur = self._db.cursor()
+            cur.execute("INSERT INTO users (user_hash) VALUES (%s);",
+                        (user_hash,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+
+    def get_all(self):
+        """ Get all the users on the system """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT user_id, date_created, "
+                        "user_hash, karma, is_banned "
+                        "FROM users ORDER BY user_id DESC;")
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        if not res:
+            return []
+        users = []
+        for e in res:
+            users.append(_create_user(e))
+        return users
+
+    def get_with_login(self, username, password):
+        """ Get information about a specific login """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT user_id, date_created, "
+                        "user_hash, karma, is_banned "
+                        "FROM users WHERE user_hash=%s and password=%s;",
+                        (username,
+                         _password_hash(password),))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if not res:
+            return None
+        return _create_user(res)
+
+    def get_by_id(self, user_hash):
+        """ Get information about a specific user """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT user_id, date_created, "
+                        "user_hash, karma, is_banned "
+                        "FROM users WHERE user_id=%s;",
+                        (user_hash,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if not res:
+            return None
+        return _create_user(res)
+
+    def get_by_hash(self, user_hash):
+        """ Get information about a specific user """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT user_id, date_created, "
+                        "user_hash, karma, is_banned "
+                        "FROM users WHERE user_hash=%s ORDER BY user_id DESC;",
+                        (user_hash,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if not res:
+            return None
+        return _create_user(res)
+
+    def get_by_karma(self, best=True):
+        """ Returns interesting statistics for the webapp """
+        try:
+            cur = self._db.cursor()
+            if best:
+                cur.execute("SELECT user_id, date_created, "
+                            "user_hash, karma, is_banned FROM users "
+                            "WHERE karma != 0 ORDER BY karma DESC LIMIT 10;")
+            else:
+                cur.execute("SELECT user_id, date_created, "
+                            "user_hash, karma, is_banned FROM users "
+                            "WHERE karma != 0 ORDER BY karma ASC LIMIT 10;")
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        results = cur.fetchall()
+        data = []
+        for res in results:
+            data.append(_create_user(res))
+        return data
+
+    def update_karma(self, user_hash, val):
+        """ Update the request time for a specific user ID """
+
+        # if not existing, create it
+        user = self.get_by_hash(user_hash)
+        if not user:
+            self.add(user_hash)
+            return
+
+        # update the karma value
+        try:
+            cur = self._db.cursor()
+            cur.execute("UPDATE users SET karma = karma + %s "
+                        "WHERE user_hash = %s;", (val, user_hash,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+
+    def ban(self, user_hash):
+        """ Ban a user """
+
+        # check it exists
+        user = self.get_by_hash(user_hash)
+        if not user:
+            return
+
+        # update the karma value
+        try:
+            cur = self._db.cursor()
+            cur.execute("UPDATE users SET is_banned = 1 "
+                        "WHERE user_hash = %s;", (user_hash,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
