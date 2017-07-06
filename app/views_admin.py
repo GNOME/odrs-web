@@ -229,7 +229,7 @@ def admin_modify(review_id):
     review.summary = request.form['summary']
     review.version = request.form['version']
     db.reviews.modify(review)
-    return redirect(url_for('.review', review_id=review_id))
+    return redirect(url_for('.admin_show_review', review_id=review_id))
 
 @app.route('/admin/users.ban/<user_hash>')
 @login_required
@@ -240,7 +240,7 @@ def admin_user_ban(user_hash):
         db.users.ban(user_hash)
     except CursorError as e:
         return error_internal(str(e))
-    return redirect(url_for('.show_reported'))
+    return redirect(url_for('.admin_show_reported'))
 
 @app.route('/admin/unreport/<review_id>')
 @login_required
@@ -255,7 +255,7 @@ def admin_unreport(review_id):
         return error_internal('no review with that ID')
     review.reported = 0
     db.reviews.modify(review)
-    return redirect(url_for('.review', review_id=review_id))
+    return redirect(url_for('.admin_show_review', review_id=review_id))
 
 @app.route('/admin/unremove/<review_id>')
 @login_required
@@ -270,7 +270,7 @@ def admin_unremove(review_id):
         return error_internal('no review with that ID')
     review.date_deleted = 0
     db.reviews.modify(review)
-    return redirect(url_for('.review', review_id=review_id))
+    return redirect(url_for('.admin_show_review', review_id=review_id))
 
 @app.route('/admin/englishify/<review_id>')
 @login_required
@@ -289,7 +289,7 @@ def admin_englishify(review_id):
     else:
         review.locale = 'en_' + parts[1]
     db.reviews.modify(review)
-    return redirect(url_for('.review', review_id=review_id))
+    return redirect(url_for('.admin_show_review', review_id=review_id))
 
 @app.route('/admin/anonify/<review_id>')
 @login_required
@@ -304,7 +304,7 @@ def admin_anonify(review_id):
         return error_internal('no review with that ID')
     review.user_display = None
     db.reviews.modify(review)
-    return redirect(url_for('.review', review_id=review_id))
+    return redirect(url_for('.admin_show_review', review_id=review_id))
 
 @app.route('/admin/delete/<review_id>/force')
 @login_required
@@ -318,7 +318,7 @@ def admin_delete_force(review_id):
     if not review:
         return error_internal('no review with that ID')
     db.reviews.delete(review)
-    return redirect(url_for('.show_all'))
+    return redirect(url_for('.admin_show_all'))
 
 @app.route('/admin/delete/<review_id>')
 @login_required
