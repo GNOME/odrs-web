@@ -375,7 +375,7 @@ def admin_show_all(page):
 
     # filter by the languages the moderator understands
     reviews = []
-    if not current_user or current_user.locales == None:
+    if not current_user or current_user.locales == None or current_user.locales == '*':
         reviews.extend(reviews_all)
     else:
         langs = current_user.locales.split(',')
