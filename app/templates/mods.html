@@ -29,22 +29,24 @@
 
 <h2>Create new</h2>
 <form method="post" action="/admin/moderator/add" class="form">
-  <div class="form-control">
-    <label for="username_new">Username:</label>
-    <input type="text" class="form-control" name="username_new" required>
-  </div>
-  <div class="form-control">
-    <label for="password_new">Password:</label>
-    <input type="password" class="form-control" name="password_new" required>
-  </div>
-  <div class="form-control">
-    <label for="name">Display Name:</label>
-    <input type="text" class="form-control" name="display_name" required>
-  </div>
-  <div class="form-control">
-    <label for="email">Contact Email:</label>
-    <input type="text" class="form-control" name="email" required>
-  </div>
+<table>
+  <tr>
+    <th>Username:</th>
+    <td><input type="text" class="form-control" name="username_new" required></td>
+  </tr>
+  <tr>
+    <th>Password:</th>
+    <td><input type="password" class="form-control" name="password_new" required></td>
+  </tr>
+  <tr>
+    <th>Display Name:</th>
+    <td><input type="text" class="form-control" name="display_name" required></td>
+  </tr>
+  <tr>
+    <th>Contact Email:</th>
+    <td><input type="text" class="form-control" name="email" required></td>
+  </tr>
+</table>
   <input type="submit" value="Add">
 </form>
 

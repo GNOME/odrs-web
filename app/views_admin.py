@@ -36,6 +36,26 @@ def _get_chart_labels_days():
         labels.append("%02i-%02i-%02i" % (then.year, then.month, then.day))
     return labels
 
+def _get_langs_for_user(user):
+    if not user:
+        return None
+    if not getattr(user, 'locales', None):
+        return None
+    if not user.locales:
+        return None
+    if user.locales == '*':
+        return None
+    return user.locales.split(',')
+
+def _get_hash_for_user(user):
+    if not user:
+        return None
+    if not getattr(user, 'user_hash', None):
+        return None
+    if not user.user_hash:
+        return None
+    return user.user_hash
+
 def _password_check(value):
     """ Check the password for suitability """
     success = True
@@ -234,7 +254,15 @@ def admin_show_review(review_id):
         return _error_internal(str(e))
     if not review:
         return _error_internal('no review with that ID')
-    return render_template('show.html', r=review)
+
+    # has the user already voted
+    user_hash = _get_hash_for_user(current_user)
+    if user_hash:
+        vote_exists = db.reviews.vote_exists(review_id, user_hash)
+    else:
+        vote_exists = False
+
+    return render_template('show.html', r=review, vote_exists=vote_exists)
 
 @app.route('/admin/modify/<review_id>', methods=['POST'])
 @login_required
@@ -367,22 +395,11 @@ def admin_show_all(page):
 
     try:
         db = get_db()
-        reviews_all = db.reviews.get_all()
+        reviews = db.reviews.get_all()
     except CursorError as e:
         return _error_internal(str(e))
-    if not reviews_all and page != 1:
+    if not reviews and page != 1:
         abort(404)
-
-    # filter by the languages the moderator understands
-    reviews = []
-    if not current_user or current_user.locales == None or current_user.locales == '*':
-        reviews.extend(reviews_all)
-    else:
-        langs = current_user.locales.split(',')
-        for r in reviews_all:
-            lang = r.locale.split('_')[0]
-            if lang in langs:
-                reviews.append(r)
 
     reviews_per_page = 20
     pagination = Pagination(page, reviews_per_page, len(reviews))
@@ -390,6 +407,41 @@ def admin_show_all(page):
     reviews = reviews[(page-1) * reviews_per_page:page * reviews_per_page]
     return render_template('show-all.html',
                            pagination=pagination,
+                           reviews=reviews)
+
+@app.route('/admin/show/unmoderated')
+@login_required
+def admin_show_unmoderated():
+    """
+    Return all the reviews on the server as HTML.
+    """
+
+    try:
+        db = get_db()
+        reviews_all = db.reviews.get_all()
+    except CursorError as e:
+        return _error_internal(str(e))
+    if not reviews_all and page != 1:
+        abort(404)
+
+    user_hash = _get_hash_for_user(current_user)
+    if not user_hash:
+        return _error_internal('no user_hash...')
+
+    # filter by the languages the moderator understands
+    reviews = []
+    langs = _get_langs_for_user(current_user)
+    for r in reviews_all:
+        lang = r.locale.split('_')[0]
+        if langs and lang not in langs:
+            continue
+        if db.reviews.vote_exists(r.review_id, user_hash):
+            continue
+        if len(reviews_all) > 20:
+            break
+        reviews.append(r)
+    return render_template('show-all.html',
+                           pagination=None,
                            reviews=reviews)
 
 @app.route('/admin/show/reported')
@@ -551,7 +603,7 @@ def admin_moderator_show(username):
     """
     Shows an admin panel for a moderator
     """
-    if username != current_user.username and current_user.username != 'root':
+    if username != current_user.username and current_user.username != 'admin':
         return _error_permission_denied('Unable to show moderator information')
     try:
         db = get_db()
@@ -585,13 +637,44 @@ def admin_moderate_delete(username):
     flash('Deleted user')
     return redirect(url_for('.admin_moderator_show_all'), 302)
 
+@app.route('/admin/vote/<review_id>/<val_str>')
+@login_required
+def admin_vote(review_id, val_str):
+    """ Up or downvote an existing review by @val karma points """
+    user_hash = _get_hash_for_user(current_user)
+    if not user_hash:
+        return _error_internal('no user_hash...')
+    if val_str == 'up':
+        val = 1
+    elif val_str == 'down':
+        val = -1;
+    elif val_str == 'meh':
+        val = 0;
+    else:
+        return _error_internal('invalid vote value...')
+    try:
+        # the user already has a review
+        db = get_db()
+        if db.reviews.vote_exists(review_id, user_hash):
+            flash('already voted on this app')
+            return redirect(url_for('.admin_show_review', review_id=review_id))
+        user = db.users.get_by_hash(user_hash)
+        if not user:
+            db.users.add(user_hash)
+        db.users.update_karma(user_hash, val)
+        db.reviews.vote_add(review_id, val, user_hash)
+    except CursorError as e:
+        return json_error(str(e))
+    return redirect(url_for('.admin_show_review', review_id=review_id))
+
+
 @app.route('/admin/moderator/<username>/modify_by_admin', methods=['POST'])
 @login_required
 def user_modify_by_admin(username):
     """ Change details about the any user """
 
     # security check
-    if username != current_user.username and current_user.username != 'root':
+    if username != current_user.username and current_user.username != 'admin':
         return _error_permission_denied('Unable to modify user as non-admin')
 
     # set each thing in turn

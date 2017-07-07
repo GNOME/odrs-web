@@ -38,6 +38,7 @@
               <li><a href="/">Home</a></li>
               <li><a href="/admin/show/all">All Reviews</a></li>
 {% if current_user.is_authenticated %}
+              <li><a href="/admin/show/unmoderated">Queue</a></li>
               <li><a href="/admin/show/reported">Reported</a></li>
 {% endif %}
 {% if current_user.is_admin %}
@@ -46,8 +47,6 @@
               <li><a href="/admin/moderators/all">Moderators</a></li>
               <li><a href="/admin/distros">Distributions</a></li>
               <li><a href="/admin/graph_month">Usage</a></li>
-{% else %}
-              <li><a href="/admin/moderator/{{current_user.username}}/admin">Profile</a></li>
 {% endif %}
             </ul>
           </div>
@@ -55,6 +54,9 @@
         <div class="right">
           <div class="menu-globalnav-container">
             <ul id="menu-globalnav" class="menu">
+{% if not current_user.is_admin and current_user.is_authenticated %}
+              <li><a href="/admin/moderator/{{current_user.username}}/admin">Profile</a></li>
+{% endif %}
 {% if current_user.is_authenticated %}
               <li class="navigation2"><a href="/logout">Logout</a></li>
 {% else %}
