@@ -62,12 +62,6 @@ def _password_check(value):
     if len(value) < 8:
         success = False
         flash('The password is too short, the minimum is 8 characters', 'warning')
-    if len(value) > 40:
-        success = False
-        flash('The password is too long, the maximum is 40 characters', 'warning')
-    if value.lower() == value:
-        success = False
-        flash('The password requires at least one uppercase character', 'warning')
     if value.isalnum():
         success = False
         flash('The password requires at least one non-alphanumeric character', 'warning')
