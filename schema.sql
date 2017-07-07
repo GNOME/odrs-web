@@ -1,3 +1,6 @@
+ALTER TABLE analytics MODIFY COLUMN app_id VARCHAR(128) DEFAULT NULL;
+
+
 DROP TABLE IF EXISTS reviews;
 CREATE TABLE reviews (
   review_id INT NOT NULL AUTO_INCREMENT,
@@ -34,7 +37,6 @@ CREATE TABLE users (
   user_hash TEXT DEFAULT NULL,
   karma INT DEFAULT 0,
   is_banned INT DEFAULT 0,
-  password TEXT DEFAULT NULL,
   UNIQUE KEY id (user_id)
 ) CHARSET=utf8;
 DROP TABLE IF EXISTS eventlog;
@@ -56,3 +58,17 @@ CREATE TABLE analytics (
   UNIQUE (datestr,app_id)
 ) CHARSET=utf8;
 CREATE INDEX date_created_idx ON eventlog (date_created);
+CREATE TABLE moderators (
+  moderator_id INT NOT NULL AUTO_INCREMENT,
+  username TEXT DEFAULT NULL,
+  password TEXT DEFAULT NULL,
+  display_name TEXT DEFAULT NULL,
+  email TEXT DEFAULT NULL,
+  is_enabled TINYINT DEFAULT 0,
+  is_admin TINYINT DEFAULT 0,
+  user_hash TEXT DEFAULT NULL,
+  locales TEXT DEFAULT NULL,
+  UNIQUE KEY id (moderator_id)
+) CHARSET=utf8;
+INSERT INTO moderators (username, password, display_name, email, is_enabled, is_admin)
+    VALUES ('admin', 'cc492636d799c5509bbd48b27b02986dcf25dfc8', 'Richard Hughes', 'richard@hughsie.com', 1, 1);

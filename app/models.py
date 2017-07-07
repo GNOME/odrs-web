@@ -14,24 +14,6 @@ class User(object):
         self.user_hash = 0
         self.is_banned = 0
 
-    @property
-    def is_authenticated(self):
-        return True
-
-    @property
-    def is_active(self):
-        return True
-
-    @property
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return str(self.id)
-
-    def __repr__(self):
-        return '<User %r>' % (self.id)
-
 class Review(object):
     def __init__(self):
         self.review_id = 0
@@ -59,3 +41,33 @@ class Event(object):
         self.message = None
         self.app_id = None
         self.important = False
+
+class Moderator(object):
+    def __init__(self):
+        self.moderator_id = 0
+        self.username = None
+        self.password = None
+        self.display_name = None
+        self.email = None
+        self.is_enabled = False
+        self.is_admin = False
+        self.user_hash = None
+        self.locales = None
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.moderator_id)
+
+    def __repr__(self):
+        return '<Moderator %r>' % (self.moderator_id)

@@ -12,6 +12,8 @@ To set up the database tables do:
     GRANT ALL ON odrs.* TO 'test'@'localhost';
     SOURCE /path/to/schema.sql
 
+The default admin password is `Pa$$w0rd`
+
 ## How do I backup the data ##
 
 You want to save the variable `ODRS_REVIEWS_SECRET` so that old review data

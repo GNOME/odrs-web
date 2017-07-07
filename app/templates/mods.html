@@ -1,0 +1,52 @@
+{% extends "default.html" %}
+{% block title %}Moderators{% endblock %}
+
+{% block content %}
+
+<h2>Moderators</h2>
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Username</th>
+    <th>Display Name</th>
+    <th>Email</th>
+    <th>Is Enabled</th>
+    <th>Is Admin</th>
+    <th>User Hashes</th>
+  </tr>
+{% for u in mods %}
+  <tr>
+    <td> {{ u.moderator_id }} </td>
+    <td><a href="/admin/moderator/{{u.username}}/admin">{{ u.username }}</a></td>
+    <td> {{ u.display_name }} </td>
+    <td> {{ u.email }} </td>
+    <td> {{ u.is_enabled }} </td>
+    <td> {{ u.is_admin }} </td>
+    <td> {{ u.user_hash }} </td>
+  </tr>
+{% endfor %}
+</table>
+
+<h2>Create new</h2>
+<form method="post" action="/admin/moderator/add" class="form">
+  <div class="form-control">
+    <label for="username_new">Username:</label>
+    <input type="text" class="form-control" name="username_new" required>
+  </div>
+  <div class="form-control">
+    <label for="password_new">Password:</label>
+    <input type="password" class="form-control" name="password_new" required>
+  </div>
+  <div class="form-control">
+    <label for="name">Display Name:</label>
+    <input type="text" class="form-control" name="display_name" required>
+  </div>
+  <div class="form-control">
+    <label for="email">Contact Email:</label>
+    <input type="text" class="form-control" name="email" required>
+  </div>
+  <input type="submit" value="Add">
+</form>
+
+
+{% endblock %}

@@ -13,7 +13,7 @@ import hashlib
 
 import pymysql as mdb
 
-from .models import User, Event, Review
+from .models import User, Event, Review, Moderator
 
 class CursorError(Exception):
     def __init__(self, cur, e):
@@ -64,6 +64,20 @@ def _create_user(e):
     user.is_banned = int(e[4])
     return user
 
+def _create_moderator(e):
+    """ Parse a user """
+    mod = Moderator()
+    mod.moderator_id = int(e[0])
+    mod.username = e[1]
+    mod.password = e[2]
+    mod.display_name = e[3]
+    mod.email = e[4]
+    mod.is_enabled = int(e[5])
+    mod.is_admin = int(e[6])
+    mod.user_hash = e[7]
+    mod.locales = e[8]
+    return mod
+
 def _password_hash(value):
     """ Generate a salted hash of the password string """
     salt = 'odrs%%%'
@@ -92,6 +106,7 @@ class Database(object):
             print("Error %d: %s" % (e.args[0], e.args[1]))
         assert self._db
         self.users = DatabaseUsers(self._db)
+        self.moderators = DatabaseModerators(self._db)
         self.reviews = DatabaseReviews(self._db)
         self.eventlog = DatabaseEventlog(self._db)
 
@@ -537,6 +552,121 @@ class DatabaseReviews(object):
             data.append(en[0])
         return data
 
+class DatabaseModerators(object):
+
+    def __init__(self, db):
+        """ Constructor for object """
+        self._db = db
+
+    def get_all(self):
+        """ Get all the users on the system """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT moderator_id, username, password, "
+                        "display_name, email, is_enabled, is_admin, "
+                        "user_hash, locales "
+                        "FROM moderators ORDER BY moderator_id ASC;")
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchall()
+        if not res:
+            return []
+        users = []
+        for e in res:
+            users.append(_create_moderator(e))
+        return users
+
+    def get_by_id(self, moderator_id):
+        """ Get information about a specific user """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT moderator_id, username, password, "
+                        "display_name, email, is_enabled, is_admin, "
+                        "user_hash, locales "
+                        "FROM moderators WHERE moderator_id=%s;",
+                        (moderator_id,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if not res:
+            return None
+        return _create_moderator(res)
+
+    def get_by_username(self, username):
+        """ Get information about a specific user """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT moderator_id, username, password, "
+                        "display_name, email, is_enabled, is_admin, "
+                        "user_hash, locales "
+                        "FROM moderators WHERE username=%s;",
+                        (username,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if not res:
+            return None
+        return _create_moderator(res)
+
+    def get_by_username_password(self, username, password):
+        """ Get information about a specific login """
+        try:
+            cur = self._db.cursor()
+            cur.execute("SELECT moderator_id, username, password, "
+                        "display_name, email, is_enabled, is_admin, "
+                        "user_hash, locales "
+                        "FROM moderators WHERE username=%s AND password=%s;",
+                        (username,
+                         _password_hash(password),))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if not res:
+            return None
+        return _create_moderator(res)
+
+    def add(self, username, password, display_name, email):
+        """ Adds a moderator """
+        try:
+            cur = self._db.cursor()
+            cur.execute("INSERT INTO moderators (username, password, display_name, "
+                        "email, is_enabled) "
+                        "VALUES (%s, %s, %s, %s, %s);",
+                        (username,
+                         _password_hash(password),
+                         display_name,
+                         email,
+                         True,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+        res = cur.fetchone()
+        if not res:
+            return None
+        return _create_moderator(res)
+
+    def delete(self, username):
+        """ Deletes a moderator """
+        try:
+            cur = self._db.cursor()
+            cur.execute("DELETE FROM moderators WHERE username = %s;",
+                        (username,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+
+    def set_property(self, username, key, value):
+        """ Sets some properties on the moderator """
+        assert username
+        assert key
+
+        try:
+            query = "UPDATE moderators SET %s=%%s WHERE username=%%s;" % key
+            if key == 'password':
+                value = _password_hash(value)
+            cur = self._db.cursor()
+            cur.execute(query, (value, username,))
+        except mdb.Error as e:
+            raise CursorError(cur, e)
+
 class DatabaseUsers(object):
 
     def __init__(self, db):
@@ -568,22 +698,6 @@ class DatabaseUsers(object):
         for e in res:
             users.append(_create_user(e))
         return users
-
-    def get_with_login(self, username, password):
-        """ Get information about a specific login """
-        try:
-            cur = self._db.cursor()
-            cur.execute("SELECT user_id, date_created, "
-                        "user_hash, karma, is_banned "
-                        "FROM users WHERE user_hash=%s and password=%s;",
-                        (username,
-                         _password_hash(password),))
-        except mdb.Error as e:
-            raise CursorError(cur, e)
-        res = cur.fetchone()
-        if not res:
-            return None
-        return _create_user(res)
 
     def get_by_id(self, user_hash):
         """ Get information about a specific user """

@@ -11,7 +11,7 @@ import calendar
 from math import ceil
 
 from flask import abort, request, flash, render_template, redirect, url_for
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from app import app, get_db
 from .db import CursorError
@@ -35,6 +35,29 @@ def _get_chart_labels_days():
         then = now - datetime.timedelta(i)
         labels.append("%02i-%02i-%02i" % (then.year, then.month, then.day))
     return labels
+
+def _password_check(value):
+    """ Check the password for suitability """
+    success = True
+    if len(value) < 8:
+        success = False
+        flash('The password is too short, the minimum is 8 characters', 'warning')
+    if len(value) > 40:
+        success = False
+        flash('The password is too long, the maximum is 40 characters', 'warning')
+    if value.lower() == value:
+        success = False
+        flash('The password requires at least one uppercase character', 'warning')
+    if value.isalnum():
+        success = False
+        flash('The password requires at least one non-alphanumeric character', 'warning')
+    return success
+
+def _email_check(value):
+    """ Do a quick and dirty check on the email address """
+    if len(value) < 5 or value.find('@') == -1 or value.find('.') == -1:
+        return False
+    return True
 
 class Pagination(object):
 
@@ -69,13 +92,13 @@ class Pagination(object):
                 last = num
 
 @app.errorhandler(400)
-def error_internal(msg=None, errcode=400):
+def _error_internal(msg=None, errcode=400):
     """ Error handler: Internal """
     flash("Internal error: %s" % msg)
     return render_template('error.html'), errcode
 
 @app.errorhandler(401)
-def error_permission_denied(msg=None):
+def _error_permission_denied(msg=None):
     """ Error handler: Permission Denied """
     flash("Permission denied: %s" % msg)
     return render_template('error.html'), 401
@@ -115,11 +138,14 @@ def show_stats():
     """
     Return the statistics page as HTML.
     """
+    # security check
+    if current_user.username != 'admin':
+        return _error_permission_denied('Unable to show stats as non-admin')
     try:
         db = get_db()
         stats = db.get_stats()
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
 
     # stats
     results_stats = []
@@ -146,11 +172,14 @@ def distros():
     """
     Return the statistics page as HTML.
     """
+    # security check
+    if current_user.username != 'admin':
+        return _error_permission_denied('Unable to show distros as non-admin')
     try:
         db = get_db()
         stats = db.get_stats_distro(8)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     labels = []
     data = []
     for s in stats:
@@ -202,9 +231,9 @@ def admin_show_review(review_id):
         db = get_db()
         review = db.reviews.get_for_id(review_id)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     if not review:
-        return error_internal('no review with that ID')
+        return _error_internal('no review with that ID')
     return render_template('show.html', r=review)
 
 @app.route('/admin/modify/<review_id>', methods=['POST'])
@@ -215,9 +244,9 @@ def admin_modify(review_id):
         db = get_db()
         review = db.reviews.get_for_id(review_id)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     if not review:
-        return error_internal('no review with that ID')
+        return _error_internal('no review with that ID')
     review.distro = request.form['distro']
     review.locale = request.form['locale']
     if len(request.form['user_display']) == 0:
@@ -235,11 +264,14 @@ def admin_modify(review_id):
 @login_required
 def admin_user_ban(user_hash):
     """ Change details about a review """
+    # security check
+    if current_user.username != 'admin':
+        return _error_permission_denied('Unable to ban user as non-admin')
     try:
         db = get_db()
         db.users.ban(user_hash)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     return redirect(url_for('.admin_show_reported'))
 
 @app.route('/admin/unreport/<review_id>')
@@ -250,9 +282,9 @@ def admin_unreport(review_id):
         db = get_db()
         review = db.reviews.get_for_id(review_id)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     if not review:
-        return error_internal('no review with that ID')
+        return _error_internal('no review with that ID')
     review.reported = 0
     db.reviews.modify(review)
     return redirect(url_for('.admin_show_review', review_id=review_id))
@@ -265,9 +297,9 @@ def admin_unremove(review_id):
         db = get_db()
         review = db.reviews.get_for_id(review_id)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     if not review:
-        return error_internal('no review with that ID')
+        return _error_internal('no review with that ID')
     review.date_deleted = 0
     db.reviews.modify(review)
     return redirect(url_for('.admin_show_review', review_id=review_id))
@@ -280,9 +312,9 @@ def admin_englishify(review_id):
         db = get_db()
         review = db.reviews.get_for_id(review_id)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     if not review:
-        return error_internal('no review with that ID')
+        return _error_internal('no review with that ID')
     parts = review.locale.split('_')
     if len(parts) == 1:
         review.locale = 'en'
@@ -299,9 +331,9 @@ def admin_anonify(review_id):
         db = get_db()
         review = db.reviews.get_for_id(review_id)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     if not review:
-        return error_internal('no review with that ID')
+        return _error_internal('no review with that ID')
     review.user_display = None
     db.reviews.modify(review)
     return redirect(url_for('.admin_show_review', review_id=review_id))
@@ -314,9 +346,9 @@ def admin_delete_force(review_id):
         db = get_db()
         review = db.reviews.get_for_id(review_id)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     if not review:
-        return error_internal('no review with that ID')
+        return _error_internal('no review with that ID')
     db.reviews.delete(review)
     return redirect(url_for('.admin_show_all'))
 
@@ -332,13 +364,26 @@ def admin_show_all(page):
     """
     Return all the reviews on the server as HTML.
     """
+
     try:
         db = get_db()
-        reviews = db.reviews.get_all()
+        reviews_all = db.reviews.get_all()
     except CursorError as e:
-        return error_internal(str(e))
-    if not reviews and page != 1:
+        return _error_internal(str(e))
+    if not reviews_all and page != 1:
         abort(404)
+
+    # filter by the languages the moderator understands
+    reviews = []
+    if not current_user or current_user.locales == None:
+        reviews.extend(reviews_all)
+    else:
+        langs = current_user.locales.split(',')
+        for r in reviews_all:
+            lang = r.locale.split('_')[0]
+            if lang in langs:
+                reviews.append(r)
+
     reviews_per_page = 20
     pagination = Pagination(page, reviews_per_page, len(reviews))
     # FIXME: do this database side...
@@ -348,6 +393,7 @@ def admin_show_all(page):
                            reviews=reviews)
 
 @app.route('/admin/show/reported')
+@login_required
 def admin_show_reported():
     """
     Return all the reported reviews on the server as HTML.
@@ -360,7 +406,7 @@ def admin_show_reported():
             if review.reported > 0:
                 reviews_filtered.append(review)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     return render_template('show-all.html', reviews=reviews_filtered)
 
 @app.route('/admin/show/user/<user_hash>')
@@ -376,7 +422,7 @@ def admin_show_user(user_hash):
             if review.user_hash == user_hash:
                 reviews_filtered.append(review)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     return render_template('show-all.html', reviews=reviews_filtered)
 
 @app.route('/admin/show/app/<app_id>')
@@ -392,7 +438,7 @@ def admin_show_app(app_id):
             if review.app_id == app_id:
                 reviews_filtered.append(review)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     return render_template('show-all.html', reviews=reviews_filtered)
 
 @app.route('/admin/show/lang/<locale>')
@@ -408,7 +454,7 @@ def admin_show_lang(locale):
             if review.locale == locale:
                 reviews_filtered.append(review)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     return render_template('show-all.html', reviews=reviews_filtered)
 
 @app.route('/admin/users/all')
@@ -422,5 +468,151 @@ def admin_users_all():
         users_awesome = db.users.get_by_karma(best=True)
         users_haters = db.users.get_by_karma(best=False)
     except CursorError as e:
-        return error_internal(str(e))
+        return _error_internal(str(e))
     return render_template('users.html', users_awesome=users_awesome, users_haters=users_haters)
+
+@app.route('/admin/moderators/all')
+@login_required
+def admin_moderator_show_all():
+    """
+    Return all the moderators as HTML.
+    """
+    # security check
+    if current_user.username != 'admin':
+        return _error_permission_denied('Unable to show all moderators')
+    try:
+        db = get_db()
+        mods = db.moderators.get_all()
+    except CursorError as e:
+        return _error_internal(str(e))
+    return render_template('mods.html', mods=mods)
+
+@app.route('/admin/moderator/add', methods=['GET', 'POST'])
+@login_required
+def admin_moderator_add():
+    """ Add a moderator [ADMIN ONLY] """
+
+    # only accept form data
+    if request.method != 'POST':
+        return redirect(url_for('.profile'))
+
+    # security check
+    if current_user.username != 'admin':
+        return _error_permission_denied('Unable to add moderator as non-admin')
+
+    if not 'password_new' in request.form:
+        return _error_permission_denied('Unable to add user as no password_new')
+    if not 'username_new' in request.form:
+        return _error_permission_denied('Unable to add user as no username_new')
+    if not 'display_name' in request.form:
+        return _error_permission_denied('Unable to add user as no display name')
+    if not 'email' in request.form:
+        return _error_permission_denied('Unable to add user as no email')
+    try:
+        db = get_db()
+        auth = db.moderators.get_by_username(request.form['username_new'])
+    except CursorError as e:
+        return _error_internal(str(e))
+    if auth:
+        return _error_internal('Already a entry with that username', 422)
+
+    # verify password
+    password = request.form['password_new']
+    if not _password_check(password):
+        return redirect(url_for('.admin_moderator_show_all'), 422)
+
+    # verify email
+    email = request.form['email']
+    if not _email_check(email):
+        flash('Invalid email address', 'warning')
+        return redirect(url_for('.admin_moderator_show_all'), 422)
+
+    # verify name
+    display_name = request.form['display_name']
+    if len(display_name) < 3:
+        flash('Name invalid', 'warning')
+        return redirect(url_for('.admin_moderator_show_all'), 422)
+
+    # verify username
+    username_new = request.form['username_new']
+    if len(username_new) < 3:
+        flash('Username invalid', 'warning')
+        return redirect(url_for('.admin_moderator_show_all'), 422)
+    try:
+        db.moderators.add(username_new, password, display_name, email)
+    except CursorError as e:
+        return _error_internal(str(e))
+    flash('Added user')
+    return redirect(url_for('.admin_moderator_show_all'), 302)
+
+@app.route('/admin/moderator/<username>/admin')
+@login_required
+def admin_moderator_show(username):
+    """
+    Shows an admin panel for a moderator
+    """
+    if username != current_user.username and current_user.username != 'root':
+        return _error_permission_denied('Unable to show moderator information')
+    try:
+        db = get_db()
+        mod = db.moderators.get_by_username(username)
+    except CursorError as e:
+        return _error_internal(str(e))
+    return render_template('modadmin.html', u=mod)
+
+@app.route('/admin/moderator/<username>/delete')
+@login_required
+def admin_moderate_delete(username):
+    """ Delete a moderator """
+
+    # security check
+    if current_user.username != 'admin':
+        return _error_permission_denied('Unable to delete moderator as not admin')
+
+    # check whether exists in database
+    try:
+        db = get_db()
+        mod = db.moderators.get_by_username(username)
+    except CursorError as e:
+        return _error_internal(str(e))
+    if not mod:
+        flash("No entry with username %s" % username, 'error')
+        return redirect(url_for('.admin_moderator_show_all'), 422)
+    try:
+        db.moderators.remove(username)
+    except CursorError as e:
+        return _error_internal(str(e))
+    flash('Deleted user')
+    return redirect(url_for('.admin_moderator_show_all'), 302)
+
+@app.route('/admin/moderator/<username>/modify_by_admin', methods=['POST'])
+@login_required
+def user_modify_by_admin(username):
+    """ Change details about the any user """
+
+    # security check
+    if username != current_user.username and current_user.username != 'root':
+        return _error_permission_denied('Unable to modify user as non-admin')
+
+    # set each thing in turn
+    for key in ['display_name',
+                'email',
+                'password',
+                'user_hash',
+                'locales',
+                'is_enabled']:
+        # unchecked checkbuttons are not included in the form data
+        if key in request.form:
+            tmp = request.form[key]
+        else:
+            tmp = '0'
+        try:
+            # don't set the optional password
+            if key == 'password' and len(tmp) == 0:
+                continue
+            db = get_db()
+            db.moderators.set_property(username, key, tmp)
+        except CursorError as e:
+            return _error_internal(str(e))
+    flash('Updated profile')
+    return redirect(url_for('.admin_moderator_show', username=username))

@@ -17,7 +17,7 @@ from flask_login import login_user, logout_user
 from app import app, get_db
 
 from .db import CursorError
-from .models import Review
+from .models import Review, Moderator
 
 def _get_user_key(user_hash, app_id):
     salt = os.environ['ODRS_REVIEWS_SECRET']
@@ -123,8 +123,8 @@ def login():
     password = request.form['password']
     try:
         db = get_db()
-        user = db.users.get_with_login(request.form['username'],
-                                       request.form['password'])
+        user = db.moderators.get_by_username_password(request.form['username'],
+                                                      request.form['password'])
     except CursorError as e:
         flash(str(e))
         return render_template('error.html'), 503
@@ -175,7 +175,7 @@ def json_error(msg=None, errcode=400):
                     mimetype="application/json")
 
 @app.errorhandler(401)
-def error_permission_denied(msg=None):
+def _error_permission_denied(msg=None):
     """ Error handler: Permission Denied """
     return json_error(msg, 401)
 

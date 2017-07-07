@@ -35,7 +35,7 @@ def teardown_request(exception):
 @lm.user_loader
 def load_user(user_id):
     db = get_db()
-    user = db.users.get_by_id(user_id)
+    user = db.moderators.get_by_id(user_id)
     return user
 
 @app.errorhandler(404)
