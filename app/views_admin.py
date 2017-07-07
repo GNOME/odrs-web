@@ -409,15 +409,11 @@ def admin_show_unmoderated():
     """
     Return all the reviews on the server as HTML.
     """
-
     try:
         db = get_db()
         reviews_all = db.reviews.get_all()
     except CursorError as e:
         return _error_internal(str(e))
-    if not reviews_all and page != 1:
-        abort(404)
-
     user_hash = _get_hash_for_user(current_user)
     if not user_hash:
         return _error_internal('no user_hash...')
@@ -431,7 +427,7 @@ def admin_show_unmoderated():
             continue
         if db.reviews.vote_exists(r.review_id, user_hash):
             continue
-        if len(reviews_all) > 20:
+        if len(reviews) > 20:
             break
         reviews.append(r)
     return render_template('show-all.html',
