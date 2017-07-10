@@ -275,7 +275,6 @@ def admin_modify(review_id):
         review.user_display = None
     else:
         review.user_display = request.form['user_display']
-    review.user_hash = request.form['user_hash']
     review.description = request.form['description']
     review.summary = request.form['summary']
     review.version = request.form['version']
