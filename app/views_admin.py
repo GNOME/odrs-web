@@ -281,7 +281,7 @@ def admin_modify(review_id):
     db.reviews.modify(review)
     return redirect(url_for('.admin_show_review', review_id=review_id))
 
-@app.route('/admin/users.ban/<user_hash>')
+@app.route('/admin/user_ban/<user_hash>')
 @login_required
 def admin_user_ban(user_hash):
     """ Change details about a review """
