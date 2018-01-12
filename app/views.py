@@ -318,6 +318,8 @@ def fetch():
             return json_error('invalid data, expected %s' % key)
         if item[key] is None:
             return json_error('missing data, expected %s' % key)
+        if item[key] is '':
+            return json_error('missing data, expected %s' % key)
 
     # check format
     if not len(item['user_hash']) == 40:
