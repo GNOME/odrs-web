@@ -34,6 +34,8 @@ can be used on the new instance.
       DELETE FROM eventlog WHERE message = 'already reviewed';
       DELETE FROM eventlog WHERE message = 'duplicate vote';
       DELETE FROM eventlog WHERE message = 'getting';
+      DELETE FROM eventlog WHERE message = 'getting moderatable reviews';
+      DELETE FROM eventlog WHERE message LIKE 'voted % on review';
 
 ## How to I use distro packages ##
 
