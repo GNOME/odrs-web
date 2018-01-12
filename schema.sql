@@ -39,6 +39,7 @@ CREATE TABLE users (
   is_banned INT DEFAULT 0,
   UNIQUE KEY id (user_id)
 ) CHARSET=utf8;
+CREATE INDEX users_hash_idx ON users (user_hash(40));
 DROP TABLE IF EXISTS eventlog;
 CREATE TABLE eventlog (
   eventlog_id INT NOT NULL AUTO_INCREMENT,
