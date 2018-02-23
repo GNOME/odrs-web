@@ -221,8 +221,6 @@ def submit():
         return json_error('the user_hash is invalid')
 
     # check fields for markup and length
-    if not item['app_id'].endswith('.desktop'):
-        return json_error('only applications can be reviewed at this time')
     if len(item['summary']) > 70:
         return json_error('summary is too long')
     if len(item['description']) > 3000:
