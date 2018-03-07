@@ -1,4 +1,4 @@
-# Open Desktop Ratings Serice
+# Open Desktop Ratings Service
 
 A Flask web service for submitting application reviews
 
