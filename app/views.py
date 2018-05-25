@@ -152,6 +152,11 @@ def index():
     """ start page """
     return render_template('index.html')
 
+@app.route('/privacy')
+def privacy():
+    """ privacy page """
+    return render_template('privacy.html')
+
 @app.route('/oars')
 def oars_index():
     """ OARS page """
