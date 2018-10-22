@@ -4,8 +4,6 @@
 # Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
 # Licensed under the GNU General Public License Version 3
 
-from __future__ import print_function
-
 import json
 import sys
 

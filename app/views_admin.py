@@ -211,15 +211,15 @@ def utility_processor():
         nr_stars = int(rating / 20)
         tmp = ''
         for i in range(0, nr_stars):
-            tmp += u'★'
+            tmp += '★'
         for i in range(0, 5 - nr_stars):
-            tmp += u'☆'
+            tmp += '☆'
         return tmp
 
     def format_truncate(tmp, length):
         if len(tmp) <= length:
             return tmp
-        return tmp[:length] + u'…'
+        return tmp[:length] + '…'
 
     def format_timestamp(tmp):
         if not tmp:
