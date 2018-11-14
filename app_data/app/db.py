@@ -97,7 +97,7 @@ class Database(object):
                 self._db = mdb.connect(os.environ['MYSQL_DB_HOST'],
                                        os.environ['MYSQL_DB_USERNAME'],
                                        os.environ['MYSQL_DB_PASSWORD'],
-                                       'odrs',
+                                       'odrsdev',
                                        use_unicode=True, charset='utf8')
             else:
                 self._db = mdb.connect('localhost', 'test', 'test', 'odrs',
