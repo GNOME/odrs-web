@@ -411,7 +411,7 @@ def admin_show_unmoderated():
     try:
         db = get_db()
         reviews_all = db.reviews.get_all()
-    except CursorError as e:
+    except Exception as e:
         return _error_internal(str(e))
     user_hash = _get_hash_for_user(current_user)
     if not user_hash:

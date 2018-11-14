@@ -1,0 +1,1 @@
+59 23 * * * python /opt/app-root/src/cron.py ratings /opt/app-root/src/app/static/ratings.json

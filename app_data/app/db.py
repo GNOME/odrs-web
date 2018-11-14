@@ -38,7 +38,8 @@ def _create_review(e):
     review.user_display = e[11]
     review.rating = int(e[12])
     if e[13]:
-        review.date_deleted = int(e[13].strftime("%s"))
+        if e[13] != '0000-00-00 00:00:00':
+            review.date_deleted = int(e[13].strftime("%s"))
     review.reported = int(e[14])
     return review
 

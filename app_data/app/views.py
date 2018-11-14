@@ -165,7 +165,7 @@ def oars_index():
 @app.route('/<path:resource>')
 def static_resource(resource):
     """ Return a static image or resource """
-    return send_from_directory('static/', os.path.basename(resource))
+    return send_from_directory("%s/app/static/" % os.environ['HOME'], os.path.basename(resource))
 
 @app.errorhandler(400)
 def json_error(msg=None, errcode=400):

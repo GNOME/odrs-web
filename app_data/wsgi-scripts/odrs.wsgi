@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
@@ -7,7 +7,7 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.environ['HOME'], 'html'))
+sys.path.insert(0, os.environ['ODRS_HOME'])
 
 def application(environ, start_response):
     for key in ['MYSQL_DB_HOST',
