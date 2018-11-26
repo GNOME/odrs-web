@@ -4,7 +4,7 @@
 {% block content %}
 
 <h2>Moderators</h2>
-<table>
+<table class="table table-hover table-responsive">
   <tr>
     <th>ID</th>
     <th>Username</th>
@@ -27,7 +27,7 @@
 {% endfor %}
 </table>
 
-<h2>Create new</h2>
+<h3>Create new</h3>
 <form method="post" action="/admin/moderator/add" class="form">
 <table>
   <tr>
@@ -47,7 +47,7 @@
     <td><input type="text" class="form-control" name="email" required></td>
   </tr>
 </table>
-  <input type="submit" value="Add">
+  <button class="btn btn-action btn-large" type="submit">Add</button>
 </form>
 
 

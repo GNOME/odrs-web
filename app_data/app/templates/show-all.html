@@ -8,7 +8,7 @@
   There are no results for this query.
 </p>
 {% else %}
-<table>
+<table class="table table-hover table-responsive">
   <tr>
     <th>#</th>
     <th>Created / Deleted</th>
@@ -56,31 +56,31 @@
 </table>
 
 {% macro render_pagination(pagination) %}
-  <div class=pagination>
+  <ul class=pagination>
   {% if pagination.has_prev %}
-    <a href="{{ url_for_other_page(pagination.page - 1) }}">
-      &laquo;</a>
+    <li><a href="{{ url_for_other_page(pagination.page - 1) }}">
+      &laquo;</a></li>
   {% else %}
-    &laquo;
+    <li><span>&laquo;</span></li>
   {% endif %}
   {%- for page in pagination.iter_pages() %}
     {% if page %}
       {% if page != pagination.page %}
-        <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+        <li><a href="{{ url_for_other_page(page) }}">{{ page }}</a></li>
       {% else %}
-        <strong>{{ page }}</strong>
+        <li class="active"><span>{{ page }}</span></li>
       {% endif %}
     {% else %}
-      <span class=ellipsis>…</span>
+      <li class="disabled"><span>…</span></li>
     {% endif %}
   {%- endfor %}
   {% if pagination.has_next %}
-    <a href="{{ url_for_other_page(pagination.page + 1)
-      }}">&raquo;</a>
+    <li><a href="{{ url_for_other_page(pagination.page + 1)
+      }}">&raquo;</a></li>
   {% else %}
-    &raquo;
+    <li><span>&raquo;</span></li>
   {% endif %}
-  </div>
+  </ul>
 {% endmacro %}
 
 {% if pagination %}
