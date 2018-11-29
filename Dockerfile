@@ -3,7 +3,7 @@ FROM centos/httpd-24-centos7
 USER root 
 
 RUN yum update -y
-RUN yum install gcc make python27-python python27-python-pip python27-mod_wsgi python27-python-devel python2-cryptography python-flask python2-flask-wtf python2-flask-login python2-PyMySQL crontab -y
+RUN yum install gcc make python27-python python27-python-pip python27-mod_wsgi python27-python-devel python2-cryptography python-flask python2-flask-wtf python2-flask-login python2-PyMySQL -y
 
 ENV ODRS_HOME=/opt/app-root/src \
     LANG=C
@@ -16,7 +16,6 @@ COPY odrs.gnome.org.conf /etc/httpd/conf.d/odrs.gnome.org.conf
 RUN rm /etc/httpd/conf.d/welcome.conf
 
 RUN python /opt/app-root/src/cron.py ratings /opt/app-root/src/app/static/ratings.json 
-COPY odrs.cron /etc/cron.d/odrs
 
 RUN chown -R 1000310000:0 ${ODRS_HOME} && \
     chmod -R 664 ${ODRS_HOME} && \
@@ -25,5 +24,5 @@ RUN chown -R 1000310000:0 ${ODRS_HOME} && \
 COPY entrypoint.sh /usr/local/bin
 EXPOSE 8443
 
-USER 1001 
+USER 1000310000 
 ENTRYPOINT ["entrypoint.sh"]

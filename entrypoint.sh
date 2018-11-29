@@ -5,4 +5,6 @@ sed -i "s/replace_odrs_username/${MYSQL_DB_USERNAME}/" /etc/httpd/conf.d/odrs.gn
 sed -i "s/replace_odrs_password/${MYSQL_DB_PASSWORD}/" /etc/httpd/conf.d/odrs.gnome.org.conf
 sed -i "s/replace_odrs_host/${MYSQL_DB_HOST}/" /etc/httpd/conf.d/odrs.gnome.org.conf
 
+while true; do python /opt/app-root/src/cron.py ratings /opt/app-root/src/app/static/ratings.json ; sleep 43200 ; done &
+
 exec /usr/bin/run-httpd
