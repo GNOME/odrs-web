@@ -32,3 +32,9 @@ th {
 td {
   padding: .5em 0 .5em 0;
 }
+
+/* Make inputs a bit shorter */
+
+.form .form-control {
+    padding: 3px 12px;
+}
