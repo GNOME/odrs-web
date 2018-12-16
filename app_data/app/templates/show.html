@@ -38,7 +38,7 @@
         <strong>Application</strong>
     </div>
     <div class="col-sm-11">
-        <div class="input-group">
+        <div class="input-group col-xs-12">
             <textarea class="form-control" rows="1" name="app_id">{{ r.app_id }}</textarea>
             {% if current_user.is_authenticated %}
             <span class="input-group-addon btn btn-action">
@@ -58,7 +58,7 @@
     <div class="col-sm-1">
         <strong>Karma</strong>
     </div>
-    <div class="col-sm-4">
+    <div class="col-sm-3">
       {{ r.karma_up }}&uarr;, {{ r.karma_down }}&darr;
         {% if r.reported > 0 %}
               (reported {{ r.reported }})
@@ -72,7 +72,7 @@
     <div class="col-sm-1">
         <strong>Created</strong>
     </div>
-    <div class="col-sm-4">
+    <div class="col-sm-5">
       {{ format_timestamp(r.date_created) }}
         {% if r.date_deleted %}
               (deleted {{ format_timestamp(r.date_deleted) }})
@@ -93,7 +93,7 @@
         {% if current_user.is_authenticated %}
               <span class="help-block"><em>Names cannot be offensive or trademarks</em></span>
         {% endif %}
-        <div class="input-group">
+        <div class="input-group col-xs-12">
             <textarea class="form-control" rows="1" name="user_display">{{ r.user_display }}</textarea>
             {% if current_user.is_authenticated %}
                 <span class="input-group-addon btn btn-action">
@@ -120,7 +120,7 @@
         <strong>Locale</strong>
     </div>
     <div class="col-sm-5">
-        <div class="input-group">
+        <div class="input-group col-xs-12">
              <textarea class="form-control" rows="1" name="locale">{{ r.locale }}</textarea>
             {% if current_user.is_authenticated %}
             <span class="input-group-addon btn btn-action">
