@@ -24,6 +24,7 @@ RUN chown -R 1000310000:0 ${ODRS_HOME} && \
     chmod -R 664 ${ODRS_HOME} && \
     chown -R 1000310000:0 /etc/httpd/sites.d && \
     chown 1000310000:0 /etc/httpd/conf && \
+    chown 1000310000:0 /etc/httpd/conf.d && \
     find ${ODRS_HOME} -type d -exec chmod 775 {} +
 
 COPY entrypoint.sh /usr/local/bin
