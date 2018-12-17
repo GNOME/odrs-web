@@ -13,7 +13,7 @@ WORKDIR ${ODRS_HOME}
 COPY app_data ${ODRS_HOME}
 
 RUN mkdir /etc/httpd/sites.d && \
-    echo 'IncludeOptional sites.d/*.conf' >> /etc/httpd/conf/httpd.conf && \
+    sed -i '/IncludeOptional conf.d\/\*.conf/i IncludeOptional sites.d/*.conf' /etc/httpd/conf/httpd.conf
     rm /etc/httpd/conf.d/welcome.conf
 
 COPY odrs.gnome.org.conf /etc/httpd/sites.d/00_odrs.gnome.org.conf
