@@ -12,19 +12,16 @@ WORKDIR ${ODRS_HOME}
 
 COPY app_data ${ODRS_HOME}
 
-RUN mkdir /etc/httpd/sites.d && \
-    sed -i '/IncludeOptional conf.d\/\*.conf/i IncludeOptional sites.d/*.conf' /etc/httpd/conf/httpd.conf && \
-    rm /etc/httpd/conf.d/welcome.conf
-
-COPY odrs.gnome.org.conf /etc/httpd/sites.d/odrs.gnome.org.conf
+RUN rm /etc/httpd/conf.d/welcome.conf
+COPY odrs.gnome.org.conf /etc/httpd/conf.d/odrs.gnome.org.conf
 
 RUN python /opt/app-root/src/cron.py ratings /opt/app-root/src/app/static/ratings.json 
 
 RUN chown -R 1000310000:0 ${ODRS_HOME} && \
     chmod -R 664 ${ODRS_HOME} && \
-    chown -R 1000310000:0 /etc/httpd/sites.d && \
     chown 1000310000:0 /etc/httpd/conf && \
     chown 1000310000:0 /etc/httpd/conf.d && \
+    chown 1000310000:0 /etc/httpd/conf.d/odrs.gnome.org.conf && \
     find ${ODRS_HOME} -type d -exec chmod 775 {} +
 
 COPY entrypoint.sh /usr/local/bin
