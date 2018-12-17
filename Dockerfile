@@ -13,10 +13,10 @@ WORKDIR ${ODRS_HOME}
 COPY app_data ${ODRS_HOME}
 
 RUN mkdir /etc/httpd/sites.d && \
-    sed -i '/IncludeOptional conf.d\/\*.conf/i IncludeOptional sites.d/*.conf' /etc/httpd/conf/httpd.conf
+    sed -i '/IncludeOptional conf.d\/\*.conf/i IncludeOptional sites.d/*.conf' /etc/httpd/conf/httpd.conf && \
     rm /etc/httpd/conf.d/welcome.conf
 
-COPY odrs.gnome.org.conf /etc/httpd/sites.d/00_odrs.gnome.org.conf
+COPY odrs.gnome.org.conf /etc/httpd/sites.d/odrs.gnome.org.conf
 
 RUN python /opt/app-root/src/cron.py ratings /opt/app-root/src/app/static/ratings.json 
 
