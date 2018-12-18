@@ -17,8 +17,7 @@ RUN chown -R 1000310000:0 ${ODRS_HOME} && \
     chmod -R 664 ${ODRS_HOME} && \
     find ${ODRS_HOME} -type d -exec chmod 775 {} +
 
-COPY entrypoint.sh /usr/local/bin
 EXPOSE 8443
 
 USER 1001 
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/run-httpd"]
