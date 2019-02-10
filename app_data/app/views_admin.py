@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 # pylint: disable=invalid-name,missing-docstring
@@ -73,7 +73,7 @@ def _email_check(value):
         return False
     return True
 
-class Pagination(object):
+class Pagination():
 
     def __init__(self, page, per_page, total_count):
         self.page = page
@@ -211,15 +211,15 @@ def utility_processor():
         nr_stars = int(rating / 20)
         tmp = ''
         for _ in range(0, nr_stars):
-            tmp += u'★'
+            tmp += '★'
         for _ in range(0, 5 - nr_stars):
-            tmp += u'☆'
+            tmp += '☆'
         return tmp
 
     def format_truncate(tmp, length):
         if len(tmp) <= length:
             return tmp
-        return tmp[:length] + u'…'
+        return tmp[:length] + '…'
 
     def format_timestamp(tmp):
         if not tmp:

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 # pylint: disable=invalid-name,missing-docstring
@@ -87,7 +87,7 @@ def _password_hash(value):
 def _get_datestr_from_dt(when):
     return int("%04i%02i%02i" % (when.year, when.month, when.day))
 
-class Database(object):
+class Database():
 
     def __init__(self, app):
         """ Constructor for object """
@@ -311,7 +311,7 @@ class Database(object):
             data.append((en[0], en[1]))
         return data
 
-class DatabaseEventlog(object):
+class DatabaseEventlog():
 
     def __init__(self, db):
         """ Constructor for object """
@@ -337,7 +337,7 @@ class DatabaseEventlog(object):
         """ Adds an info item to the event log """
         self.warn(user_addr, user_hash, app_id, message, False)
 
-class DatabaseReviews(object):
+class DatabaseReviews():
 
     def __init__(self, db):
         """ Constructor for object """
@@ -553,7 +553,7 @@ class DatabaseReviews(object):
             data.append(en[0])
         return data
 
-class DatabaseModerators(object):
+class DatabaseModerators():
 
     def __init__(self, db):
         """ Constructor for object """
@@ -668,7 +668,7 @@ class DatabaseModerators(object):
         except mdb.Error as e:
             raise CursorError(cur, e)
 
-class DatabaseUsers(object):
+class DatabaseUsers():
 
     def __init__(self, db):
         """ Constructor for object """

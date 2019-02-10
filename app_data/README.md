@@ -39,14 +39,16 @@ can be used on the new instance.
 
 ## How to I use distro packages ##
 
-    pkcon install python2-PyMySQL python-flask python-flask-wtf \
-      python-flask-login
-
-...or, if you're using python3:
-
     pkcon install python3-PyMySQL python3-flask python3-flask-wtf \
       python3-flask-login
 
 ## I have a question
 
 Email me or grab me on IRC (`hughsie@freenode`).
+
+## How to build the docker image?
+
+    podman build . --build-arg ODRS_REVIEWS_SECRET=1
+    podman images
+    podman run --env-file env.cfg <image>
+    podman run --env-file env.cfg -it --entrypoint /bin/bash <image>

@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 # pylint: disable=invalid-name,missing-docstring
@@ -607,8 +607,8 @@ def ratings():
                     mimetype="application/json")
 
 if __name__ == '__main__':
-    print ">>>%s<<<" % _sanitised_version("16.12.3")
-    print ">>>%s<<<" % _sanitised_version("4:16.12.3+p16.04+git20170325.0519-0")
-    print ">>>%s<<<" % _sanitised_version("16.11.0~ds0")
-    print ">>>%s<<<" % _sanitised_summary("   not sure why people include.   ")
-    print ">>>%s<<<" % _sanitised_description("   this is awesome :) !!!   ")
+    print(">>>%s<<<" % _sanitised_version("16.12.3"))
+    print(">>>%s<<<" % _sanitised_version("4:16.12.3+p16.04+git20170325.0519-0"))
+    print(">>>%s<<<" % _sanitised_version("16.11.0~ds0"))
+    print(">>>%s<<<" % _sanitised_summary("   not sure why people include.   "))
+    print(">>>%s<<<" % _sanitised_description("   this is awesome :) !!!   "))

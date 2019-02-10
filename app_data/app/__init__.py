@@ -1,7 +1,7 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# pylint: disable=invalid-name,missing-docstring
+# pylint: disable=invalid-name,missing-docstring,wrong-import-order,wrong-import-position
 #
 # Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
 # Licensed under the GNU General Public License Version 2

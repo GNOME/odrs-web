@@ -1,12 +1,12 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# pylint: disable=invalid-name,missing-docstring,too-few-public-methods
+# pylint: disable=invalid-name,missing-docstring,too-few-public-methods,too-many-instance-attributes
 #
 # Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
 # Licensed under the GNU General Public License Version 2
 
-class User(object):
+class User():
     def __init__(self):
         self.id = None
         self.karma = 0
@@ -14,7 +14,7 @@ class User(object):
         self.user_hash = 0
         self.is_banned = 0
 
-class Review(object):
+class Review():
     def __init__(self):
         self.review_id = 0
         self.date_created = 0
@@ -32,7 +32,7 @@ class Review(object):
         self.date_deleted = None
         self.reported = None
 
-class Event(object):
+class Event():
     def __init__(self):
         self.eventlog_id = 0
         self.date_created = 0
@@ -42,7 +42,7 @@ class Event(object):
         self.app_id = None
         self.important = False
 
-class Moderator(object):
+class Moderator():
     def __init__(self):
         self.moderator_id = 0
         self.username = None
