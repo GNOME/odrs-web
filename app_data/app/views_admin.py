@@ -210,9 +210,9 @@ def utility_processor():
     def format_rating(rating):
         nr_stars = int(rating / 20)
         tmp = ''
-        for i in range(0, nr_stars):
+        for _ in range(0, nr_stars):
             tmp += u'★'
-        for i in range(0, 5 - nr_stars):
+        for _ in range(0, 5 - nr_stars):
             tmp += u'☆'
         return tmp
 
@@ -636,9 +636,9 @@ def admin_vote(review_id, val_str):
     if val_str == 'up':
         val = 1
     elif val_str == 'down':
-        val = -1;
+        val = -1
     elif val_str == 'meh':
-        val = 0;
+        val = 0
     else:
         return _error_internal('invalid vote value...')
     try:

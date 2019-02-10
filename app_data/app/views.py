@@ -17,7 +17,7 @@ from flask_login import login_user, logout_user
 from app import app, get_db
 
 from .db import CursorError
-from .models import Review, Moderator
+from .models import Review
 
 def _get_user_key(user_hash, app_id):
     salt = os.environ['ODRS_REVIEWS_SECRET']
@@ -119,8 +119,6 @@ def _sanitised_version(val):
 def login():
     if request.method != 'POST':
         return render_template('login.html')
-    username = request.form['username']
-    password = request.form['password']
     try:
         db = get_db()
         user = db.moderators.get_by_username_password(request.form['username'],
@@ -321,7 +319,7 @@ def fetch():
             return json_error('invalid data, expected %s' % key)
         if item[key] is None:
             return json_error('missing data, expected %s' % key)
-        if item[key] is '':
+        if item[key] == '':
             return json_error('missing data, expected %s' % key)
 
     # check format
