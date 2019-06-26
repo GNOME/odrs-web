@@ -4,7 +4,8 @@
 # pylint: disable=invalid-name,missing-docstring,too-few-public-methods,too-many-instance-attributes
 #
 # Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
-# Licensed under the GNU General Public License Version 2
+#
+# SPDX-License-Identifier: GPL-3.0+
 
 class User():
     def __init__(self):

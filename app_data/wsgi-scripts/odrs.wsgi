@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
-# Licensed under the GNU General Public License Version 3
+#
+# SPDX-License-Identifier: GPL-3.0+
 
 import sys
 import os

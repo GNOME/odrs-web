@@ -4,7 +4,8 @@
 # pylint: disable=invalid-name,missing-docstring,wrong-import-order,wrong-import-position
 #
 # Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
-# Licensed under the GNU General Public License Version 2
+#
+# SPDX-License-Identifier: GPL-3.0+
 
 import os
 

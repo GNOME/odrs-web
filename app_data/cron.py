@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
-# Licensed under the GNU General Public License Version 3
-
-from __future__ import print_function
+# Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
+#
+# SPDX-License-Identifier: GPL-3.0+
 
 import json
 import sys
