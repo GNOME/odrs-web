@@ -2,3 +2,5 @@ flask-wtf
 flask-login
 markupsafe
 PyMySQL
+pylint
+pytest-cov
