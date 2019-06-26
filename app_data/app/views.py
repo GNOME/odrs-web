@@ -19,6 +19,7 @@ from app import app, get_db
 
 from .db import CursorError
 from .models import Review
+from .util import json_success, json_error
 
 def _get_user_key(user_hash, app_id):
     salt = os.environ['ODRS_REVIEWS_SECRET']
@@ -166,33 +167,10 @@ def static_resource(resource):
     """ Return a static image or resource """
     return send_from_directory("%s/app/static/" % os.environ['HOME'], os.path.basename(resource))
 
-@app.errorhandler(400)
-def json_error(msg=None, errcode=400):
-    """ Error handler: JSON output """
-    item = {}
-    item['success'] = False
-    if msg:
-        item['msg'] = msg
-    dat = json.dumps(item, sort_keys=True, indent=4, separators=(',', ': '))
-    return Response(response=dat,
-                    status=errcode, \
-                    mimetype="application/json")
-
 @app.errorhandler(401)
 def _error_permission_denied(msg=None):
     """ Error handler: Permission Denied """
     return json_error(msg, 401)
-
-def json_success(msg=None, errcode=200):
-    """ Success handler: JSON output """
-    item = {}
-    item['success'] = True
-    if msg:
-        item['msg'] = msg
-    dat = json.dumps(item, sort_keys=True, indent=4, separators=(',', ': '))
-    return Response(response=dat,
-                    status=errcode, \
-                    mimetype="application/json")
 
 def _check_str(val):
     """ Return with success if the summary and description """

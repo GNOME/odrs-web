@@ -16,6 +16,7 @@ from flask_login import login_required, current_user
 
 from app import app, get_db
 from .db import CursorError
+from .util import json_error
 
 def _get_chart_labels_months():
     """ Gets the chart labels """
