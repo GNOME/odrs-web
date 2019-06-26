@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0+
 
-from app import app
+from odrs import app
 
 if __name__ == '__main__':
     app.debug = True

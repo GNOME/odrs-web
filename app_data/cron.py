@@ -8,7 +8,7 @@
 import json
 import sys
 
-from app.db import Database, CursorError
+from odrs.db import Database, CursorError
 
 if __name__ == '__main__':
 

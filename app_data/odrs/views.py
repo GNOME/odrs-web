@@ -15,7 +15,7 @@ import math
 from flask import request, url_for, redirect, flash, render_template, send_from_directory, Response
 from flask_login import login_user, logout_user
 
-from app import app, get_db
+from odrs import app, get_db
 
 from .db import CursorError
 from .models import Review

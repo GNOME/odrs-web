@@ -45,5 +45,5 @@ def error_page_not_found(msg=None):
     flash(msg)
     return render_template('error.html'), 404
 
-from app import views
-from app import views_admin
+from odrs import views
+from odrs import views_admin

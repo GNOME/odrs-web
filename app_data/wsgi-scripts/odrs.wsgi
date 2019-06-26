@@ -16,5 +16,5 @@ def application(environ, start_response):
                 'MYSQL_DB_PASSWORD',
                 'ODRS_REVIEWS_SECRET']:
         os.environ[key] = environ[key]
-    from app import app as _application
+    from odrs import app as _application
     return _application(environ, start_response)

@@ -14,7 +14,7 @@ from math import ceil
 from flask import abort, request, flash, render_template, redirect, url_for
 from flask_login import login_required, current_user
 
-from app import app, get_db
+from odrs import app, get_db
 from .db import CursorError
 from .util import json_error
 
