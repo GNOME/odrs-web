@@ -1,180 +1,180 @@
 {% extends "default.html" %}
-{% block title %}Review #{{ r.review_id }}{% endblock %}
+{% block title %}Review #{{r.review_id}}{% endblock %}
 
 {% block content %}
 
 <ul class="pagination">
-    <li><a href="/admin/review/{{ r.review_id - 1 }}">&lt;&lt;</a></li>
-    <li><a href="/admin/review/{{ r.review_id + 1 }}">&gt;&gt;</a></li>
+  <li><a href="{{url_for('.admin_show_review', review_id=r.review_id - 1)}}">&lt;&lt;</a></li>
+  <li><a href="{{url_for('.admin_show_review', review_id=r.review_id + 1)}}">&gt;&gt;</a></li>
 </ul>
 
-<form class="form" name="myform" action="/admin/modify/{{ r.review_id }}" method="POST">
+<form class="form" name="myform" action="{{url_for('admin_modify', review_id=r.review_id)}}" method="POST">
 
 {% if current_user.is_authenticated %}
 <div class="row form-group">
-    <div class="col-sm-1">
-        <strong>Actions</strong>
-    </div>
-    <div class="col-sm-11">
+  <div class="col-sm-1">
+    <strong>Actions</strong>
+  </div>
+  <div class="col-sm-11">
 {% if current_user.user_hash and not vote_exists %}
-      <a href="/admin/vote/{{r.review_id}}/up">
-        <button class="btn btn-action" type="button">Vote Up</button>
-      </a>
-      <a href="/admin/vote/{{r.review_id}}/down">
-        <button class="btn btn-action" type="button">Vote Down</button>
-      </a>
-      <a href="/admin/vote/{{r.review_id}}/meh">
-        <button class="btn btn-action" type="button">Meh</button>
-      </a>
+    <a href="{{url_for('.admin_vote', review_id=r.review_id, val_str='up')}}">
+    <button class="btn btn-action" type="button">Vote Up</button>
+    </a>
+    <a href="{{url_for('.admin_vote', review_id=r.review_id, val_str='down')}}">
+    <button class="btn btn-action" type="button">Vote Down</button>
+    </a>
+    <a href="{{url_for('.admin_vote', review_id=r.review_id, val_str='meh')}}">
+    <button class="btn btn-action" type="button">Meh</button>
+    </a>
 {% endif %}
-      <a href="/admin/delete/{{r.review_id}}">
-        <button class="btn btn-danger" type="button">Remove Forever</button>
-      </a>
-    </div>
+    <a href="{{url_for('.admin_delete', review_id=r.review_id)}}">
+    <button class="btn btn-danger" type="button">Remove Forever</button>
+    </a>
+  </div>
 </div>
 {% endif %}
 <div class="row form-group">
-    <div class="col-sm-1">
-        <strong>Application</strong>
+  <div class="col-sm-1">
+    <strong>Application</strong>
+  </div>
+  <div class="col-sm-11">
+    <div class="input-group col-xs-12">
+      <textarea class="form-control" rows="1" name="app_id">{{r.app_id}}</textarea>
+{% if current_user.is_authenticated %}
+      <span class="input-group-addon btn btn-action">
+        <a href="{{url_for('.admin_show_app', app_id=r.app_id)}}">All</a>
+      </span>
+{% endif %}
     </div>
-    <div class="col-sm-11">
-        <div class="input-group col-xs-12">
-            <textarea class="form-control" rows="1" name="app_id">{{ r.app_id }}</textarea>
-            {% if current_user.is_authenticated %}
-            <span class="input-group-addon btn btn-action">
-                <a href="/admin/show/app/{{ r.app_id }}">All</a>
-            </span>
-            {% endif %}
-        </div>
-    </div>
+  </div>
 </div>
 <div class="row form-group">
-    <div class="col-sm-1">
-        <strong>Rating</strong>
-    </div>
-    <div class="col-sm-1">
-        {{ format_rating(r.rating) }}
-    </div>
-    <div class="col-sm-1">
-        <strong>Karma</strong>
-    </div>
-    <div class="col-sm-3">
-      {{ r.karma_up }}&uarr;, {{ r.karma_down }}&darr;
-        {% if r.reported > 0 %}
-              (reported {{ r.reported }})
-        {% if current_user.is_authenticated %}
-              <a href="/admin/unreport/{{ r.review_id }}">
-                <button class="btn btn-action" type="button">Unreport</button>
-              </a>
-        {% endif %}
-        {% endif %}
-    </div>
-    <div class="col-sm-1">
-        <strong>Created</strong>
-    </div>
-    <div class="col-sm-5">
-      {{ format_timestamp(r.date_created) }}
-        {% if r.date_deleted %}
-              (deleted {{ format_timestamp(r.date_deleted) }})
-        {% if current_user.is_authenticated %}
-              <a href="/admin/unremove/{{ r.review_id }}">
-                <button class="btn btn-action" type="button">Unremove</button>
-              </a>
-        {% endif %}
-        {% endif %}
-    </div>
+  <div class="col-sm-1">
+    <strong>Rating</strong>
+  </div>
+  <div class="col-sm-1">
+    {{format_rating(r.rating)}}
+  </div>
+  <div class="col-sm-1">
+    <strong>Karma</strong>
+  </div>
+  <div class="col-sm-3">
+    {{r.karma_up}}&uarr;, {{r.karma_down}}&darr;
+{% if r.reported > 0 %}
+        (reported {{r.reported}})
+{% if current_user.is_authenticated %}
+        <a href="{{url_for('.admin_unreport', review_id=r.review_id)}}">
+        <button class="btn btn-action" type="button">Unreport</button>
+        </a>
+{% endif %}
+{% endif %}
+  </div>
+  <div class="col-sm-1">
+    <strong>Created</strong>
+  </div>
+  <div class="col-sm-5">
+    {{r.date_created}}
+{% if r.date_deleted %}
+    (deleted {{r.date_deleted}})
+{% if current_user.is_authenticated %}
+    <a href="{{url_for('.admin_unremove', review_id=r.review_id)}}">
+    <button class="btn btn-action" type="button">Unremove</button>
+    </a>
+{% endif %}
+{% endif %}
+  </div>
 </div>
 <div class="row form-group">
-    <div class="col-sm-1">
-        <strong>User Display</strong>
+  <div class="col-sm-1">
+    <strong>User Display</strong>
+  </div>
+  <div class="col-sm-11">
+{% if r.user_display %}
+{% if current_user.is_authenticated %}
+        <span class="help-block"><em>Names cannot be offensive or trademarks</em></span>
+{% endif %}
+    <div class="input-group col-xs-12">
+      <textarea class="form-control" rows="1" name="user_display">{{r.user_display}}</textarea>
+{% if current_user.is_authenticated %}
+        <span class="input-group-addon btn btn-action">
+          <a href="{{url_for('.admin_anonify', review_id=r.review_id)}}/admin/anonify/{{r.review_id}}">Anonify</a>
+        </span>
+{% endif %}
+{% else %}
+          <textarea class="form-control" rows="1" name="user_display"></textarea>
+{% endif %}
+{% if current_user.is_authenticated %}
+        <span class="input-group-addon btn btn-action">
+          <a href="{{url_for('.admin_show_user', user_hash=r.user_hash)}}">All</a>
+        </span>
+        <span class="input-group-addon btn btn-action">
+          <a href="{{url_for('.admin_user_ban', user_hash=r.user_hash)}}">Ban</a>
+        </span>
+{% endif %}
     </div>
-    <div class="col-sm-11">
-        {% if r.user_display %}
-        {% if current_user.is_authenticated %}
-              <span class="help-block"><em>Names cannot be offensive or trademarks</em></span>
-        {% endif %}
-        <div class="input-group col-xs-12">
-            <textarea class="form-control" rows="1" name="user_display">{{ r.user_display }}</textarea>
-            {% if current_user.is_authenticated %}
-                <span class="input-group-addon btn btn-action">
-                  <a href="/admin/anonify/{{ r.review_id }}">Anonify</a>
-                </span>
-            {% endif %}
-            {% else %}
-                  <textarea class="form-control" rows="1" name="user_display"></textarea>
-            {% endif %}
-            {% if current_user.is_authenticated %}
-                <span class="input-group-addon btn btn-action">
-                  <a href="/admin/show/user/{{ r.user_hash }}">All</a>
-                </span>
-                <span class="input-group-addon btn btn-action">
-                  <a href="/admin/user_ban/{{ r.user_hash }}">Ban</a>
-                </span>
-            {% endif %}
-        </div>
-    </div>
+  </div>
 </div>
 
 <div class="row form-group">
-    <div class="col-sm-1">
-        <strong>Locale</strong>
+  <div class="col-sm-1">
+    <strong>Locale</strong>
+  </div>
+  <div class="col-sm-5">
+    <div class="input-group col-xs-12">
+       <textarea class="form-control" rows="1" name="locale">{{r.locale}}</textarea>
+{% if current_user.is_authenticated %}
+      <span class="input-group-addon btn btn-action">
+        <a href="{{url_for('.admin_show_lang', locale=r.locale)}}">All</a>
+      </span>
+{% if not r.locale.startswith('en_') %}
+      <span class="input-group-addon btn btn-action">
+        <a href="{{url_for('.admin_englishify', review_id=r.review_id)}}">Englishify</a>
+      </span>
+{% endif %}
+{% endif %}
     </div>
-    <div class="col-sm-5">
-        <div class="input-group col-xs-12">
-             <textarea class="form-control" rows="1" name="locale">{{ r.locale }}</textarea>
-            {% if current_user.is_authenticated %}
-            <span class="input-group-addon btn btn-action">
-              <a href="/admin/show/lang/{{ r.locale }}">All</a>
-            </span>
-            {% if not r.locale.startswith('en_') %}
-            <span class="input-group-addon btn btn-action">
-              <a href="/admin/englishify/{{ r.review_id }}">Englishify</a>
-            </span>
-            {% endif %}
-            {% endif %}
-        </div>
-    </div>
-    <div class="col-sm-1">
-        <strong>Version</strong>
-    </div>
-    <div class="col-sm-2">
-        <textarea class="form-control" rows="1" name="version">{{ r.version }}</textarea>
-    </div>
-    <div class="col-sm-1">
-        <strong>Distro</strong>
-    </div>
-    <div class="col-sm-2">
-      <textarea class="form-control" rows="1" name="distro">{{ r.distro }}</textarea>
-    </div>
+  </div>
+  <div class="col-sm-1">
+    <strong>Version</strong>
+  </div>
+  <div class="col-sm-2">
+    <textarea class="form-control" rows="1" name="version">{{r.version}}</textarea>
+  </div>
+  <div class="col-sm-1">
+    <strong>Distro</strong>
+  </div>
+  <div class="col-sm-2">
+    <textarea class="form-control" rows="1" name="distro">{{r.distro}}</textarea>
+  </div>
 </div>
 <div class="row form-group">
-    <div class="col-sm-1">
-        <strong>Summary</strong>
-    </div>
-    <div class="col-sm-11">
-        {% if current_user.is_authenticated %}
-              <span class="help-block"><em>This should start with a capital letter and not end with a full stop</em></span>
-        {% endif %}
-        <textarea class="form-control" rows="1" name="summary">{{ r.summary }}</textarea>
-    </div>
+  <div class="col-sm-1">
+    <strong>Summary</strong>
+  </div>
+  <div class="col-sm-11">
+{% if current_user.is_authenticated %}
+    <span class="help-block"><em>This should start with a capital letter and not end with a full stop</em></span>
+{% endif %}
+    <textarea class="form-control" rows="1" name="summary">{{r.summary}}</textarea>
+  </div>
 </div>
 <div class="row form-group">
-    <div class="col-sm-1">
-        <strong>Description</strong>
-    </div>
-    <div class="col-sm-11">
-        {% if current_user.is_authenticated %}
-              <span class="help-block"><em>
-                This should start with a capital letter and each sentance should end with a full stop.<br/>
-                Please remove any incorrect content, and correct spelling, and grammar where required.
-              </em></span>
-        {% endif %}
-              <textarea class="form-control" rows="20" name="description">{{ r.description }}</textarea>
-              <br/>
-        {% if current_user.is_authenticated %}
-              <button class="btn btn-action" type="submit">Modify</button>
-        {% endif %}
-    </div>
+  <div class="col-sm-1">
+    <strong>Description</strong>
+  </div>
+  <div class="col-sm-11">
+{% if current_user.is_authenticated %}
+    <span class="help-block"><em>
+    This should start with a capital letter and each sentance should end with a full stop.<br/>
+    Please remove any incorrect content, and correct spelling, and grammar where required.
+    </em></span>
+{% endif %}
+    <textarea class="form-control" rows="20" name="description">{{r.description}}</textarea>
+    <br/>
+{% if current_user.is_authenticated %}
+    <button class="btn btn-action" type="submit">Modify</button>
+{% endif %}
+  </div>
 </div>
 </form>
 

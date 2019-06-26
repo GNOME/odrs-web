@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <!-- Copyright (C) 2016-2019 Richard Hughes <richard@hughsie.com>
-     SPDX-License-Identifier: GPL-3.0+ -->
+   SPDX-License-Identifier: GPL-3.0+ -->
 <html lang="en">
 <head>
   <title>{% block title %}{% endblock %}</title>
@@ -15,145 +15,143 @@
 </head>
 
 <body class="gnome-body">
-    <header class="gnome-header">
-        <nav class="navbar navbar-fixed-top navbar-default affix-top">
-            <div class="container">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-wrapper" aria-expanded="false">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar top-bar"></span>
-                        <span class="icon-bar middle-bar"></span>
-                        <span class="icon-bar bottom-bar"></span>
-                    </button>
-                    <a href="/" class="gnome-navbar-brand" title="Go to home page">
-                        <img src="src/images/gnome-logo.svg" alt="GNOME: Open Desktop Review Server">
-                    </a>
-                </div>
-                <div class="navbar-collapse collapse" id="navbar-wrapper">
-                    <ul class="nav navbar-nav">
-                            <li><a href="/admin/show/all">All Reviews</a></li>
-                        {% if current_user.is_authenticated %}
-                            <li><a href="/admin/show/unmoderated">Queue</a></li>
-                            <li><a href="/admin/show/reported">Reported</a></li>
-                        {% endif %}
-                        {% if current_user.is_admin %}
-                            <li><a href="/admin/stats">Statistics</a></li>
-                            <li><a href="/admin/users/all">Users</a></li>
-                            <li><a href="/admin/moderators/all">Moderators</a></li>
-                            <li><a href="/admin/distros">Distributions</a></li>
-                            <li><a href="/admin/graph_month">Usage</a></li>
-                        {% endif %}
-                        {% if not current_user.is_admin and current_user.is_authenticated %}
-                            <li><a href="/admin/moderator/{{current_user.username}}/admin">Profile</a></li>
-                        {% endif %}
-                    </ul>
-                    <ul class="nav navbar-nav navbar-right">
-                        {% if current_user.is_authenticated %}
-                            <li><a href="/logout">Logout</a></li>
-                        {% else %}
-                            <li><a href="/login">Login</a></li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header> <!-- gnome-header -->
-
-    <div class="gnome-content">
-        <div class="container">
-            <div class="row">
-                 <div class="col-xs-12">
-                    {% block navigation %}
-                    {% endblock %}
-
-                    <!-- any flashed messages -->
-                    <div id="messages">
-                      {% for category, msg in get_flashed_messages(with_categories=true) %}
-                        <p class="alert alert-info message flash-{{ category }}">{{ msg }}</p>
-                      {% endfor %}
-                    </div>
-
-                    {% block content %}{% endblock %}
-                  </div>
-             </div>
+  <header class="gnome-header">
+    <nav class="navbar navbar-fixed-top navbar-default affix-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-wrapper" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar top-bar"></span>
+            <span class="icon-bar middle-bar"></span>
+            <span class="icon-bar bottom-bar"></span>
+          </button>
+          <a href="/" class="gnome-navbar-brand" title="Go to home page">
+            <img src="src/images/gnome-logo.svg" alt="GNOME: Open Desktop Review Server">
+          </a>
         </div>
-    </div><!-- end of gnome-content -->
-
-    <div class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-xs-12 col-sm-2">
-                    <h4><a href="https://www.gnome.org">The GNOME Project</a></h4>
-                    <ul>
-                        <li>
-                            <a href="https://www.gnome.org/about/">About Us</a>
-                        </li>
-                        <li>
-                            <a href="https://www.gnome.org/get-involved/">Get Involved</a>
-                        </li>
-                        <li>
-                            <a href="https://www.gnome.org/teams/">Teams</a>
-                        </li>
-                        <li>
-                            <a href="https://www.gnome.org/support-gnome/">Support GNOME</a>
-                        </li>
-                        <li>
-                            <a href="https://www.gnome.org/contact/">Contact Us</a>
-                        </li>
-                        <li>
-                            <a href="https://www.gnome.org/foundation/">The GNOME Foundation</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-xs-12 col-sm-2">
-                    <h4><a href="#">Resources</a></h4>
-                    <ul class="sub-menu">
-                        <li>
-                            <a href="https://developer.gnome.org">Developer Center</a>
-                        </li>
-                        <li>
-                            <a href="https://help.gnome.org">Documentation</a>
-                        </li>
-                        <li>
-                            <a href="https://wiki.gnome.org">Wiki</a>
-                        </li>
-                        <li>
-                            <a href="https://mail.gnome.org/mailman/listinfo">Mailing Lists</a>
-                        </li>
-                        <li>
-                            <a href="https://wiki.gnome.org/GettingInTouch/IRC">IRC Channels</a>
-                        </li>
-                        <li>
-                            <a href="https://gitlab.gnome.org/">Bug Tracker</a>
-                        </li>
-                        <li>
-                            <a href="https://gitlab.gnome.org/">Development Code</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-xs-12 col-sm-2">
-                    <h4><a href="https://www.gnome.org/news/">News</a></h4>
-                    <ul class="sub-menu">
-                        <li>
-                            <a href="https://www.gnome.org/press/">Press Releases</a>
-                        </li>
-                        <li>
-                            <a href="https://www.gnome.org/start/stable">Latest Release</a>
-                        </li>
-                        <li>
-                            <a href="https://planet.gnome.org">Planet GNOME</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-xs-12">
-                    <p>© <a href="https://www.gnome.org/">The GNOME Project</a>.</p>
-                    <p>GNOME: Open Desktop Review Server. Hosted by <a href="https://www.redhat.com/">Red Hat</a>.
-                </div>
-            </div>
+        <div class="navbar-collapse collapse" id="navbar-wrapper">
+          <ul class="nav navbar-nav">
+            <li><a href="{{url_for('.admin_show_all')}}">All Reviews</a></li>
+{% if g.user is defined %}
+            <li><a href="{{url_for('.odrs_show_unmoderated')}}">Queue</a></li>
+            <li><a href="{{url_for('.odrs_show_reported')}}">Reported</a></li>
+{% if g.user.is_admin %}
+            <li><a href="{{url_for('.admin_show_stats')}}">Statistics</a></li>
+            <li><a href="{{url_for('.admin_users_all')}}">Users</a></li>
+            <li><a href="{{url_for('.admin_moderator_show_all')}}">Moderators</a></li>
+            <li><a href="{{url_for('.admin_distros')}}">Distributions</a></li>
+            <li><a href="{{url_for('.admin_graph_month')}}">Usage</a></li>
+{% endif %}
+            <li><a href="{{url_for('.odrs_moderator_show', moderator_id=g.user.moderator_id)}}">Profile</a></li>
+{% endif %}
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+{% if g.user is defined %}
+              <li><a href="{{url_for('.odrs_logout')}}">Logout</a></li>
+{% else %}
+              <li><a href="{{url_for('.odrs_login')}}">Login</a></li>
+{% endif %}
+          </ul>
         </div>
+      </div>
+    </nav>
+  </header> <!-- gnome-header -->
+
+  <div class="gnome-content">
+    <div class="container">
+      <div class="row">
+         <div class="col-xs-12">
+{% block navigation %}
+{% endblock %}
+
+          <!-- any flashed messages -->
+          <div id="messages">
+{% for category, msg in get_flashed_messages(with_categories=true) %}
+            <p class="alert alert-info message flash-{{category}}">{{msg}}</p>
+{% endfor %}
+          </div>
+
+{% block content %}{% endblock %}
+          </div>
+       </div>
     </div>
+  </div><!-- end of gnome-content -->
+
+  <div class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12 col-sm-2">
+          <h4><a href="https://www.gnome.org">The GNOME Project</a></h4>
+          <ul>
+            <li>
+              <a href="https://www.gnome.org/about/">About Us</a>
+            </li>
+            <li>
+              <a href="https://www.gnome.org/get-involved/">Get Involved</a>
+            </li>
+            <li>
+              <a href="https://www.gnome.org/teams/">Teams</a>
+            </li>
+            <li>
+              <a href="https://www.gnome.org/support-gnome/">Support GNOME</a>
+            </li>
+            <li>
+              <a href="https://www.gnome.org/contact/">Contact Us</a>
+            </li>
+            <li>
+              <a href="https://www.gnome.org/foundation/">The GNOME Foundation</a>
+            </li>
+          </ul>
+        </div>
+        <div class="col-xs-12 col-sm-2">
+          <h4><a href="#">Resources</a></h4>
+          <ul class="sub-menu">
+            <li>
+              <a href="https://developer.gnome.org">Developer Center</a>
+            </li>
+            <li>
+              <a href="https://help.gnome.org">Documentation</a>
+            </li>
+            <li>
+              <a href="https://wiki.gnome.org">Wiki</a>
+            </li>
+            <li>
+              <a href="https://mail.gnome.org/mailman/listinfo">Mailing Lists</a>
+            </li>
+            <li>
+              <a href="https://wiki.gnome.org/GettingInTouch/IRC">IRC Channels</a>
+            </li>
+            <li>
+              <a href="https://gitlab.gnome.org/">Bug Tracker</a>
+            </li>
+            <li>
+              <a href="https://gitlab.gnome.org/">Development Code</a>
+            </li>
+          </ul>
+        </div>
+        <div class="col-xs-12 col-sm-2">
+          <h4><a href="https://www.gnome.org/news/">News</a></h4>
+          <ul class="sub-menu">
+            <li>
+              <a href="https://www.gnome.org/press/">Press Releases</a>
+            </li>
+            <li>
+              <a href="https://www.gnome.org/start/stable">Latest Release</a>
+            </li>
+            <li>
+              <a href="https://planet.gnome.org">Planet GNOME</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <p>© <a href="https://www.gnome.org/">The GNOME Project</a>.</p>
+          <p>GNOME: Open Desktop Review Server. Hosted by <a href="https://www.redhat.com/">Red Hat</a>.
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="https://static.gnome.org/js/jquery-2.1.4.min.js"></script>
   <script src="https://static.gnome.org/js/deneb.min.js"></script>

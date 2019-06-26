@@ -5,7 +5,7 @@
 
 <h1>Details of user ‘{{u.username}}’</h1>
 
-<form method="post" action="/admin/moderator/{{u.username}}/modify_by_admin">
+<form method="post" action="{{url_for('admin_user_modify_by_admin', moderator_id=u.moderator_id)}}">
   <table>
     <tr>
       <td>Display Name:</td>
@@ -38,13 +38,13 @@
 {% else %}
         <input class="checkbox" type="checkbox" name="is_enabled" value="1"/>Account enabled</input>
 {% endif %}
-      </td>
+     </td>
     </tr>
 {% endif %}
   </table>
   <button type="submit" class="btn btn-primary btn-large" class="submit">Modify</button>
 {% if u.username != 'admin' and current_user.is_admin %}
-  <form method="get" action="/admin/moderator/{{u.username}}/delete">
+  <form method="get" action="{{url_for('admin_moderate_delete', moderator_id=u.moderator_id)}}">
 {% endif %}
     <button class="btn btn-danger btn-large">Delete</button>
   </form>

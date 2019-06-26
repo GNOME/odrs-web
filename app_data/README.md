@@ -10,7 +10,6 @@ To set up the database tables do:
     CREATE USER 'test'@'localhost' IDENTIFIED BY 'test';
     USE odrs;
     GRANT ALL ON odrs.* TO 'test'@'localhost';
-    SOURCE /path/to/schema.sql
 
 The default admin password is `Pa$$w0rd`
 

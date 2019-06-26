@@ -7,7 +7,7 @@
 Once deleted, reviews are gone <b>forever</b>.
 </p>
 
-<a href="/admin/delete/{{ review_id }}/force">
+<a href="{{url_for('.admin_delete_force', review_id=review_id)}}">
 <button class="btn btn-danger" type="submit">Irrevocably Remove Review</button>
 </a>
 

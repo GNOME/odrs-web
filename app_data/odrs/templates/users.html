@@ -14,19 +14,19 @@
   </tr>
 {% for u in users_awesome %}
   <tr>
-    <td> {{ u.id }} </td>
-    <td> {{ u.karma }} </td>
+    <td>{{u.id}}</td>
+    <td>{{u.karma}}</td>
     <td>
 {% if current_user.is_authenticated %}
-      <a href="/admin/show/user/{{ u.user_hash }}">
-        <code>{{ u.user_hash }}</code>
+      <a href="{{url_for('.admin_show_user', user_hash=u.user_hash)}}">
+        <code>{{u.user_hash}}</code>
       </a>
 {% else %}
-      <code>{{ u.user_hash }}</code>
+      <code>{{u.user_hash}}</code>
 {% endif %}
     </td>
-    <td> {{ format_timestamp(u.date_created) }} </td>
-    <td> {{ u.is_banned }} </td>
+    <td>{{u.date_created}}</td>
+    <td>{{u.is_banned}}</td>
   </tr>
 {% endfor %}
 </table>
@@ -42,19 +42,19 @@
   </tr>
 {% for u in users_haters %}
   <tr>
-    <td> {{ u.id }} </td>
-    <td> {{ u.karma }} </td>
+    <td>{{u.id}}</td>
+    <td>{{u.karma}}</td>
     <td>
 {% if current_user.is_authenticated %}
-      <a href="/admin/show/user/{{ u.user_hash }}">
-        <code>{{ u.user_hash }}</code>
+      <a href="{{url_for('.admin_show_user', user_hash=u.user_hash)}}">
+        <code>{{u.user_hash}}</code>
       </a>
 {% else %}
-      <code>{{ u.user_hash }}</code>
+      <code>{{u.user_hash}}</code>
 {% endif %}
     </td>
-    <td> {{ format_timestamp(u.date_created) }} </td>
-    <td> {{ u.is_banned }} </td>
+    <td>{{u.date_created}}</td>
+    <td>{{u.is_banned}}</td>
   </tr>
 {% endfor %}
 </table>

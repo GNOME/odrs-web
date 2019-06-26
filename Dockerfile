@@ -3,8 +3,13 @@ FROM centos/httpd-24-centos7
 USER root 
 
 RUN yum install -y gcc make \
+    mysql-devel \
+    python36-click \
     python36-cryptography \
+    python36-dateutil \
     python36-devel \
+    python36-jinja2 \
+    python36-markupsafe \
     python36-pip \
     python36-PyMySQL \
     rh-python36-mod_wsgi \
@@ -13,9 +18,13 @@ RUN yum install -y gcc make \
 ENV ODRS_HOME=/opt/app-root/src \
     LANG=C
 
-COPY app_data/requirements.txt /tmp/requirements.txt
-
-RUN pip3 install --prefix=/usr -r /tmp/requirements.txt
+RUN pip3 install --prefix=/usr \
+    flask-login \
+    flask-migrate \
+    flask-wtf \
+    mysqlclient \
+    PyMySQL \
+    sqlalchemy
 
 WORKDIR ${ODRS_HOME}
 

@@ -15,11 +15,12 @@ clean:
 	rm -rf ./htmlcov
 
 run:
+	FLASK_DEBUG=1 \
 	ODRS_REVIEWS_SECRET=1 \
+	ODRS_CONFIG=example.cfg \
 	FLASK_APP=odrs/__init__.py \
 	HOME=/home/hughsie/Code/odrs-web/app_data \
 	$(VENV)/bin/flask run
-	#FLASK_DEBUG=1
 
 dbup:
 	ODRS_CONFIG=example.cfg \

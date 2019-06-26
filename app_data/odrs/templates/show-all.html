@@ -25,31 +25,31 @@
 
 {% for r in reviews %}
   <tr>
-    <td><a href="/admin/review/{{ r.review_id }}">{{ r.review_id }}</a></td>
+    <td><a href="{{url_for('.admin_show_review', review_id=r.review_id)}}">{{r.review_id}}</a></td>
     <td>
-      {{ format_timestamp(r.date_created) }}
+      {{r.date_created}}
 {% if r.date_deleted %}
       <br/>
-      <i class="important">{{ format_timestamp(r.date_deleted) }}</i>
+      <i class="important">{{r.date_deleted}}</i>
 {% endif %}
     </td>
-    <td>{{ r.app_id.replace('.desktop', '').replace('.Application', '') }}</td>
-    <td>{{ r.version }}</td>
-    <td>{{ format_rating(r.rating) }}</td>
-    <td>{{ r.karma_up }}</td>
+    <td>{{r.app_id.replace('.desktop', '').replace('.Application', '')}}</td>
+    <td>{{r.version}}</td>
+    <td>{{format_rating(r.rating)}}</td>
+    <td>{{r.karma_up}}</td>
 {% if r.reported > 0 %}
-    <td><i class="important">{{ r.karma_down }}</i></td>
+    <td><i class="important">{{r.karma_down}}</i></td>
 {% else %}
-    <td>{{ r.karma_down }}</td>
+    <td>{{r.karma_down}}</td>
 {% endif %}
-    <td>{{ r.distro.replace(' GNU/Linux', '') }}</td>
-    <td>{{ r.locale }}</td>
+    <td>{{r.distro.replace(' GNU/Linux', '')}}</td>
+    <td>{{r.locale}}</td>
 {% if r.user_display %}
-    <td>{{ format_truncate(r.user_display, 15) }}</td>
+    <td>{{format_truncate(r.user_display, 15)}}</td>
 {% else %}
     <td><i>Unknown</i></td>
 {% endif %}
-    <td>{{ format_truncate(r.summary, 15) }}</td>
+    <td>{{format_truncate(r.summary, 15)}}</td>
   </tr>
 {% endfor %}
 
@@ -58,7 +58,7 @@
 {% macro render_pagination(pagination) %}
   <ul class=pagination>
   {% if pagination.has_prev %}
-    <li><a href="{{ url_for_other_page(pagination.page - 1) }}">
+    <li><a href="{{url_for_other_page(pagination.page - 1)}}">
       &laquo;</a></li>
   {% else %}
     <li><span>&laquo;</span></li>
@@ -66,17 +66,17 @@
   {%- for page in pagination.iter_pages() %}
     {% if page %}
       {% if page != pagination.page %}
-        <li><a href="{{ url_for_other_page(page) }}">{{ page }}</a></li>
+        <li><a href="{{url_for_other_page(page)}}">{{page}}</a></li>
       {% else %}
-        <li class="active"><span>{{ page }}</span></li>
+        <li class="active"><span>{{page}}</span></li>
       {% endif %}
     {% else %}
       <li class="disabled"><span>…</span></li>
     {% endif %}
   {%- endfor %}
   {% if pagination.has_next %}
-    <li><a href="{{ url_for_other_page(pagination.page + 1)
-      }}">&raquo;</a></li>
+    <li><a href="{{url_for_other_page(pagination.page + 1)
+}}">&raquo;</a></li>
   {% else %}
     <li><span>&raquo;</span></li>
   {% endif %}
@@ -88,6 +88,5 @@
 {% endif %}
 
 {% endif %}
-
 
 {% endblock %}

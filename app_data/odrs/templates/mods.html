@@ -16,19 +16,19 @@
   </tr>
 {% for u in mods %}
   <tr>
-    <td> {{ u.moderator_id }} </td>
-    <td><a href="/admin/moderator/{{u.username}}/admin">{{ u.username }}</a></td>
-    <td> {{ u.display_name }} </td>
-    <td> {{ u.email }} </td>
-    <td> {{ u.is_enabled }} </td>
-    <td> {{ u.is_admin }} </td>
-    <td> {{ u.user_hash }} </td>
+    <td>{{u.moderator_id}}</td>
+    <td><a href="{{url_for('.odrs_moderator_show', moderator_id=u.moderator_id)}}">{{u.username}}</a></td>
+    <td>{{u.display_name}}</td>
+    <td>{{u.email}}</td>
+    <td>{{u.is_enabled}}</td>
+    <td>{{u.is_admin}}</td>
+    <td>{{u.user_hash}}</td>
   </tr>
 {% endfor %}
 </table>
 
 <h3>Create new</h3>
-<form method="post" action="/admin/moderator/add" class="form">
+<form method="post" action="{{url_for('admin_moderator_add')}}" class="form">
 <table>
   <tr>
     <th>Username:</th>
@@ -49,6 +49,5 @@
 </table>
   <button class="btn btn-action btn-large" type="submit">Add</button>
 </form>
-
 
 {% endblock %}

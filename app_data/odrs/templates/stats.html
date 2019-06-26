@@ -5,10 +5,10 @@
 
 <h2>Web Service Statistics</h2>
 <table class="table table-hover table-responsive">
-{% for key, value in results_stats %}
+{% for key in results_stats %}
   <tr>
-    <td> {{ key }} </td>
-    <td> {{ value }} </td>
+    <td>{{key}}</td>
+    <td>{{results_stats[key]}}</td>
   </tr>
 {% endfor %}
 </table>
@@ -16,14 +16,14 @@
 <h2>Popularity By Page View</h2>
 <ol>
 {% for name, cnt in results_viewed %}
-  <li>{{ name.replace('.desktop', '') }} ({{ cnt }})</li>
+  <li>{{name.replace('.desktop', '')}} ({{cnt}})</li>
 {% endfor %}
 </ol>
 
 <h2>Popularity By Submitted Reviews</h2>
 <ol>
 {% for name, cnt in results_submitted %}
-  <li>{{ name.replace('.desktop', '') }} (<a href="admin/show/app/{{ name }}">{{ cnt }}</a>)</li>
+  <li>{{name.replace('.desktop', '')}} (<a href="{{url_for('.admin_show_app', app_id=name)}}">{{cnt}}</a>)</li>
 {% endfor %}
 </ol>
 
