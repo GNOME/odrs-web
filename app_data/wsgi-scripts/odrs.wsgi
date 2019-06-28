@@ -11,9 +11,7 @@ import os
 sys.path.insert(0, os.environ['ODRS_HOME'])
 
 def application(environ, start_response):
-    for key in ['MYSQL_DB_HOST',
-                'MYSQL_DB_USERNAME',
-                'MYSQL_DB_PASSWORD',
+    for key in ['SQLALCHEMY_DATABASE_URI',
                 'ODRS_REVIEWS_SECRET']:
         os.environ[key] = environ[key]
     from odrs import app as _application
