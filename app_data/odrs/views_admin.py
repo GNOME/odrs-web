@@ -445,13 +445,14 @@ def odrs_show_unmoderated():
                            reviews=reviews)
 
 @app.route('/admin/show/reported')
+@app.route('/admin/show/reported/<int:limit>')
 @login_required
-def odrs_show_reported():
+def odrs_show_reported(limit=1):
     """
     Return all the reported reviews on the server as HTML.
     """
     reviews = db.session.query(Review).\
-                    filter(Review.reported > 0).\
+                    filter(Review.reported >= limit).\
                     order_by(Review.date_created.desc()).all()
     return render_template('show-all.html', reviews=reviews)
 

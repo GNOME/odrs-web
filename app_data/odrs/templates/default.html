@@ -34,7 +34,7 @@
             <li><a href="{{url_for('.admin_show_all')}}">All Reviews</a></li>
 {% if g.user is defined %}
             <li><a href="{{url_for('.odrs_show_unmoderated')}}">Queue</a></li>
-            <li><a href="{{url_for('.odrs_show_reported')}}">Reported</a></li>
+            <li><a href="{{url_for('.odrs_show_reported', limit=2)}}">Reported</a></li>
 {% if g.user.is_admin %}
             <li><a href="{{url_for('.admin_show_stats')}}">Statistics</a></li>
             <li><a href="{{url_for('.admin_users_all')}}">Users</a></li>
