@@ -346,7 +346,7 @@ def admin_unremove(review_id):
     if not review:
         flash('No review with that ID')
         return redirect(url_for('.odrs_index'))
-    review.date_deleted = 0
+    review.date_deleted = None
     db.session.commit()
     flash('Review unremoved')
     return redirect(url_for('.admin_show_review', review_id=review_id))

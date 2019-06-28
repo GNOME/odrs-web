@@ -14,11 +14,18 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
+from odrs import db
+from odrs.models import Review
+
 def upgrade():
     op.alter_column('reviews', 'date_deleted',
                existing_type=mysql.TIMESTAMP(),
                nullable=True,
                existing_server_default=sa.text("'0000-00-00 00:00:00'"))
+    for review in db.session.query(Review).all():
+        if review.date_deleted == '0000-00-00 00:00:00':
+             review.date_deleted = None
+    db.session.commit()
 
 
 def downgrade():
