@@ -7,6 +7,7 @@ RUN yum install -y gcc make \
     python36-devel \
     python36-pip \
     python36-PyMySQL \
+    rh-python36-mod_wsgi \
     uwsgi-plugin-python36
 
 ENV ODRS_HOME=/opt/app-root/src \
