@@ -148,8 +148,8 @@ class OdrsTest(unittest.TestCase):
         assert b'Confirm Removal?' in rv.data, rv.data
         rv = self.app.get('/admin/delete/1/force', follow_redirects=True)
         assert b'Deleted review' in rv.data, rv.data
-        rv = self.app.get('/admin/review/1')
-        assert b'no review with that ID' in rv.data, rv.data
+        rv = self.app.get('/admin/review/1', follow_redirects=True)
+        assert b'No review with that ID' in rv.data, rv.data
 
     def _admin_moderator_add(self, username='dave', password='foobarbaz123.', email='dave@dave.com'):
 

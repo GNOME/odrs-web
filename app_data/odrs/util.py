@@ -10,7 +10,7 @@ import hashlib
 
 from sqlalchemy import text
 
-from flask import Response, abort, flash
+from flask import Response
 
 def json_success(msg=None, errcode=200):
     """ Success handler: JSON output """
@@ -33,14 +33,6 @@ def json_error(msg=None, errcode=400):
     return Response(response=dat,
                     status=errcode, \
                     mimetype='application/json')
-
-def _error_permission_denied(msg=None):
-    flash('Permission denied: %s' % msg)
-    abort(401)
-
-def _error_internal(msg=None):
-    flash('Internal error: %s' % msg)
-    abort(400)
 
 def _get_datestr_from_dt(when):
     return int('%04i%02i%02i' % (when.year, when.month, when.day))

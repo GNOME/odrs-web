@@ -19,7 +19,7 @@ from flask_login import login_required, current_user
 from odrs import app, db
 from .models import Review, User, Moderator, Vote
 from .models import _vote_exists
-from .util import _get_datestr_from_dt, _error_permission_denied, _error_internal
+from .util import _get_datestr_from_dt
 
 def _get_chart_labels_months():
     """ Gets the chart labels """
@@ -178,7 +178,8 @@ def admin_show_stats():
     """
     # security check
     if not current_user.is_admin:
-        return _error_permission_denied('Unable to show stats as non-admin')
+        flash('Unable to show stats as non-admin', 'error')
+        return redirect(url_for('.odrs_index'))
 
     stats = {}
 
@@ -244,7 +245,8 @@ def admin_distros():
     """
     # security check
     if not current_user.is_admin:
-        return _error_permission_denied('Unable to show admin_distros as non-admin')
+        flash('Unable to show distros as non-admin', 'error')
+        return redirect(url_for('.odrs_index'))
     rs = db.session.execute("SELECT DISTINCT(distro), COUNT(distro) AS total " # pylint: disable=no-member
                             "FROM reviews GROUP BY distro ORDER BY total DESC "
                             "LIMIT 8;")
@@ -267,7 +269,8 @@ def admin_show_review(review_id):
     """
     review = db.session.query(Review).filter(Review.review_id == review_id).first()
     if not review:
-        return _error_internal('no review with that ID')
+        flash('No review with that ID')
+        return redirect(url_for('.odrs_index'))
 
     # has the user already voted
     user_hash = _get_hash_for_user(current_user)
@@ -284,7 +287,8 @@ def admin_modify(review_id):
     """ Change details about a review """
     review = db.session.query(Review).filter(Review.review_id == review_id).first()
     if not review:
-        return _error_internal('no review with that ID')
+        flash('No review with that ID')
+        return redirect(url_for('.odrs_index'))
     if 'distro' in request.form:
         review.distro = request.form['distro']
     if 'locale' in request.form:
@@ -309,11 +313,13 @@ def admin_user_ban(user_hash):
     """ Change details about a review """
     # security check
     if not current_user.is_admin:
-        return _error_permission_denied('Unable to ban user as non-admin')
+        flash('Unable to ban user as non-admin', 'error')
+        return redirect(url_for('.odrs_index'))
     print(db.session.query(User).all())
     user = db.session.query(User).filter(User.user_hash == user_hash).first()
     if not user:
-        return _error_internal('no user with that user_hash')
+        flash('No user with that user_hash')
+        return redirect(url_for('.odrs_index'))
     user.is_banned = True
     db.session.commit()
     flash('Banned user')
@@ -325,7 +331,8 @@ def admin_unreport(review_id):
     """ Unreport a perfectly valid review """
     review = db.session.query(Review).filter(Review.review_id == review_id).first()
     if not review:
-        return _error_internal('no review with that ID')
+        flash('No review with that ID')
+        return redirect(url_for('.odrs_index'))
     review.reported = 0
     db.session.commit()
     flash('Review unreported')
@@ -337,7 +344,8 @@ def admin_unremove(review_id):
     """ Unreport a perfectly valid review """
     review = db.session.query(Review).filter(Review.review_id == review_id).first()
     if not review:
-        return _error_internal('no review with that ID')
+        flash('No review with that ID')
+        return redirect(url_for('.odrs_index'))
     review.date_deleted = 0
     db.session.commit()
     flash('Review unremoved')
@@ -349,7 +357,8 @@ def admin_englishify(review_id):
     """ Marks a review as writen in English """
     review = db.session.query(Review).filter(Review.review_id == review_id).first()
     if not review:
-        return _error_internal('no review with that ID')
+        flash('No review with that ID')
+        return redirect(url_for('.odrs_index'))
     parts = review.locale.split('_')
     if len(parts) == 1:
         review.locale = 'en'
@@ -364,7 +373,8 @@ def admin_anonify(review_id):
     """ Removes the username from the review """
     review = db.session.query(Review).filter(Review.review_id == review_id).first()
     if not review:
-        return _error_internal('no review with that ID')
+        flash('No review with that ID')
+        return redirect(url_for('.odrs_index'))
     review.user_display = None
     db.session.commit()
     return redirect(url_for('.admin_show_review', review_id=review_id))
@@ -375,7 +385,8 @@ def admin_delete_force(review_id):
     """ Delete a review """
     review = db.session.query(Review).filter(Review.review_id == review_id).first()
     if not review:
-        return _error_internal('no review with that ID')
+        flash('No review with that ID')
+        return redirect(url_for('.odrs_index'))
     db.session.delete(review)
     db.session.commit()
     flash('Deleted review')
@@ -414,7 +425,8 @@ def odrs_show_unmoderated():
     """
     user_hash = _get_hash_for_user(current_user)
     if not user_hash:
-        return _error_internal('no user_hash...')
+        flash('No user_hash for current user')
+        return redirect(url_for('.odrs_index'))
 
     # filter by the languages the moderator understands
     reviews = []
@@ -496,7 +508,8 @@ def admin_moderator_show_all():
     """
     # security check
     if not current_user.is_admin:
-        return _error_permission_denied('Unable to show all moderators')
+        flash('Unable to show all moderators', 'error')
+        return redirect(url_for('.odrs_index'))
     mods = db.session.query(Moderator).all()
     return render_template('mods.html', mods=mods)
 
@@ -511,16 +524,13 @@ def admin_moderator_add():
 
     # security check
     if not current_user.is_admin:
-        return _error_permission_denied('Unable to add moderator as non-admin')
+        flash('Unable to add moderator as non-admin', 'error')
+        return redirect(url_for('.odrs_index'))
 
-    if not 'password_new' in request.form:
-        return _error_permission_denied('Unable to add user as no password_new')
-    if not 'username_new' in request.form:
-        return _error_permission_denied('Unable to add user as no username_new')
-    if not 'display_name' in request.form:
-        return _error_permission_denied('Unable to add user as no display name')
-    if not 'email' in request.form:
-        return _error_permission_denied('Unable to add user as no email')
+    for key in ['username_new', 'password_new', 'display_name', 'email']:
+        if not key in request.form:
+            flash('Unable to add moderator as {} missing'.format(key), 'error')
+            return redirect(url_for('.odrs_index'))
     if db.session.query(Moderator).\
             filter(Moderator.username == request.form['username_new']).first():
         flash('Already a entry with that username', 'warning')
@@ -560,7 +570,8 @@ def odrs_moderator_show(moderator_id):
     Shows an admin panel for a moderator
     """
     if moderator_id != current_user.moderator_id and not current_user.is_admin:
-        return _error_permission_denied('Unable to show moderator information')
+        flash('Unable to show moderator information', 'error')
+        return redirect(url_for('.odrs_index'))
     mod = db.session.query(Moderator).filter(Moderator.moderator_id == moderator_id).first()
     if not mod:
         flash("No entry with moderator ID {}".format(moderator_id), 'warning')
@@ -574,7 +585,8 @@ def admin_moderate_delete(moderator_id):
 
     # security check
     if not current_user.is_admin:
-        return _error_permission_denied('Unable to delete moderator as not admin')
+        flash('Unable to delete moderator as not admin', 'error')
+        return redirect(url_for('.odrs_index'))
 
     # check whether exists in database
     mod = db.session.query(Moderator).filter(Moderator.moderator_id == moderator_id).first()
@@ -592,7 +604,8 @@ def admin_vote(review_id, val_str):
     """ Up or downvote an existing review by @val karma points """
     user_hash = _get_hash_for_user(current_user)
     if not user_hash:
-        return _error_internal('no user_hash...')
+        flash('No user_hash for current user')
+        return redirect(url_for('.admin_show_review', review_id=review_id))
     if val_str == 'up':
         val = 1
     elif val_str == 'down':
@@ -600,7 +613,8 @@ def admin_vote(review_id, val_str):
     elif val_str == 'meh':
         val = 0
     else:
-        return _error_internal('invalid vote value...')
+        flash('Invalid vote value')
+        return redirect(url_for('.admin_show_review', review_id=review_id))
 
     # the user already has a review
     if _vote_exists(review_id, user_hash):
@@ -624,7 +638,8 @@ def admin_user_modify_by_admin(moderator_id):
 
     # security check
     if moderator_id != current_user.moderator_id and not current_user.is_admin:
-        return _error_permission_denied('Unable to modify user as non-admin')
+        flash('Unable to modify user as non-admin', 'error')
+        return redirect(url_for('.odrs_index'))
 
     mod = db.session.query(Moderator).filter(Moderator.moderator_id == moderator_id).first()
     if not mod:
