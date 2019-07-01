@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
+# pylint: disable=singleton-comparison
+#
 # Copyright (C) 2015-2019 Richard Hughes <richard@hughsie.com>
 #
 # SPDX-License-Identifier: GPL-3.0+
