@@ -3,7 +3,8 @@ FROM centos/httpd-24-centos7
 USER root 
 
 RUN yum install -y gcc make \
-    mysql-devel \
+    mariadb \
+    mariadb-devel \
     python36-click \
     python36-cryptography \
     python36-dateutil \
