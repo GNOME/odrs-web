@@ -60,7 +60,7 @@ if __name__ == '__main__':
             print('Usage: %s ratings filename' % sys.argv[0])
             sys.exit(1)
         _regenerate_ratings(sys.argv[2])
-    if sys.argv[1] == 'auto-delete':
+    elif sys.argv[1] == 'auto-delete':
         _auto_delete()
     else:
         print("cron mode %s not known" % sys.argv[1])
