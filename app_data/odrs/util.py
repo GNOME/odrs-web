@@ -39,10 +39,9 @@ def _get_datestr_from_dt(when):
 
 def _get_user_key(user_hash, app_id):
     from odrs import app
-    salt = app.config['ODRS_REVIEWS_SECRET']
     key = 'invalid'
     try:
-        key = hashlib.sha1(salt.encode('utf-8') +
+        key = hashlib.sha1(app.secret_key.encode('utf-8') +
                            user_hash.encode('utf-8') +
                            app_id.encode('utf-8')).hexdigest()
     except UnicodeEncodeError as e:

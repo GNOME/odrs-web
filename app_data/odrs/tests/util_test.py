@@ -45,7 +45,7 @@ class UtilTest(unittest.TestCase):
     def test_user_key(self):
 
         os.environ['ODRS_REVIEWS_SECRET'] = '1'
-        self.assertEqual(_get_user_key('foo', 'gimp.desktop'), '74e9a6c58a608c88104efab48cc76beb271af1f1')
+        self.assertEqual(_get_user_key('foo', 'gimp.desktop'), '8d68a9e8054a18cb11e62242f9036aca786551d8')
 
     def test_legacy_hash(self):
 
