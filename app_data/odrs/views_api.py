@@ -12,6 +12,7 @@ import math
 import datetime
 
 from sqlalchemy.dialects.mysql import insert
+from sqlalchemy.exc import IntegrityError
 
 from flask import request, Response
 
@@ -178,12 +179,14 @@ def api_fetch():
     datestr = _get_datestr_from_dt(datetime.date.today())
     stmt = insert(Analytic).values(datestr=datestr, app_id=item['app_id'])
     if db.session.bind.dialect.name != 'sqlite': # pylint: disable=no-member
-        stmt_ondupe = stmt.on_duplicate_key_update(datestr=stmt.inserted.datestr,
-                                                   app_id=stmt.inserted.app_id,
-                                                   fetch_cnt=stmt.inserted.fetch_cnt + 1)
+        stmt_ondupe = stmt.on_duplicate_key_update(fetch_cnt=Analytic.fetch_cnt + 1)
     else:
         stmt_ondupe = stmt
-    db.session.execute(stmt_ondupe) # pylint: disable=no-member
+    try:
+        db.session.execute(stmt_ondupe) # pylint: disable=no-member
+        db.session.commit()
+    except IntegrityError as e:
+        print('ignoring: {}'.format(str(e)))
 
     # also add any compat IDs
     app_ids = [item['app_id']]
