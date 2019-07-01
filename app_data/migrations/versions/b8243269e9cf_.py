@@ -27,7 +27,7 @@ def upgrade():
     for review in db.session.query(Review).all():
         if review.date_deleted == '0000-00-00 00:00:00':
              review.date_deleted = None
-        if review.date_deleted > since:
+        if review.date_deleted and review.date_deleted > since:
              review.date_deleted = None
 
     db.session.commit()
