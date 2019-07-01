@@ -47,7 +47,9 @@ Email me or grab me on IRC (`hughsie@freenode`).
 
 ## How to build the docker image?
 
-    podman build . --build-arg ODRS_REVIEWS_SECRET=1
+    podman build . \
+        --build-arg ODRS_REVIEWS_SECRET=1 \
+        --build-arg SQLALCHEMY_DATABASE_URI=mysql+pymysql://test:test@localhost/odrs?charset=utf8mb4
     podman images
     podman run --env-file env.cfg <image>
     podman run --env-file env.cfg -it --entrypoint /bin/bash <image>

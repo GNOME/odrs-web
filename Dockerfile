@@ -31,6 +31,11 @@ WORKDIR ${ODRS_HOME}
 
 COPY app_data ${ODRS_HOME}
 
+RUN LANG=en_US.utf8 \
+    FLASK_APP=odrs/__init__.py \
+    SQLALCHEMY_TRACK_MODIFICATIONS=False \
+    flask db upgrade
+
 RUN python36 /opt/app-root/src/cron.py ratings /opt/app-root/src/odrs/static/ratings.json
 
 RUN chown -R 1000310000:0 ${ODRS_HOME} && \

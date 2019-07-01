@@ -183,16 +183,14 @@ class Moderator(db.Model):
     username = Column(Text)
     password_hash = Column('password', Text)
     display_name = Column(Text)
-    email = Column(Text)
     is_enabled = Column(Integer, default=0)
     is_admin = Column(Integer, default=0)
     user_hash = Column(Text)
     locales = Column(Text)
 
-    def __init__(self, username=None, password=None, display_name=None, email=None):
+    def __init__(self, username=None, password=None, display_name=None):
         self.username = username
         self.display_name = display_name
-        self.email = email
         self.is_enabled = False
         self.is_admin = False
         self.user_hash = None

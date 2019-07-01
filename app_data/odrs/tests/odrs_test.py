@@ -73,7 +73,7 @@ class OdrsTest(unittest.TestCase):
     def _logout(self):
         return self.app.get('/logout', follow_redirects=True)
 
-    def login(self, username='admin', password='Pa$$w0rd'):
+    def login(self, username='admin@test.com', password='Pa$$w0rd'):
         rv = self._login(username, password)
         assert b'Logged in' in rv.data, rv.data
         assert b'/admin/show/reported' in rv.data, rv.data
@@ -151,13 +151,12 @@ class OdrsTest(unittest.TestCase):
         rv = self.app.get('/admin/review/1', follow_redirects=True)
         assert b'No review with that ID' in rv.data, rv.data
 
-    def _admin_moderator_add(self, username='dave', password='foobarbaz123.', email='dave@dave.com'):
+    def _admin_moderator_add(self, username='dave@dave.com', password='foobarbaz123.'):
 
         return self.app.post('/admin/moderator/add', data=dict(
             password_new=password,
             username_new=username,
             display_name='Dave',
-            email=email,
         ), follow_redirects=True)
 
     def test_admin_add_moderator(self):
@@ -171,7 +170,7 @@ class OdrsTest(unittest.TestCase):
         assert b'The password is too short' in rv.data, rv.data
         rv = self._admin_moderator_add(password='foobarbaz')
         assert b'requires at least one non-alphanumeric' in rv.data, rv.data
-        rv = self._admin_moderator_add(email='foo')
+        rv = self._admin_moderator_add(username='foo')
         assert b'Invalid email address' in rv.data, rv.data
 
         # good values
@@ -226,16 +225,16 @@ class OdrsTest(unittest.TestCase):
     def test_login_logout(self):
 
         # test logging in and out
-        rv = self._login('admin', 'Pa$$w0rd')
+        rv = self._login('admin@test.com', 'Pa$$w0rd')
         assert b'/admin/show/reported' in rv.data, rv.data
         rv = self._logout()
-        rv = self._login('admin', 'Pa$$w0rd')
+        rv = self._login('admin@test.com', 'Pa$$w0rd')
         assert b'/admin/show/reported' in rv.data, rv.data
         rv = self._logout()
         assert b'/admin/show/reported' not in rv.data, rv.data
-        rv = self._login('adminx', 'default')
+        rv = self._login('FAILED@test.com', 'default')
         assert b'Incorrect username' in rv.data, rv.data
-        rv = self._login('admin', 'defaultx')
+        rv = self._login('admin@test.com', 'defaultx')
         assert b'Incorrect password' in rv.data, rv.data
 
     @staticmethod

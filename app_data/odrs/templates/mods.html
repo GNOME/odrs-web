@@ -9,7 +9,6 @@
     <th>ID</th>
     <th>Username</th>
     <th>Display Name</th>
-    <th>Email</th>
     <th>Is Enabled</th>
     <th>Is Admin</th>
     <th>User Hashes</th>
@@ -19,7 +18,6 @@
     <td>{{u.moderator_id}}</td>
     <td><a href="{{url_for('.odrs_moderator_show', moderator_id=u.moderator_id)}}">{{u.username}}</a></td>
     <td>{{u.display_name}}</td>
-    <td>{{u.email}}</td>
     <td>{{u.is_enabled}}</td>
     <td>{{u.is_admin}}</td>
     <td>{{u.user_hash}}</td>
@@ -41,10 +39,6 @@
   <tr>
     <th>Display Name:</th>
     <td><input type="text" class="form-control" name="display_name" required></td>
-  </tr>
-  <tr>
-    <th>Contact Email:</th>
-    <td><input type="text" class="form-control" name="email" required></td>
   </tr>
 </table>
   <button class="btn btn-action btn-large" type="submit">Add</button>

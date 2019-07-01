@@ -315,7 +315,6 @@ def admin_user_ban(user_hash):
     if not current_user.is_admin:
         flash('Unable to ban user as non-admin', 'error')
         return redirect(url_for('.odrs_index'))
-    print(db.session.query(User).all())
     user = db.session.query(User).filter(User.user_hash == user_hash).first()
     if not user:
         flash('No user with that user_hash')
@@ -528,7 +527,7 @@ def admin_moderator_add():
         flash('Unable to add moderator as non-admin', 'error')
         return redirect(url_for('.odrs_index'))
 
-    for key in ['username_new', 'password_new', 'display_name', 'email']:
+    for key in ['username_new', 'password_new', 'display_name']:
         if not key in request.form:
             flash('Unable to add moderator as {} missing'.format(key), 'error')
             return redirect(url_for('.odrs_index'))
@@ -542,9 +541,12 @@ def admin_moderator_add():
     if not _password_check(password):
         return redirect(url_for('.admin_moderator_show_all'))
 
-    # verify email
-    email = request.form['email']
-    if not _email_check(email):
+    # verify username
+    username_new = request.form['username_new']
+    if len(username_new) < 3:
+        flash('Username invalid', 'warning')
+        return redirect(url_for('.admin_moderator_show_all'))
+    if not _email_check(username_new):
         flash('Invalid email address', 'warning')
         return redirect(url_for('.admin_moderator_show_all'))
 
@@ -555,11 +557,7 @@ def admin_moderator_add():
         return redirect(url_for('.admin_moderator_show_all'))
 
     # verify username
-    username_new = request.form['username_new']
-    if len(username_new) < 3:
-        flash('Username invalid', 'warning')
-        return redirect(url_for('.admin_moderator_show_all'))
-    db.session.add(Moderator(username_new, password, display_name, email))
+    db.session.add(Moderator(username_new, password, display_name))
     db.session.commit()
     flash('Added user')
     return redirect(url_for('.admin_moderator_show_all'))
@@ -650,7 +648,6 @@ def admin_user_modify_by_admin(moderator_id):
     # set each thing in turn
     mod.is_enabled = 'is_enabled' in request.form
     for key in ['display_name',
-                'email',
                 'password',
                 'user_hash',
                 'locales']:

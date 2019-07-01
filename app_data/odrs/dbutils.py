@@ -12,11 +12,11 @@ def init_db(db):
 
     # ensure admin user exists
     from .models import Moderator
-    if not db.session.query(Moderator).filter(Moderator.username == 'admin').first():
-        u = Moderator(username='admin')
-        u.password = 'Pa$$w0rd'
-        u.is_admin = True
-        db.session.add(u)
+    if not db.session.query(Moderator).filter(Moderator.username == 'admin@test.com').first():
+        mod = Moderator(username='admin@test.com')
+        mod.password = 'Pa$$w0rd'
+        mod.is_admin = True
+        db.session.add(mod)
         db.session.commit()
 
 def drop_db(db):
