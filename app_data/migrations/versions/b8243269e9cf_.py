@@ -23,7 +23,7 @@ def upgrade():
                existing_type=mysql.TIMESTAMP(),
                nullable=True,
                existing_server_default=sa.text("'0000-00-00 00:00:00'"))
-    since = datetime.datetime.now() - datetime.timedelta(hours=3)
+    since = datetime.datetime.utcnow() - datetime.timedelta(hours=3)
     for review in db.session.query(Review).all():
         if review.date_deleted == '0000-00-00 00:00:00':
              review.date_deleted = None
