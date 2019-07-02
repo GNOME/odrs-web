@@ -73,7 +73,7 @@ class User(db.Model):
 
     user_id = Column(Integer, primary_key=True, nullable=False, unique=True)
     date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-    user_hash = Column(Text)
+    user_hash = Column(String(40))
     karma = Column(Integer, default=0)
     is_banned = Column(Boolean, default=False)
 
