@@ -11,7 +11,8 @@ import datetime
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Index
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Index, ForeignKey
+from sqlalchemy.orm import relationship
 
 from odrs import db
 
@@ -51,11 +52,15 @@ class Vote(db.Model):
     vote_id = Column(Integer, primary_key=True, nullable=False, unique=True)
     date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     user_hash = Column(Text)
+    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
     val = Column(Integer, default=0)
     review_id = Column(Integer, default=0)
 
-    def __init__(self, user_hash, val, review_id=0):
+    user = relationship('User')
+
+    def __init__(self, user_id, user_hash, val, review_id=0):
         self.review_id = review_id
+        self.user_id = user_id
         self.user_hash = user_hash
         self.val = val
 
@@ -76,6 +81,10 @@ class User(db.Model):
     user_hash = Column(String(40))
     karma = Column(Integer, default=0)
     is_banned = Column(Boolean, default=False)
+
+    reviews = relationship('Review',
+                           back_populates='user',
+                           cascade='all,delete-orphan')
 
     def __init__(self, user_hash=None):
         self.user_hash = user_hash
@@ -99,6 +108,7 @@ class Review(db.Model):
     summary = Column(Text)
     description = Column(Text)
     user_hash = Column(Text)
+    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
     user_addr = Column(Text)
     user_display = Column(Text)
     version = Column(Text)
@@ -107,6 +117,8 @@ class Review(db.Model):
     karma_up = Column(Integer, default=0)
     karma_down = Column(Integer, default=0)
     reported = Column(Integer, default=0)
+
+    user = relationship('User', back_populates='reviews')
 
     def __init__(self):
         self.app_id = None
@@ -117,6 +129,7 @@ class Review(db.Model):
         self.distro = None
         self.karma_up = 0
         self.karma_down = 0
+        self.user_id = 0
         self.user_hash = None
         self.user_display = None
         self.rating = 0
@@ -159,12 +172,16 @@ class Event(db.Model):
     date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     user_addr = Column(Text)
     user_hash = Column(Text)
+    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
     message = Column(Text)
     app_id = Column(Text)
     important = Column(Boolean, default=False)
 
-    def __init__(self, user_addr, user_hash=None, app_id=None, message=None, important=False):
+    user = relationship('User')
+
+    def __init__(self, user_addr, user_id=None, user_hash=None, app_id=None, message=None, important=False):
         self.user_addr = user_addr
+        self.user_id = user_id
         self.user_hash = user_hash
         self.message = message
         self.app_id = app_id
@@ -186,13 +203,17 @@ class Moderator(db.Model):
     is_enabled = Column(Boolean, default=False)
     is_admin = Column(Boolean, default=False)
     user_hash = Column(Text)
+    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
     locales = Column(Text)
+
+    user = relationship('User')
 
     def __init__(self, username=None, password=None, display_name=None):
         self.username = username
         self.display_name = display_name
         self.is_enabled = False
         self.is_admin = False
+        self.user_id = 0
         self.user_hash = None
         self.locales = None
         self.locales = password

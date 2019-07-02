@@ -625,7 +625,7 @@ def admin_vote(review_id, val_str):
         user = User(user_hash)
         db.session.add(user)
     user.karma += val
-    db.session.add(Vote(user_hash, val, review_id=review_id))
+    db.session.add(Vote(user.user_id, user_hash, val, review_id=review_id))
     db.session.commit()
     flash('Recorded vote')
     return redirect(url_for('.admin_show_review', review_id=review_id))

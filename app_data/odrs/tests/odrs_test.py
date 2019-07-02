@@ -319,12 +319,12 @@ class OdrsTest(unittest.TestCase):
 
     def test_api_moderate_locale(self):
 
-        rv = self.app.get('/1.0/reviews/api/moderate/FIXMEuserhash/en_GB')
+        rv = self.app.get('/1.0/reviews/api/moderate/{}/en_GB'.format(self.user_hash))
         assert rv.data == b'[]', rv.data
         self.review_submit()
-        rv = self.app.get('/1.0/reviews/api/moderate/FIXMEuserhash/en_GB')
+        rv = self.app.get('/1.0/reviews/api/moderate/{}/en_GB'.format(self.user_hash))
         assert b'Somebody Important' in rv.data, rv.data
-        rv = self.app.get('/1.0/reviews/api/moderate/FIXMEuserhash/fr_FR')
+        rv = self.app.get('/1.0/reviews/api/moderate/{}/fr_FR'.format(self.user_hash))
         assert rv.data == b'[]', rv.data
 
     def test_api_fetch_no_results(self):
