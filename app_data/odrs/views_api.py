@@ -23,6 +23,8 @@ from .models import _vote_exists
 from .util import json_success, json_error, _locale_is_compatible, _eventlog_add, _get_user_key, _get_datestr_from_dt
 from .util import _sanitised_version, _sanitised_summary, _sanitised_description, _get_rating_for_app_id
 
+ODRS_REPORTED_CNT = 2
+
 def _get_client_address():
     """ Gets user IP address """
     if request.headers.getlist('X-Forwarded-For'):
@@ -137,21 +139,18 @@ def api_submit():
     db.session.commit()
     return json_success()
 
-def _get_for_app_id(app_id, user_hash=None):
-    reviews = db.session.query(Review).\
-                    filter(Review.app_id == app_id).\
-                    filter(Review.reported == 0).\
-                    order_by(Review.date_created.desc()).all()
-    return [review.asdict(user_hash) for review in reviews]
-
 @app.route('/1.0/reviews/api/app/<app_id>/<user_hash>')
 @app.route('/1.0/reviews/api/app/<app_id>')
 def api_show_app(app_id, user_hash=None):
     """
     Return details about an application.
     """
-    reviews = _get_for_app_id(app_id, user_hash)
-    dat = json.dumps(reviews, sort_keys=True, indent=4, separators=(',', ': '))
+    reviews = db.session.query(Review).\
+                    filter(Review.app_id == app_id).\
+                    filter(Review.reported < ODRS_REPORTED_CNT).\
+                    order_by(Review.date_created.desc()).all()
+    items = [review.asdict(user_hash) for review in reviews]
+    dat = json.dumps(items, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
                     mimetype='application/json')
@@ -194,7 +193,7 @@ def api_fetch():
         app_ids.extend(item['compat_ids'])
     reviews = db.session.query(Review).\
                     filter(Review.app_id.in_(app_ids)).\
-                    filter(Review.reported == 0).all()
+                    filter(Review.reported < ODRS_REPORTED_CNT).all()
 
     # if user does not exist then create
     user = db.session.query(User).filter(User.user_hash == item['user_hash']).first()
@@ -247,7 +246,7 @@ def api_all(user_hash=None):
     """
     Return all the reviews on the server as a JSON object.
     """
-    reviews = db.session.query(Review).filter(Review.reported == 0).all()
+    reviews = db.session.query(Review).filter(Review.reported < ODRS_REPORTED_CNT).all()
     items = [review.asdict(user_hash) for review in reviews]
     dat = json.dumps(items, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,

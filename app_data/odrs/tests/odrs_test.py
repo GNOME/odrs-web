@@ -343,18 +343,22 @@ class OdrsTest(unittest.TestCase):
         assert b'An essential part of my daily workflow' in rv.data, rv.data
         assert b'user_skey' in rv.data, rv.data
 
-    def review_upvote(self):
+    def review_upvote(self, user_hash=None):
+        if not user_hash:
+            user_hash = self.user_hash
         data = {'review_id': 1,
                 'app_id': 'inkscape.desktop',
-                'user_hash': self.user_hash,
-                'user_skey': _get_user_key(self.user_hash, 'inkscape.desktop')}
+                'user_hash': user_hash,
+                'user_skey': _get_user_key(user_hash, 'inkscape.desktop')}
         return self.app.post('/1.0/reviews/api/upvote', data=json.dumps(data))
 
-    def review_report(self):
+    def review_report(self, user_hash=None):
+        if not user_hash:
+            user_hash = self.user_hash
         data = {'review_id': 1,
                 'app_id': 'inkscape.desktop',
-                'user_hash': self.user_hash,
-                'user_skey': _get_user_key(self.user_hash, 'inkscape.desktop')}
+                'user_hash': user_hash,
+                'user_skey': _get_user_key(user_hash, 'inkscape.desktop')}
         return self.app.post('/1.0/reviews/api/report', data=json.dumps(data))
 
     def test_api_upvote(self):
@@ -386,6 +390,9 @@ class OdrsTest(unittest.TestCase):
 
         # should not appear again
         rv = self.review_report()
+        assert b'success": true' in rv.data, rv.data
+        assert b'voted #1 -5' in rv.data, rv.data
+        rv = self.review_report(user_hash='729342d6a7c477bb1ea0186f8c60804a3d783183')
         assert b'success": true' in rv.data, rv.data
         assert b'voted #1 -5' in rv.data, rv.data
         rv = self._review_fetch(app_id='inkscape.desktop')
