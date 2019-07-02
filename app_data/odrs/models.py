@@ -11,7 +11,7 @@ import datetime
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Index
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Index
 
 from odrs import db
 
@@ -75,12 +75,12 @@ class User(db.Model):
     date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     user_hash = Column(Text)
     karma = Column(Integer, default=0)
-    is_banned = Column(Integer, default=0)
+    is_banned = Column(Boolean, default=False)
 
     def __init__(self, user_hash=None):
         self.user_hash = user_hash
         self.karma = 0
-        self.is_banned = 0
+        self.is_banned = False
 
     def __repr__(self):
         return 'User object %s' % self.user_id
@@ -161,7 +161,7 @@ class Event(db.Model):
     user_hash = Column(Text)
     message = Column(Text)
     app_id = Column(Text)
-    important = Column(Integer, default=0)
+    important = Column(Boolean, default=False)
 
     def __init__(self, user_addr, user_hash=None, app_id=None, message=None, important=False):
         self.user_addr = user_addr
@@ -183,8 +183,8 @@ class Moderator(db.Model):
     username = Column(Text)
     password_hash = Column('password', Text)
     display_name = Column(Text)
-    is_enabled = Column(Integer, default=0)
-    is_admin = Column(Integer, default=0)
+    is_enabled = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)
     user_hash = Column(Text)
     locales = Column(Text)
 
