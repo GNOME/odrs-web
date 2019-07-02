@@ -13,6 +13,7 @@ down_revision = '84deb10331db'
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
+from sqlalchemy.exc import InternalError
 
 from odrs import db
 from odrs.models import User, Moderator, Event, Review, Vote
@@ -24,14 +25,26 @@ def _hash_to_id(user_hash):
     return user.user_id
 
 def upgrade():
-    op.add_column('eventlog', sa.Column('user_id', sa.Integer(), nullable=True))
-    op.add_column('moderators', sa.Column('user_id', sa.Integer(), nullable=True))
-    op.add_column('reviews', sa.Column('user_id', sa.Integer(), nullable=True))
-    op.add_column('votes', sa.Column('user_id', sa.Integer(), nullable=True))
-    op.create_foreign_key(None, 'eventlog', 'users', ['user_id'], ['user_id'])
-    op.create_foreign_key(None, 'moderators', 'users', ['user_id'], ['user_id'])
-    op.create_foreign_key(None, 'reviews', 'users', ['user_id'], ['user_id'])
-    op.create_foreign_key(None, 'votes', 'users', ['user_id'], ['user_id'])
+    try:
+        op.add_column('eventlog', sa.Column('user_id', sa.Integer(), nullable=True))
+        op.create_foreign_key(None, 'eventlog', 'users', ['user_id'], ['user_id'])
+    except InternalError as _:
+        pass
+    try:
+        op.add_column('moderators', sa.Column('user_id', sa.Integer(), nullable=True))
+        op.create_foreign_key(None, 'moderators', 'users', ['user_id'], ['user_id'])
+    except InternalError as _:
+        pass
+    try:
+        op.add_column('reviews', sa.Column('user_id', sa.Integer(), nullable=True))
+        op.create_foreign_key(None, 'reviews', 'users', ['user_id'], ['user_id'])
+    except InternalError as _:
+        pass
+    try:
+        op.add_column('votes', sa.Column('user_id', sa.Integer(), nullable=True))
+        op.create_foreign_key(None, 'votes', 'users', ['user_id'], ['user_id'])
+    except InternalError as _:
+        pass
 
     print('CONVERTING Event')
     for val in db.session.query(Event).all():
