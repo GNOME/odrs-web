@@ -57,8 +57,6 @@ def _get_hash_for_user(user):
         return None
     if not getattr(user, 'user_hash', None):
         return None
-    if not user.user_hash:
-        return None
     return user.user_hash
 
 def _password_check(value):
@@ -188,7 +186,7 @@ def admin_show_stats():
     stats['Active reviews'] = rs.fetchone()[0]
 
     # unique reviewers
-    rs = db.session.execute("SELECT COUNT(DISTINCT(user_hash)) FROM reviews;") # pylint: disable=no-member
+    rs = db.session.execute("SELECT COUNT(DISTINCT(user_id)) FROM reviews;") # pylint: disable=no-member
     stats['Unique reviewers'] = rs.fetchone()[0]
 
     # total votes
@@ -198,7 +196,7 @@ def admin_show_stats():
     stats['User downvotes'] = rs.fetchone()[0]
 
     # unique voters
-    rs = db.session.execute("SELECT COUNT(DISTINCT(user_hash)) FROM votes;") # pylint: disable=no-member
+    rs = db.session.execute("SELECT COUNT(DISTINCT(user_id)) FROM votes;") # pylint: disable=no-member
     stats['Unique voters'] = rs.fetchone()[0]
 
     # unique languages
@@ -422,8 +420,7 @@ def odrs_show_unmoderated():
     """
     Return all the reviews on the server as HTML.
     """
-    user_hash = _get_hash_for_user(current_user)
-    if not user_hash:
+    if not current_user.user:
         flash('No user_hash for current user')
         return redirect(url_for('.odrs_index'))
 
@@ -434,7 +431,7 @@ def odrs_show_unmoderated():
         lang = r.locale.split('_')[0]
         if langs and lang not in langs:
             continue
-        if _vote_exists(r.review_id, user_hash):
+        if _vote_exists(r.review_id, current_user.user.user_id):
             continue
         if len(reviews) > 20:
             break
@@ -601,9 +598,8 @@ def admin_moderate_delete(moderator_id):
 @login_required
 def admin_vote(review_id, val_str):
     """ Up or downvote an existing review by @val karma points """
-    user_hash = _get_hash_for_user(current_user)
-    if not user_hash:
-        flash('No user_hash for current user')
+    if not current_user.user:
+        flash('No user for moderator')
         return redirect(url_for('.admin_show_review', review_id=review_id))
     if val_str == 'up':
         val = 1
@@ -616,16 +612,12 @@ def admin_vote(review_id, val_str):
         return redirect(url_for('.admin_show_review', review_id=review_id))
 
     # the user already has a review
-    if _vote_exists(review_id, user_hash):
+    if _vote_exists(review_id, current_user.user_id):
         flash('already voted on this app')
         return redirect(url_for('.admin_show_review', review_id=review_id))
 
-    user = db.session.query(User).filter(User.user_hash == user_hash).first()
-    if not user:
-        user = User(user_hash)
-        db.session.add(user)
-    user.karma += val
-    db.session.add(Vote(user.user_id, user_hash, val, review_id=review_id))
+    current_user.user.karma += val
+    db.session.add(Vote(current_user.user_id, val, review_id=review_id))
     db.session.commit()
     flash('Recorded vote')
     return redirect(url_for('.admin_show_review', review_id=review_id))

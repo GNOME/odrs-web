@@ -100,10 +100,9 @@ def api_submit():
     # user has already reviewed
     if db.session.query(Review).\
             filter(Review.app_id == item['app_id']).\
-            filter(Review.user_hash == item['user_hash']).first():
+            filter(Review.user_id == user.user_id).first():
         _eventlog_add(_get_client_address(),
                       user.user_id,
-                      item['user_hash'],
                       item['app_id'],
                       'already reviewed')
         return json_error('already reviewed this app')
@@ -115,7 +114,6 @@ def api_submit():
     review.summary = _sanitised_summary(item['summary'])
     review.description = _sanitised_description(item['description'])
     review.user_id = user.user_id
-    review.user_hash = item['user_hash']
     review.version = _sanitised_version(item['version'])
     review.distro = item['distro']
     review.rating = item['rating']
@@ -133,7 +131,6 @@ def api_submit():
     # log and add
     _eventlog_add(_get_client_address(),
                   review.user_id,
-                  review.user_hash,
                   review.app_id,
                   'reviewed')
     db.session.add(review)
@@ -220,7 +217,7 @@ def api_fetch():
         item_new['user_skey'] = _get_user_key(item['user_hash'], item['app_id'])
 
         # the UI can hide the vote buttons on reviews already voted on
-        if _vote_exists(review.review_id, item['user_hash']):
+        if _vote_exists(review.review_id, user.user_id):
             item_new['vote_id'] = 1
 
         items_new.append(item_new)
@@ -265,10 +262,13 @@ def api_moderate(user_hash, locale=None):
     """
     # only return reviews the user has not already voted on
     items = []
+    user = db.session.query(User).filter(User.user_hash == user_hash).first()
+    if not user:
+        return json_error('no user for {}'.format(user_hash))
     for review in db.session.query(Review).all():
         if locale and not _locale_is_compatible(review.locale, locale):
             continue
-        if _vote_exists(review.review_id, user_hash):
+        if _vote_exists(review.review_id, user.user_id):
             continue
         items.append(review.asdict(user_hash))
         if len(items) > 250:
@@ -314,14 +314,14 @@ def _vote(val):
             return json_error('all negative karma used up')
 
     if item['user_skey'] != _get_user_key(item['user_hash'], item['app_id']):
-        _eventlog_add(_get_client_address(), user.user_id, item['user_hash'], None,
+        _eventlog_add(_get_client_address(), user.user_id, None,
                       'invalid user_skey of %s' % item['user_skey'], important=True)
         #print('expected user_skey of %s' % _get_user_key(item['user_hash'], item['app_id']))
         return json_error('invalid user_skey')
 
     # the user already has a review
-    if _vote_exists(item['review_id'], item['user_hash']):
-        _eventlog_add(_get_client_address(), user.user_id, item['user_hash'], item['app_id'],
+    if _vote_exists(item['review_id'], user.user_id):
+        _eventlog_add(_get_client_address(), user.user_id, item['app_id'],
                       'duplicate vote')
         return json_error('already voted on this app')
 
@@ -330,7 +330,7 @@ def _vote(val):
 
     review = db.session.query(Review).filter(Review.app_id == item['app_id']).first()
     if not review:
-        _eventlog_add(_get_client_address(), user.user_id, item['user_hash'], None,
+        _eventlog_add(_get_client_address(), user.user_id, None,
                       'invalid review ID of %s' % item['app_id'], important=True)
         return json_error('invalid review ID')
 
@@ -345,9 +345,9 @@ def _vote(val):
     db.session.commit()
 
     # add the vote to the database
-    db.session.add(Vote(user.user_id, item['user_hash'], val, review_id=item['review_id']))
+    db.session.add(Vote(user.user_id, val, review_id=item['review_id']))
     db.session.commit()
-    _eventlog_add(_get_client_address(), user.user_id, item['user_hash'], item['app_id'],
+    _eventlog_add(_get_client_address(), user.user_id, item['app_id'],
                   'voted %i on review' % val)
 
     return json_success('voted #%i %i' % (item['review_id'], val))
@@ -401,15 +401,13 @@ def api_remove():
     if not len(item['user_skey']) == 40:
         return json_error('the user_skey is invalid')
 
-    # get user
+    # the user already has a review
     user = db.session.query(User).filter(User.user_hash == item['user_hash']).first()
     if not user:
         return json_error('no review')
-
-    # the user already has a review
     review = db.session.query(Review).\
                 filter(Review.review_id == item['review_id']).\
-                filter(Review.user_hash == item['user_hash']).first()
+                filter(Review.user_id == user.user_id).first()
     if not review:
         return json_error('no review')
     if review.app_id != item['app_id']:
@@ -424,7 +422,6 @@ def api_remove():
     db.session.commit()
     _eventlog_add(_get_client_address(),
                   user.user_id,
-                  item['user_hash'],
                   item['app_id'],
                   'removed review')
     return json_success('removed review #%i' % item['review_id'])

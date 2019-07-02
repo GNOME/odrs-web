@@ -18,11 +18,11 @@ from odrs import db
 
 from .util import _password_hash, _get_user_key
 
-def _vote_exists(review_id, user_hash):
+def _vote_exists(review_id, user_id):
     """ Checks to see if a vote exists for the review+user """
     return db.session.query(Vote).\
                 filter(Vote.review_id == review_id).\
-                filter(Vote.user_hash == user_hash).\
+                filter(Vote.user_id == user_id).\
                 first()
 
 class Analytic(db.Model):
@@ -51,17 +51,15 @@ class Vote(db.Model):
 
     vote_id = Column(Integer, primary_key=True, nullable=False, unique=True)
     date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-    user_hash = Column(Text)
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
     val = Column(Integer, default=0)
     review_id = Column(Integer, default=0)
 
     user = relationship('User')
 
-    def __init__(self, user_id, user_hash, val, review_id=0):
+    def __init__(self, user_id, val, review_id=0):
         self.review_id = review_id
         self.user_id = user_id
-        self.user_hash = user_hash
         self.val = val
 
     def __repr__(self):
@@ -107,7 +105,6 @@ class Review(db.Model):
     locale = Column(Text)
     summary = Column(Text)
     description = Column(Text)
-    user_hash = Column(Text)
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
     user_addr = Column(Text)
     user_display = Column(Text)
@@ -130,7 +127,6 @@ class Review(db.Model):
         self.karma_up = 0
         self.karma_down = 0
         self.user_id = 0
-        self.user_hash = None
         self.user_display = None
         self.rating = 0
         self.reported = 0
@@ -149,7 +145,7 @@ class Review(db.Model):
             'review_id': self.review_id,
             'summary': self.summary,
             'user_display': self.user_display,
-            'user_hash': self.user_hash,
+            'user_hash': self.user.user_hash,
             'version': self.version,
         }
         if user_hash:
@@ -171,7 +167,6 @@ class Event(db.Model):
     eventlog_id = Column(Integer, primary_key=True, nullable=False, unique=True)
     date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     user_addr = Column(Text)
-    user_hash = Column(Text)
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
     message = Column(Text)
     app_id = Column(Text)
@@ -179,10 +174,9 @@ class Event(db.Model):
 
     user = relationship('User')
 
-    def __init__(self, user_addr, user_id=None, user_hash=None, app_id=None, message=None, important=False):
+    def __init__(self, user_addr, user_id=None, app_id=None, message=None, important=False):
         self.user_addr = user_addr
         self.user_id = user_id
-        self.user_hash = user_hash
         self.message = message
         self.app_id = app_id
         self.important = important
@@ -202,7 +196,6 @@ class Moderator(db.Model):
     display_name = Column(Text)
     is_enabled = Column(Boolean, default=False)
     is_admin = Column(Boolean, default=False)
-    user_hash = Column(Text)
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
     locales = Column(Text)
 
@@ -214,7 +207,6 @@ class Moderator(db.Model):
         self.is_enabled = False
         self.is_admin = False
         self.user_id = 0
-        self.user_hash = None
         self.locales = None
         self.locales = password
 

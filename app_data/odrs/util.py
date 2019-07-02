@@ -50,14 +50,13 @@ def _get_user_key(user_hash, app_id):
 
 def _eventlog_add(user_addr=None,
                   user_id=None,
-                  user_hash=None,
                   app_id=None,
                   message=None,
                   important=False):
     """ Adds a warning to the event log """
     from .models import Event
     from odrs import db
-    db.session.add(Event(user_addr, user_id, user_hash, app_id, message, important))
+    db.session.add(Event(user_addr, user_id, app_id, message, important))
     db.session.commit()
 
 def _get_rating_for_app_id(app_id, min_total=1):
