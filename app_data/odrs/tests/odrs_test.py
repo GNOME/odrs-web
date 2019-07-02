@@ -460,8 +460,8 @@ class OdrsTest(unittest.TestCase):
         assert b'"success": true' in rv.data, rv.data
 
         # upload a 2nd report
-        #rv = self._review_submit(app_id='gimp.desktop')        # FIXME supposed to fail!
-        #assert b'"success": true' in rv.data, rv.data
+        rv = self._review_submit(app_id='gimp.desktop')
+        assert b'"success": true' in rv.data, rv.data
 
         # upload a duplicate report
         rv = self._review_submit()
@@ -491,8 +491,6 @@ class OdrsTest(unittest.TestCase):
         rv = self._review_fetch(distro='Ubuntu', version='1.2.4')
         assert b'An essential part of my daily workflow' in rv.data, rv.data
         assert b'user_skey' in rv.data, rv.data
-
-        # FIXME: ban user then try to submit a review
 
     def test_fail_when_login_required(self):
 
