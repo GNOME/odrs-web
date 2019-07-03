@@ -51,11 +51,12 @@ class Vote(db.Model):
 
     vote_id = Column(Integer, primary_key=True, nullable=False, unique=True)
     date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    review_id = Column(Integer, ForeignKey('reviews.review_id'), nullable=True)
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
     val = Column(Integer, default=0)
-    review_id = Column(Integer, default=0)
 
     user = relationship('User')
+    review = relationship('Review')
 
     def __init__(self, user_id, val, review_id=0):
         self.review_id = review_id
