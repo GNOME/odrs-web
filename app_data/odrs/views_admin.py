@@ -17,9 +17,9 @@ from flask import abort, request, flash, render_template, redirect, url_for
 from flask_login import login_required, current_user
 
 from odrs import app, db
-from .models import Review, User, Moderator, Vote
+from .models import Review, User, Moderator, Vote, Taboo
 from .models import _vote_exists
-from .util import _get_datestr_from_dt
+from .util import _get_datestr_from_dt, _get_taboos_for_locale
 
 def _get_chart_labels_months():
     """ Gets the chart labels """
@@ -276,7 +276,11 @@ def admin_show_review(review_id):
     else:
         vote = None
 
-    return render_template('show.html', r=review, vote_exists=vote)
+    # does the review contain any banned keywords
+    matched_taboos = review.matches_taboos(_get_taboos_for_locale(review.locale))
+    return render_template('show.html', r=review,
+                           vote_exists=vote,
+                           matched_taboos=matched_taboos)
 
 @app.route('/admin/modify/<review_id>', methods=['POST'])
 @login_required
@@ -621,6 +625,73 @@ def admin_moderate_delete(moderator_id):
     db.session.commit()
     flash('Deleted user')
     return redirect(url_for('.admin_moderator_show_all'))
+
+@app.route('/admin/taboo/all')
+@login_required
+def admin_taboo_show_all():
+    """
+    Return all the taboos.
+    """
+    # security check
+    if not current_user.is_admin:
+        flash('Unable to show all taboos', 'error')
+        return redirect(url_for('.odrs_index'))
+    taboos = db.session.query(Taboo).\
+                order_by(Taboo.locale.asc()).\
+                order_by(Taboo.value.asc()).all()
+    return render_template('taboos.html', taboos=taboos)
+
+@app.route('/admin/taboo/add', methods=['GET', 'POST'])
+@login_required
+def admin_taboo_add():
+    """ Add a taboo [ADMIN ONLY] """
+
+    # only accept form data
+    if request.method != 'POST':
+        return redirect(url_for('.admin_taboo_show_all'))
+
+    # security check
+    if not current_user.is_admin:
+        flash('Unable to add taboo as non-admin', 'error')
+        return redirect(url_for('.odrs_index'))
+
+    for key in ['locale', 'value', 'description']:
+        if not key in request.form:
+            flash('Unable to add taboo as {} missing'.format(key), 'error')
+            return redirect(url_for('.odrs_index'))
+    if db.session.query(Taboo).\
+            filter(Taboo.locale == request.form['locale']).\
+            filter(Taboo.value == request.form['value']).first():
+        flash('Already added that taboo', 'warning')
+        return redirect(url_for('.admin_taboo_show_all'))
+
+    # verify username
+    db.session.add(Taboo(request.form['locale'],
+                         request.form['value'],
+                         request.form['description']))
+    db.session.commit()
+    flash('Added taboo')
+    return redirect(url_for('.admin_taboo_show_all'))
+
+@app.route('/admin/taboo/<taboo_id>/delete')
+@login_required
+def admin_taboo_delete(taboo_id):
+    """ Delete an taboo """
+
+    # security check
+    if not current_user.is_admin:
+        flash('Unable to delete taboo as not admin', 'error')
+        return redirect(url_for('.odrs_index'))
+
+    # check whether exists in database
+    taboo = db.session.query(Taboo).filter(Taboo.taboo_id == taboo_id).first()
+    if not taboo:
+        flash("No taboo with ID {}".format(taboo_id), 'warning')
+        return redirect(url_for('.admin_taboo_show_all'))
+    db.session.delete(taboo)
+    db.session.commit()
+    flash('Deleted taboo')
+    return redirect(url_for('.admin_taboo_show_all'))
 
 @app.route('/admin/vote/<review_id>/<val_str>')
 @login_required

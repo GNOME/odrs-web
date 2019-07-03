@@ -8,6 +8,7 @@
 # SPDX-License-Identifier: GPL-3.0+
 
 import datetime
+import re
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -42,6 +43,25 @@ class Analytic(db.Model):
 
     def __repr__(self):
         return 'Analytic object %s' % self.analytic_id
+
+class Taboo(db.Model):
+
+    # sqlalchemy metadata
+    __tablename__ = 'taboos'
+    __table_args__ = {'mysql_character_set': 'utf8mb4'}
+
+    taboo_id = Column(Integer, primary_key=True, nullable=False, unique=True)
+    locale = Column(String(8), nullable=False, index=True)
+    value = Column(Text, nullable=False)
+    description = Column(Text, nullable=True)
+
+    def __init__(self, locale, value, description=True):
+        self.locale = locale
+        self.value = value
+        self.description = description
+
+    def __repr__(self):
+        return 'Taboo object %s' % self.taboo_id
 
 class Vote(db.Model):
 
@@ -93,6 +113,9 @@ class User(db.Model):
     def __repr__(self):
         return 'User object %s' % self.user_id
 
+def _tokenize(val):
+    return [token.lower() for token in re.findall(r"[\w']+", val)]
+
 class Review(db.Model):
 
     # sqlalchemy metadata
@@ -134,6 +157,33 @@ class Review(db.Model):
         self.user_display = None
         self.rating = 0
         self.reported = 0
+
+    def _generate_keywords(self):
+
+        # tokenize anything the user can specify
+        tokens = []
+        if self.summary:
+            tokens.extend(_tokenize(self.summary))
+        if self.description:
+            tokens.extend(_tokenize(self.description))
+        if self.user_display:
+            tokens.extend(_tokenize(self.user_display))
+
+        # dedupe, and remove anything invalid
+        tokens = set(tokens)
+        if None in tokens:
+            tokens.remove(None)
+        return tokens
+
+    def matches_taboos(self, taboos):
+
+        # does the review contain any banned keywords
+        kws = self._generate_keywords()
+        matches = []
+        for taboo in taboos:
+            if taboo.value in kws:
+                matches.append(taboo)
+        return matches
 
     @property
     def user_addr(self):

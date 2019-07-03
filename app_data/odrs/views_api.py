@@ -22,6 +22,7 @@ from .models import Review, User, Vote, Analytic
 from .models import _vote_exists
 from .util import json_success, json_error, _locale_is_compatible, _eventlog_add, _get_user_key, _get_datestr_from_dt
 from .util import _sanitised_version, _sanitised_summary, _sanitised_description, _get_rating_for_app_id
+from .util import _get_taboos_for_locale
 
 ODRS_REPORTED_CNT = 2
 
@@ -129,6 +130,10 @@ def api_submit():
                            'Unknown']
     if item['user_display'] not in user_display_ignore:
         review.user_display = item['user_display']
+
+    # contains taboos
+    if review.matches_taboos(_get_taboos_for_locale(review.locale)):
+        review.reported = 5
 
     # log and add
     _eventlog_add(_get_client_address(),

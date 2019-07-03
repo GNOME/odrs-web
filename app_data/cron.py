@@ -10,11 +10,12 @@
 import json
 import sys
 import datetime
+import csv
 
 from odrs import db
 
-from odrs.models import Review
-from odrs.util import _get_rating_for_app_id
+from odrs.models import Review, Taboo
+from odrs.util import _get_rating_for_app_id, _get_taboos_for_locale
 
 def _auto_delete(days=31):
 
@@ -48,6 +49,50 @@ def _regenerate_ratings(fn):
     with open(fn, 'w') as outfd:
         outfd.write(json.dumps(item, sort_keys=True, indent=4, separators=(',', ': ')))
 
+def _taboo_check():
+
+    # this is moderately expensive, so cache for each locale
+    taboos = {}
+    for review in db.session.query(Review).\
+                    filter(Review.reported < 5).all():
+        if review.locale not in taboos:
+            taboos[review.locale] = _get_taboos_for_locale(review.locale)
+        matched_taboos = review.matches_taboos(taboos[review.locale])
+        if matched_taboos:
+            for taboo in matched_taboos:
+                print(review.review_id, review.locale, taboo.value)
+            review.reported = 5
+    db.session.commit()
+
+def _taboo_import(fn):
+
+    # get all the taboos in one database call
+    taboos = {}
+    for taboo in db.session.query(Taboo).all():
+        key = taboo.locale + ':' + taboo.value
+        taboos[key] = taboo
+
+    # add any new ones
+    with open(fn, newline='') as csvfile:
+        for locale, value, description in csv.reader(csvfile):
+            locale = locale.strip()
+            value = value.strip()
+            description = description.strip()
+            key = locale + ':' + value
+            if key in taboos:
+                continue
+            if value.find(' ') != -1:
+                print('Ignoring', locale, value)
+                continue
+            if value.lower() != value:
+                print('Ignoring', locale, value)
+                continue
+            taboo = Taboo(locale, value, description)
+            taboos[key] = taboo
+            print('Adding', locale, value)
+            db.session.add(taboo)
+    db.session.commit()
+
 if __name__ == '__main__':
 
     if len(sys.argv) < 2:
@@ -62,6 +107,13 @@ if __name__ == '__main__':
         _regenerate_ratings(sys.argv[2])
     elif sys.argv[1] == 'auto-delete':
         _auto_delete()
+    elif sys.argv[1] == 'taboo-check':
+        _taboo_check()
+    elif sys.argv[1] == 'taboo-import':
+        if len(sys.argv) < 3:
+            print('Usage: %s taboo-import filename' % sys.argv[0])
+            sys.exit(1)
+        _taboo_import(sys.argv[2])
     else:
         print("cron mode %s not known" % sys.argv[1])
         sys.exit(1)

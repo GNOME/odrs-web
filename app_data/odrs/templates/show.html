@@ -11,6 +11,16 @@
       {{r.app_id}}
       <a class="btn pull-right" href="{{url_for('.admin_show_app', app_id=r.app_id)}}">All</a>
     </h1>
+{% if matched_taboos %}
+    <div class="alert alert-warning" role="alert">
+      <strong>Warning: Contains taboo:</strong>
+      <ul>
+{% for taboo in matched_taboos %}
+        <li>{{taboo.value}}: {{taboo.description}}</li>
+{% endfor %}
+      </ul>
+    </div>
+{% endif %}
     <table class="table card-text table-borderless table-condensed">
       <tr class="row">
         <th class="col col-md-2">Rating</th>

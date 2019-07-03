@@ -8,7 +8,7 @@
 import json
 import hashlib
 
-from sqlalchemy import text
+from sqlalchemy import text, or_
 
 from flask import Response
 
@@ -93,6 +93,19 @@ def _addr_hash(value):
     """ Generate a salted hash of the IP address """
     from odrs import app
     return hashlib.sha1((app.secret_key + value).encode('utf-8')).hexdigest()
+
+def _get_taboos_for_locale(locale):
+    from .models import Taboo
+    from odrs import db
+    if locale.find('_') != -1:
+        lang, _ = locale.split('_', maxsplit=1)
+        return db.session.query(Taboo).\
+                        filter(or_(Taboo.locale == locale,
+                                   Taboo.locale == lang,
+                                   Taboo.locale == 'en')).all()
+    return db.session.query(Taboo).\
+                    filter(or_(Taboo.locale == locale,
+                               Taboo.locale == 'en')).all()
 
 def _sanitised_input(val):
 

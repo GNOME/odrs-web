@@ -215,6 +215,38 @@ class OdrsTest(unittest.TestCase):
         rv = self.app.get('/admin/search?value=inkscape+notgoingtoexist')
         assert b'Somebody Import' in rv.data, rv.data
 
+    def _admin_taboo_add(self, locale='en', value='inkscape', description='ola!'):
+        data = {'locale': locale, 'value': value, 'description': description}
+        return self.app.post('/admin/taboo/add', data=data, follow_redirects=True)
+
+    def test_admin_taboo(self):
+
+        self.login()
+
+        rv = self.app.get('/admin/taboo/all')
+        assert b'There are no taboos stored' in rv.data, rv.data
+
+        # add taboos
+        rv = self._admin_taboo_add()
+        assert b'Added taboo' in rv.data, rv.data
+        assert b'inkscape' in rv.data, rv.data
+        rv = self._admin_taboo_add()
+        assert b'Already added that taboo' in rv.data, rv.data
+        rv = self._admin_taboo_add(locale='fr_FR')
+        assert b'Added taboo' in rv.data, rv.data
+
+        # submit something, and ensure it's flagged
+        self.review_submit()
+        rv = self.app.get('/admin/review/1')
+        assert b'Somebody Important' in rv.data, rv.data
+        assert b'Contains taboo' in rv.data, rv.data
+
+        # delete
+        rv = self.app.get('/admin/taboo/1/delete', follow_redirects=True)
+        assert b'Deleted taboo' in rv.data, rv.data
+        rv = self.app.get('/admin/taboo/1/delete', follow_redirects=True)
+        assert b'No taboo with ID' in rv.data, rv.data
+
     def test_api_submit_when_banned(self):
 
         # submit abusive review
