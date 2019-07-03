@@ -9,47 +9,37 @@
 </p>
 {% else %}
 <table class="table table-hover table-responsive">
-  <tr>
-    <th>#</th>
-    <th>Created / Deleted</th>
-    <th>Application</th>
-    <th>Version</th>
-    <th>Rating</th>
-    <th>K&uarr;</th>
-    <th>K&darr;</th>
-    <th>Distro</th>
-    <th>Locale</th>
-    <th>Name</th>
-    <th>Summary</th>
+  <tr class="row">
+    <th class="col-sm-3">Application</th>
+    <th class="col-sm-1">Version</th>
+    <th class="col-sm-1">Rating</th>
+    <th class="col-sm-1">Locale</th>
+    <th class="col-sm-2">Name</th>
+    <th class="col-sm-3">Summary</th>
+    <th class="col-sm-1">&nbsp;</th>
   </tr>
 
 {% for r in reviews %}
-  <tr>
-    <td><a href="{{url_for('.admin_show_review', review_id=r.review_id)}}">{{r.review_id}}</a></td>
-    <td>
-      {{r.date_created}}
-{% if r.date_deleted %}
-      <br/>
-      <i class="important">{{r.date_deleted}}</i>
-{% endif %}
-    </td>
+  <tr class="row">
     <td>{{r.app_id.replace('.desktop', '').replace('.Application', '')}}</td>
     <td>{{r.version}}</td>
-    <td>{{format_rating(r.rating)}}</td>
-    <td>{{r.karma_up}}</td>
+    <td>
+      {{format_rating(r.rating)}}
+      ({{r.karma_up}}&uarr;, {{r.karma_down}}&darr;)
 {% if r.reported > 0 %}
-    <td><i class="important">{{r.karma_down}}</i></td>
-{% else %}
-    <td>{{r.karma_down}}</td>
+      [{{r.reported}}]
 {% endif %}
-    <td>{{r.distro.replace(' GNU/Linux', '')}}</td>
+    </td>
     <td>{{r.locale}}</td>
 {% if r.user_display %}
     <td>{{format_truncate(r.user_display, 15)}}</td>
 {% else %}
     <td><i>Unknown</i></td>
 {% endif %}
-    <td>{{format_truncate(r.summary, 15)}}</td>
+    <td>{{format_truncate(r.summary, 30)}}</td>
+    <td>
+      <a class="btn btn-info" href="{{url_for('.admin_show_review', review_id=r.review_id)}}">Details</a>
+    </td>
   </tr>
 {% endfor %}
 
