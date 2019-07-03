@@ -215,12 +215,16 @@ class OdrsTest(unittest.TestCase):
         self.login()
         rv = self.app.get('/admin/user_ban/{}'.format(self.user_hash), follow_redirects=True)
         assert b'Banned user' in rv.data, rv.data
+        assert b'deleted 1 reviews' in rv.data, rv.data
         self.logout()
 
-        # try to submit another review
-        rv = self._review_submit()
-        assert b'account has been disabled due to abuse' in rv.data, rv.data
+        # check review was actually deleted
+        rv = self.app.get('/1.0/reviews/api/all')
+        assert rv.data == b'[]', rv.data
 
+        # try to submit another review
+        rv = self._review_submit(app_id='gimp.desktop')
+        assert b'account has been disabled due to abuse' in rv.data, rv.data
 
     def test_login_logout(self):
 

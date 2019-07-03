@@ -318,8 +318,13 @@ def admin_user_ban(user_hash):
         flash('No user with that user_hash')
         return redirect(url_for('.odrs_index'))
     user.is_banned = True
+
+    # delete any of the users reviews
+    nr_delete = len(user.reviews)
+    for review in user.reviews:
+        db.session.delete(review)
     db.session.commit()
-    flash('Banned user')
+    flash('Banned user and deleted {} reviews'.format(nr_delete))
     return redirect(url_for('.odrs_show_reported'))
 
 @app.route('/admin/unreport/<review_id>')
