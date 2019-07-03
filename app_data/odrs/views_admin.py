@@ -11,7 +11,7 @@ import datetime
 import calendar
 from math import ceil
 
-from sqlalchemy import text
+from sqlalchemy import text, or_
 
 from flask import abort, request, flash, render_template, redirect, url_for
 from flask_login import login_required, current_user
@@ -416,6 +416,30 @@ def admin_show_all(page=1):
     reviews = reviews[(page-1) * reviews_per_page:page * reviews_per_page]
     return render_template('show-all.html',
                            pagination=pagination,
+                           reviews=reviews)
+
+def _review_filter_keys(keys):
+    cond = []
+    for key in keys:
+        cond.append(Review.user_display.like('%{}%'.format(key)))
+        cond.append(Review.summary.like('%{}%'.format(key)))
+        cond.append(Review.description.like('%{}%'.format(key)))
+    return or_(*cond)
+
+@app.route('/admin/search')
+@app.route('/admin/search/<int:max_results>')
+def admin_search(max_results=19):
+
+    # no search results
+    if 'value' not in request.args:
+        return render_template('search.html')
+
+    keys = request.args['value'].split(' ')
+    reviews = db.session.query(Review).\
+                    filter(_review_filter_keys(keys)).\
+                    order_by(Review.date_created.desc()).\
+                    limit(max_results).all()
+    return render_template('show-all.html',
                            reviews=reviews)
 
 @app.route('/admin/show/unmoderated')

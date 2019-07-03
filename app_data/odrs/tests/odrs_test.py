@@ -206,6 +206,15 @@ class OdrsTest(unittest.TestCase):
         rv = self.app.get('/admin/moderators/all')
         assert self.user_hash.encode() in rv.data, rv.data
 
+    def test_admin_search(self):
+
+        self.review_submit()
+        self.login()
+        rv = self.app.get('/admin/search?value=notgoingtoexist')
+        assert b'There are no results for this query' in rv.data, rv.data
+        rv = self.app.get('/admin/search?value=inkscape+notgoingtoexist')
+        assert b'Somebody Import' in rv.data, rv.data
+
     def test_api_submit_when_banned(self):
 
         # submit abusive review
