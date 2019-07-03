@@ -490,7 +490,11 @@ def admin_show_user(user_hash):
     """
     Return all the reviews from a user on the server as HTML.
     """
-    reviews = db.session.query(Review).filter(Review.user_hash == user_hash).all()
+    user = db.session.query(User).filter(User.user_hash == user_hash).first()
+    if not user:
+        flash('No user with that user_hash')
+        return redirect(url_for('.admin_show_all'))
+    reviews = db.session.query(Review).filter(Review.user_id == user.user_id).all()
     return render_template('show-all.html', reviews=reviews)
 
 @app.route('/admin/show/app/<app_id>')
