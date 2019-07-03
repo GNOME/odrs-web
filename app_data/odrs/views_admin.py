@@ -271,9 +271,8 @@ def admin_show_review(review_id):
         return redirect(url_for('.odrs_index'))
 
     # has the user already voted
-    user_hash = _get_hash_for_user(current_user)
-    if user_hash:
-        vote = _vote_exists(review_id, user_hash)
+    if current_user.user:
+        vote = _vote_exists(review_id, current_user.user.user_id)
     else:
         vote = None
 
