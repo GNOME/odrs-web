@@ -16,7 +16,7 @@ from sqlalchemy.orm import relationship
 
 from odrs import db
 
-from .util import _password_hash, _get_user_key
+from .util import _password_hash, _get_user_key, _addr_hash
 
 def _vote_exists(review_id, user_id):
     """ Checks to see if a vote exists for the review+user """
@@ -107,7 +107,7 @@ class Review(db.Model):
     summary = Column(Text)
     description = Column(Text)
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
-    user_addr = Column(Text)
+    user_addr_hash = Column('user_addr', Text)
     user_display = Column(Text)
     version = Column(Text)
     distro = Column(Text)
@@ -134,6 +134,14 @@ class Review(db.Model):
         self.user_display = None
         self.rating = 0
         self.reported = 0
+
+    @property
+    def user_addr(self):
+        raise AttributeError('user_addr is not a readable attribute')
+
+    @user_addr.setter
+    def user_addr(self, user_addr):
+        self.user_addr_hash = _addr_hash(user_addr)
 
     def asdict(self, user_hash=None):
         item = {

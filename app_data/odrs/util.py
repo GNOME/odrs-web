@@ -89,6 +89,11 @@ def _password_hash(value):
     salt = 'odrs%%%'
     return hashlib.sha1(salt.encode('utf-8') + value.encode('utf-8')).hexdigest()
 
+def _addr_hash(value):
+    """ Generate a salted hash of the IP address """
+    from odrs import app
+    return hashlib.sha1((app.secret_key + value).encode('utf-8')).hexdigest()
+
 def _sanitised_input(val):
 
     # remove trailing whitespace
