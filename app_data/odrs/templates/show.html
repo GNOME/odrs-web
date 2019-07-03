@@ -16,7 +16,7 @@
     <strong>Actions</strong>
   </div>
   <div class="col-sm-11">
-{% if current_user.user_hash and not vote_exists %}
+{% if current_user.user.user_hash and not vote_exists %}
     <a href="{{url_for('.admin_vote', review_id=r.review_id, val_str='up')}}">
     <button class="btn btn-action" type="button">Vote Up</button>
     </a>
@@ -105,10 +105,10 @@
 {% endif %}
 {% if current_user.is_authenticated %}
         <span class="input-group-addon btn btn-action">
-          <a href="{{url_for('.admin_show_user', user_hash=r.user_hash)}}">All</a>
+          <a href="{{url_for('.admin_show_user', user_hash=r.user.user_hash)}}">All</a>
         </span>
         <span class="input-group-addon btn btn-action">
-          <a href="{{url_for('.admin_user_ban', user_hash=r.user_hash)}}">Ban</a>
+          <a href="{{url_for('.admin_user_ban', user_hash=r.user.user_hash)}}">Ban</a>
         </span>
 {% endif %}
     </div>
