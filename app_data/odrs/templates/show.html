@@ -122,7 +122,7 @@
       </tr>
     </table>
     <button class="card-link btn btn-action" type="submit">Modify</button>
-    <a class="card-link btn btn-danger pull-right" href="{{url_for('.admin_user_ban', user_hash=r.user.user_hash)}}">Ban &amp; Delete All</a>
+    <a class="card-link btn btn-danger pull-right" href="{{url_for('.admin_user_ban', user_hash=r.user.user_hash)}}">Ban &amp; Delete {{r.user.reviews|length}} Review</a>
     <a class="card-link btn btn-warning pull-right" href="{{url_for('.admin_delete_force', review_id=r.review_id)}}">Remove Forever</a>
   </div>
 </div>
