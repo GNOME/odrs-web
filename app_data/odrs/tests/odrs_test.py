@@ -238,12 +238,20 @@ class OdrsTest(unittest.TestCase):
         assert b'Incorrect password' in rv.data, rv.data
 
     @staticmethod
-    def run_cron(fn='test.json'):
+    def run_cron_regenerate_ratings(fn='test.json'):
 
         from odrs import app
         from cron import _regenerate_ratings
         with app.test_request_context():
             _regenerate_ratings(fn)
+
+    @staticmethod
+    def run_cron_auto_delete():
+
+        from odrs import app
+        from cron import _auto_delete
+        with app.test_request_context():
+            _auto_delete(0)
 
     def test_nologin_required(self):
 
@@ -382,6 +390,13 @@ class OdrsTest(unittest.TestCase):
         rv = self._review_fetch(app_id='inkscape.desktop')
         assert b'vote_id": 1' in rv.data, rv.data
 
+        # delete review, hopefully deleting vote too
+        rv = self._api_review_delete()
+        assert b'removed review #1' in rv.data, rv.data
+        self.run_cron_auto_delete()
+        rv = self._review_fetch(app_id='inkscape.desktop')
+        assert b'vote_id' not in rv.data, rv.data
+
     def test_api_report(self):
 
         # submit and verify
@@ -424,6 +439,13 @@ class OdrsTest(unittest.TestCase):
         assert b'star5": 2' in rv.data, rv.data
         assert b'total": 2' in rv.data, rv.data
 
+    def _api_review_delete(self):
+        data = {'review_id': 1,
+                'app_id': 'inkscape.desktop',
+                'user_hash': self.user_hash,
+                'user_skey': _get_user_key(self.user_hash, 'inkscape.desktop')}
+        return self.app.post('/1.0/reviews/api/remove', data=json.dumps(data))
+
     def test_api_remove(self):
 
         self.review_submit()
@@ -453,11 +475,7 @@ class OdrsTest(unittest.TestCase):
         assert b'invalid user_skey' in rv.data, rv.data
 
         # delete a review
-        data = {'review_id': 1,
-                'app_id': 'inkscape.desktop',
-                'user_hash': self.user_hash,
-                'user_skey': _get_user_key(self.user_hash, 'inkscape.desktop')}
-        rv = self.app.post('/1.0/reviews/api/remove', data=json.dumps(data))
+        rv = self._api_review_delete()
         assert b'removed review #1' in rv.data, rv.data
 
     def test_api_submit(self):

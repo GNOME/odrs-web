@@ -16,9 +16,9 @@ from odrs import db
 from odrs.models import Review
 from odrs.util import _get_rating_for_app_id
 
-def _auto_delete():
+def _auto_delete(days=31):
 
-    since = datetime.datetime.now() - datetime.timedelta(days=31)
+    since = datetime.datetime.now() - datetime.timedelta(days=days)
     reviews = db.session.query(Review).\
                     filter(Review.date_deleted != None).\
                     filter(Review.date_deleted < since).\

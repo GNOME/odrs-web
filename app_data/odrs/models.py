@@ -117,6 +117,9 @@ class Review(db.Model):
     reported = Column(Integer, default=0)
 
     user = relationship('User', back_populates='reviews')
+    votes = relationship('Vote',
+                         back_populates='review',
+                         cascade='all,delete-orphan')
 
     def __init__(self):
         self.app_id = None
