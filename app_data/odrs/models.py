@@ -134,6 +134,25 @@ class User(db.Model):
 def _tokenize(val):
     return [token.lower() for token in re.findall(r"[\w']+", val)]
 
+class Component(db.Model):
+
+    # sqlalchemy metadata
+    __tablename__ = 'components'
+    __table_args__ = {'mysql_character_set': 'utf8mb4'}
+
+    component_id = Column(Integer, primary_key=True, nullable=False, unique=True)
+    app_id = Column(Text)
+    review_cnt = Column(Integer, default=1)
+
+    reviews = relationship('Review', back_populates='component')
+
+    def __init__(self, app_id):
+        self.app_id = app_id
+        self.review_cnt = 1
+
+    def __repr__(self):
+        return 'Component object %s' % self.component_id
+
 class Review(db.Model):
 
     # sqlalchemy metadata
@@ -143,7 +162,8 @@ class Review(db.Model):
     review_id = Column(Integer, primary_key=True, nullable=False, unique=True)
     date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     date_deleted = Column(DateTime)
-    app_id = Column(Text)
+    _app_id = Column('app_id', Text)
+    component_id = Column(Integer, ForeignKey('components.component_id'), nullable=False)
     locale = Column(Text)
     summary = Column(Text)
     description = Column(Text)
@@ -158,12 +178,12 @@ class Review(db.Model):
     reported = Column(Integer, default=0)
 
     user = relationship('User', back_populates='reviews')
+    component = relationship('Component', back_populates='reviews', lazy='joined')
     votes = relationship('Vote',
                          back_populates='review',
                          cascade='all,delete-orphan')
 
     def __init__(self):
-        self.app_id = None
         self.locale = None
         self.summary = None
         self.description = None
@@ -213,7 +233,7 @@ class Review(db.Model):
 
     def asdict(self, user_hash=None):
         item = {
-            'app_id': self.app_id,
+            'app_id': self.component.app_id,
             'date_created': self.date_created.timestamp(),
             'description': self.description,
             'distro': self.distro,
@@ -229,7 +249,7 @@ class Review(db.Model):
             'version': self.version,
         }
         if user_hash:
-            item['user_skey'] = _get_user_key(user_hash, self.app_id)
+            item['user_skey'] = _get_user_key(user_hash, self.component.app_id)
         return item
 
     def __repr__(self):

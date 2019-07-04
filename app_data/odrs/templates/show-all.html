@@ -21,7 +21,7 @@
 
 {% for r in reviews %}
   <tr class="row">
-    <td>{{r.app_id.replace('.desktop', '').replace('.Application', '')}}</td>
+    <td>{{r.component.app_id}}</td>
     <td>{{r.version}}</td>
     <td>
       {{format_rating(r.rating)}}

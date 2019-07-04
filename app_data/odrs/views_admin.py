@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# pylint: disable=invalid-name,missing-docstring,chained-comparison
+# pylint: disable=invalid-name,missing-docstring,chained-comparison,singleton-comparison
 #
 # Copyright (C) 2015-2019 Richard Hughes <richard@hughsie.com>
 #
@@ -17,7 +17,7 @@ from flask import abort, request, flash, render_template, redirect, url_for
 from flask_login import login_required, current_user
 
 from odrs import app, db
-from .models import Review, User, Moderator, Vote, Taboo
+from .models import Review, User, Moderator, Vote, Taboo, Component
 from .models import _vote_exists
 from .util import _get_datestr_from_dt, _get_taboos_for_locale
 
@@ -208,7 +208,7 @@ def admin_show_stats():
     stats['Unique distros'] = rs.fetchone()[0]
 
     # unique apps
-    rs = db.session.execute("SELECT COUNT(DISTINCT(app_id)) FROM reviews;") # pylint: disable=no-member
+    rs = db.session.execute("SELECT COUNT(*) FROM components;") # pylint: disable=no-member
     stats['Unique apps reviewed'] = rs.fetchone()[0]
 
     # unique distros
@@ -226,10 +226,11 @@ def admin_show_stats():
                                 "GROUP BY app_id ORDER BY total DESC LIMIT 50;")
 
     # popularity reviews
-    submitted = db.session.execute("SELECT DISTINCT app_id, COUNT(app_id) as total " # pylint: disable=no-member
-                                   "FROM eventlog WHERE app_id IS NOT NULL "
-                                   "AND message='reviewed' GROUP BY app_id "
-                                   "ORDER BY total DESC LIMIT 50;")
+    submitted = db.session.query(Component.app_id, Component.review_cnt).\
+                                    filter(Component.app_id != None).\
+                                    order_by(Component.review_cnt.desc()).\
+                                    limit(50).all()
+
     return render_template('stats.html',
                            results_stats=stats,
                            results_viewed=viewed,
@@ -697,6 +698,21 @@ def admin_taboo_delete(taboo_id):
     db.session.commit()
     flash('Deleted taboo')
     return redirect(url_for('.admin_taboo_show_all'))
+
+@app.route('/admin/component/all')
+@login_required
+def admin_component_show_all():
+    """
+    Return all the components.
+    """
+    # security check
+    if not current_user.is_admin:
+        flash('Unable to show all components', 'error')
+        return redirect(url_for('.odrs_index'))
+    components = db.session.query(Component).\
+                order_by(Component.app_id.asc()).\
+                order_by(Component.review_cnt.asc()).all()
+    return render_template('components.html', components=components)
 
 @app.route('/admin/vote/<review_id>/<val_str>')
 @login_required

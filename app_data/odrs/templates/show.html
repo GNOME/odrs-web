@@ -8,8 +8,8 @@
 <div class="card">
   <div class="card-body">
     <h1 class="card-title">
-      {{r.app_id}}
-      <a class="btn pull-right" href="{{url_for('.admin_show_app', app_id=r.app_id)}}">All</a>
+      {{r.component.app_id}}
+      <a class="btn pull-right" href="{{url_for('.admin_show_app', app_id=r.component.app_id)}}">All</a>
     </h1>
 {% for taboo in matched_taboos %}
     <div class="alert alert-{{taboo.color}}" role="alert">

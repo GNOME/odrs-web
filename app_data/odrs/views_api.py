@@ -20,7 +20,7 @@ from flask import request, Response
 
 from odrs import app, db
 
-from .models import Review, User, Vote, Analytic, Taboo
+from .models import Review, User, Vote, Analytic, Taboo, Component
 from .models import _vote_exists
 from .util import json_success, json_error, _locale_is_compatible, _eventlog_add, _get_user_key, _get_datestr_from_dt
 from .util import _sanitised_version, _sanitised_summary, _sanitised_description, _get_rating_for_app_id
@@ -104,7 +104,8 @@ def api_submit():
 
     # user has already reviewed
     if db.session.query(Review).\
-            filter(Review.app_id == item['app_id']).\
+            join(Component).\
+            filter(Component.app_id == item['app_id']).\
             filter(Review.user_id == user.user_id).first():
         _eventlog_add(_get_client_address(),
                       user.user_id,
@@ -112,9 +113,26 @@ def api_submit():
                       'already reviewed')
         return json_error('already reviewed this app')
 
+    # this is basically a clunky UPSERT that works with MySQL
+    stmt = insert(Component).values(app_id=item['app_id'])
+    if db.session.bind.dialect.name != 'sqlite': # pylint: disable=no-member
+        stmt_ondupe = stmt.on_duplicate_key_update(review_cnt=Component.review_cnt + 1)
+    else:
+        stmt_ondupe = stmt
+    try:
+        db.session.execute(stmt_ondupe) # pylint: disable=no-member
+        db.session.commit()
+    except IntegrityError as e:
+        print('ignoring: {}'.format(str(e)))
+
+    # component definately exists now!
+    component = db.session.query(Component).filter(Component.app_id == item['app_id']).first()
+    if not component:
+        return json_error('cannot create component for {}'.format(item['app_id']))
+
     # create new
     review = Review()
-    review.app_id = item['app_id']
+    review._app_id = item['app_id'] # pylint: disable=protected-access
     review.locale = item['locale']
     review.summary = _sanitised_summary(item['summary'])
     review.description = _sanitised_description(item['description'])
@@ -123,6 +141,7 @@ def api_submit():
     review.distro = item['distro']
     review.rating = item['rating']
     review.user_addr = _get_client_address()
+    review.component_id = component.component_id
 
     # check if valid
     user_display_ignore = ['root',
@@ -140,7 +159,7 @@ def api_submit():
     # log and add
     _eventlog_add(_get_client_address(),
                   review.user_id,
-                  review.app_id,
+                  component.app_id,
                   'reviewed')
     db.session.add(review)
     db.session.commit()
@@ -153,7 +172,8 @@ def api_show_app(app_id, user_hash=None):
     Return details about an application.
     """
     reviews = db.session.query(Review).\
-                    filter(Review.app_id == app_id).\
+                    join(Component).\
+                    filter(Component.app_id == app_id).\
                     filter(Review.reported < ODRS_REPORTED_CNT).\
                     order_by(Review.date_created.desc()).all()
     items = [review.asdict(user_hash) for review in reviews]
@@ -199,7 +219,8 @@ def api_fetch():
     if 'compat_ids' in item:
         app_ids.extend(item['compat_ids'])
     reviews = db.session.query(Review).\
-                    filter(Review.app_id.in_(app_ids)).\
+                    join(Component).\
+                    filter(Component.app_id.in_(app_ids)).\
                     filter(Review.reported < ODRS_REPORTED_CNT).all()
 
     # if user does not exist then create
@@ -334,7 +355,9 @@ def _vote(val):
     # update the per-user karma
     user.karma += val
 
-    review = db.session.query(Review).filter(Review.app_id == item['app_id']).first()
+    review = db.session.query(Review).\
+                join(Component).\
+                filter(Component.app_id == item['app_id']).first()
     if not review:
         _eventlog_add(_get_client_address(), user.user_id, None,
                       'invalid review ID of %s' % item['app_id'], important=True)
@@ -416,7 +439,7 @@ def api_remove():
                 filter(Review.user_id == user.user_id).first()
     if not review:
         return json_error('no review')
-    if review.app_id != item['app_id']:
+    if review.component.app_id != item['app_id']:
         return json_error('the app_id is invalid')
 
     if item['user_skey'] != _get_user_key(item['user_hash'], item['app_id']):
@@ -464,9 +487,9 @@ def api_ratings():
     Get the star ratings for all known applications.
     """
     item = {}
-    app_ids = [res[0] for res in db.session.query(Review.app_id).\
-                                       order_by(Review.app_id.asc()).\
-                                       distinct(Review.app_id).all()]
+    app_ids = [res[0] for res in db.session.query(Component.app_id).\
+                                       order_by(Component.app_id.asc()).\
+                                       distinct(Component.app_id).all()]
     for app_id in app_ids:
         ratings = _get_rating_for_app_id(app_id, 2)
         if len(ratings) == 0:
