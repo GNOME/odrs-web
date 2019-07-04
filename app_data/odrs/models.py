@@ -142,12 +142,14 @@ class Component(db.Model):
 
     component_id = Column(Integer, primary_key=True, nullable=False, unique=True)
     app_id = Column(Text)
+    fetch_cnt = Column(Integer, default=0)
     review_cnt = Column(Integer, default=1)
 
     reviews = relationship('Review', back_populates='component')
 
     def __init__(self, app_id):
         self.app_id = app_id
+        self.fetch_cnt = 0
         self.review_cnt = 1
 
     def __repr__(self):

@@ -214,6 +214,12 @@ def api_fetch():
     except IntegrityError as e:
         print('ignoring: {}'.format(str(e)))
 
+    # increment the counter for the stats
+    component = db.session.query(Component).filter(Component.app_id == item['app_id']).first()
+    if component:
+        component.fetch_cnt += 1
+        db.session.commit()
+
     # also add any compat IDs
     app_ids = [item['app_id']]
     if 'compat_ids' in item:

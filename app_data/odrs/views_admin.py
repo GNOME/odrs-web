@@ -221,9 +221,10 @@ def admin_show_stats():
         stats['%i star reviews' % star] = rs.fetchone()[0]
 
     # popularity view
-    viewed = db.session.execute("SELECT DISTINCT app_id, SUM(fetch_cnt) AS total " # pylint: disable=no-member
-                                "FROM analytics WHERE app_id IS NOT NULL "
-                                "GROUP BY app_id ORDER BY total DESC LIMIT 50;")
+    viewed = db.session.query(Component.app_id, Component.fetch_cnt).\
+                                    filter(Component.app_id != None).\
+                                    order_by(Component.fetch_cnt.desc()).\
+                                    limit(50).all()
 
     # popularity reviews
     submitted = db.session.query(Component.app_id, Component.review_cnt).\
