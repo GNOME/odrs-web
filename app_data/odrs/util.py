@@ -8,7 +8,7 @@
 import json
 import hashlib
 
-from sqlalchemy import text, or_
+from sqlalchemy import or_
 
 from flask import Response
 
@@ -62,26 +62,26 @@ def _eventlog_add(user_addr=None,
 def _get_rating_for_app_id(app_id, min_total=1):
     """ Gets the ratings information for the application """
     from odrs import db
-    stmt = text('SELECT COUNT(*) total,'
-                '       SUM(rating = 0) star0,'
-                '       SUM(rating = 20) star1,'
-                '       SUM(rating = 40) star2,'
-                '       SUM(rating = 60) star3,'
-                '       SUM(rating = 80) star4,'
-                '       SUM(rating = 100) star5 '
-                'FROM reviews WHERE app_id=:app_id;')
-    res = db.session.execute(stmt.bindparams(app_id=app_id)).fetchone() # pylint: disable=no-member
-    if not res:
+    from odrs.models import Review, Component
+
+    # get all ratings for app
+    array = [0] * 6
+    for rating in db.session.query(Review.rating).\
+                        join(Component).\
+                        filter(Component.app_id == app_id).all():
+        idx = int(rating[0] / 20)
+        if idx > 5:
+            continue
+        array[idx] += 1
+
+    # nothing found
+    if sum(array) < min_total:
         return []
-    item = {}
-    item['total'] = res[0]
-    if item['total'] < min_total:
-        return []
-    for i in range(6):
-        if res[i + 1]:
-            item['star%i' % i] = int(res[i + 1])
-        else:
-            item['star%i' % i] = 0
+
+    # return as dict
+    item = {'total': sum(array)}
+    for idx in range(6):
+        item['star{}'.format(idx)] = array[idx]
     return item
 
 def _password_hash(value):

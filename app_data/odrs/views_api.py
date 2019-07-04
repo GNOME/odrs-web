@@ -132,7 +132,6 @@ def api_submit():
 
     # create new
     review = Review()
-    review._app_id = item['app_id'] # pylint: disable=protected-access
     review.locale = item['locale']
     review.summary = _sanitised_summary(item['summary'])
     review.description = _sanitised_description(item['description'])

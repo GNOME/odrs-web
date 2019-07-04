@@ -164,7 +164,6 @@ class Review(db.Model):
     review_id = Column(Integer, primary_key=True, nullable=False, unique=True)
     date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     date_deleted = Column(DateTime)
-    _app_id = Column('app_id', Text)
     component_id = Column(Integer, ForeignKey('components.component_id'), nullable=False)
     locale = Column(Text)
     summary = Column(Text)
