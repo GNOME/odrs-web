@@ -29,8 +29,10 @@ def upgrade():
         sa.UniqueConstraint('component_id'),
         mysql_character_set='utf8mb4'
         )
+    except InternalError as e:
+        print(str(e))
+    try:
         op.add_column('reviews', sa.Column('component_id', sa.Integer(), nullable=False))
-        op.create_foreign_key(None, 'reviews', 'components', ['component_id'], ['component_id'])
     except InternalError as e:
         print(str(e))
 
@@ -57,7 +59,13 @@ def upgrade():
         review.component_id = app_ids[review._app_id].component_id
     db.session.commit()
 
+    # should all be valid now
+    try:
+        op.create_foreign_key('components_ibfk_3', 'reviews', 'components', ['component_id'], ['component_id'])
+    except InternalError as e:
+        print(str(e))
+
 def downgrade():
-    #op.drop_constraint(None, 'reviews', type_='foreignkey')
+    op.drop_constraint('components_ibfk_3', 'reviews', type_='foreignkey')
     op.drop_column('reviews', 'component_id')
     op.drop_table('components')
