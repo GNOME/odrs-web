@@ -96,7 +96,7 @@ def _taboo_import(fn):
 if __name__ == '__main__':
 
     if len(sys.argv) < 2:
-        print('Usage: %s ratings|auto-delete' % sys.argv[0])
+        print('Usage: %s ratings|auto-delete|taboo-check|taboo-import' % sys.argv[0])
         sys.exit(1)
 
     # create the ratings data
