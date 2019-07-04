@@ -141,16 +141,36 @@ class Component(db.Model):
     __table_args__ = {'mysql_character_set': 'utf8mb4'}
 
     component_id = Column(Integer, primary_key=True, nullable=False, unique=True)
+    component_id_parent = Column(Integer, ForeignKey('components.component_id'))
     app_id = Column(Text)
     fetch_cnt = Column(Integer, default=0)
     review_cnt = Column(Integer, default=1)
 
-    reviews = relationship('Review', back_populates='component')
+    reviews = relationship('Review',
+                           back_populates='component',
+                           cascade='all,delete-orphan')
+    parent = relationship('Component',
+                          uselist=False,
+                          remote_side='Component.component_id',
+                          backref='children',
+                          lazy='joined')
 
     def __init__(self, app_id):
         self.app_id = app_id
         self.fetch_cnt = 0
         self.review_cnt = 1
+
+    def adopt(self, child):
+
+        # set the child parent
+        child.component_id_parent = self.component_id
+
+        # adopt any of the childs existing children
+        adopted = 0
+        for component in child.children:
+            component.component_id_parent = self.component_id
+            adopted += 1
+        return adopted
 
     def __repr__(self):
         return 'Component object %s' % self.component_id
@@ -179,7 +199,9 @@ class Review(db.Model):
     reported = Column(Integer, default=0)
 
     user = relationship('User', back_populates='reviews')
-    component = relationship('Component', back_populates='reviews', lazy='joined')
+    component = relationship('Component',   # the one used for submit()
+                             back_populates='reviews',
+                             lazy='joined')
     votes = relationship('Vote',
                          back_populates='review',
                          cascade='all,delete-orphan')
@@ -196,6 +218,12 @@ class Review(db.Model):
         self.user_display = None
         self.rating = 0
         self.reported = 0
+
+    @property
+    def component_parent(self):
+        if self.component.parent:
+            return self.component.parent
+        return self.component
 
     def _generate_keywords(self):
 

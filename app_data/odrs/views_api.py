@@ -223,6 +223,13 @@ def api_fetch():
     app_ids = [item['app_id']]
     if 'compat_ids' in item:
         app_ids.extend(item['compat_ids'])
+    if component:
+        if component.parent:
+            if component.parent.app_id not in app_ids:
+                app_ids.append(component.parent.app_id)
+        for child in component.children:
+            if child.app_id not in app_ids:
+                app_ids.append(child.app_id)
     reviews = db.session.query(Review).\
                     join(Component).\
                     filter(Component.app_id.in_(app_ids)).\

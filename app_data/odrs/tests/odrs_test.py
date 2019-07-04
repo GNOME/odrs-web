@@ -219,6 +219,52 @@ class OdrsTest(unittest.TestCase):
         data = {'locale': locale, 'value': value, 'description': description, 'severity': severity}
         return self.app.post('/admin/taboo/add', data=data, follow_redirects=True)
 
+    def test_admin_components(self):
+
+        self.review_submit()
+        self.review_submit(app_id='inkscape-ubuntu-lts.desktop')
+        self.login()
+        rv = self.app.get('/admin/component/all')
+        assert b'inkscape.desktop' in rv.data, rv.data
+        assert b'inkscape-ubuntu-lts.desktop' in rv.data, rv.data
+
+        rv = self.app.get('/admin/component/join/notgoingtoexist.desktop/inkscape-ubuntu-lts.desktop', follow_redirects=True)
+        assert b'No parent component found' in rv.data, rv.data
+        rv = self.app.get('/admin/component/join/inkscape.desktop/notgoingtoexist.desktop', follow_redirects=True)
+        assert b'No child component found' in rv.data, rv.data
+        rv = self.app.get('/admin/component/join/inkscape.desktop/inkscape.desktop', follow_redirects=True)
+        assert b'Parent and child components were the same' in rv.data, rv.data
+        rv = self.app.get('/admin/component/join/inkscape.desktop/inkscape-ubuntu-lts.desktop', follow_redirects=True)
+        assert b'Joined components' in rv.data, rv.data
+
+        # again
+        rv = self.app.get('/admin/component/join/inkscape.desktop/inkscape-ubuntu-lts.desktop', follow_redirects=True)
+        assert b'Parent and child already set up' in rv.data, rv.data
+
+        # delete inkscape.desktop
+        rv = self._api_review_delete()
+        assert b'removed review #1' in rv.data, rv.data
+
+        # still match for the alternate name
+        self.review_fetch()
+
+    def test_admin_component_delete(self):
+        self.review_submit()
+        self.review_submit(app_id='inkscape-ubuntu-lts.desktop')
+        self.login()
+
+        # delete one, causing the review to get deleted too
+        rv = self.app.get('/admin/component/delete/99999', follow_redirects=True)
+        assert b'Unable to find component' in rv.data, rv.data
+        rv = self.app.get('/admin/component/delete/2', follow_redirects=True)
+        assert b'Deleted component with 1 reviews' in rv.data, rv.data
+
+        # still match for the alternate name
+        self.review_fetch()
+
+        rv = self.app.get('/admin/component/delete/1', follow_redirects=True)
+        assert b'Deleted component with 1 reviews' in rv.data, rv.data
+
     def test_admin_taboo(self):
 
         self.login()

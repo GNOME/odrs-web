@@ -715,6 +715,106 @@ def admin_component_show_all():
                 order_by(Component.review_cnt.asc()).all()
     return render_template('components.html', components=components)
 
+@app.route('/admin/component/join/<component_id_parent>/<component_id_child>')
+@login_required
+def admin_component_join(component_id_parent, component_id_child):
+    """
+    Join components.
+    """
+    # security check
+    if not current_user.is_admin:
+        flash('Unable to join components', 'error')
+        return redirect(url_for('.odrs_index'))
+    parent = db.session.query(Component).filter(Component.app_id == component_id_parent).first()
+    if not parent:
+        flash('No parent component found', 'warning')
+        return redirect(url_for('.admin_component_show_all'))
+    child = db.session.query(Component).filter(Component.app_id == component_id_child).first()
+    if not child:
+        flash('No child component found', 'warning')
+        return redirect(url_for('.admin_component_show_all'))
+    if parent.component_id == child.component_id:
+        flash('Parent and child components were the same', 'warning')
+        return redirect(url_for('.admin_component_show_all'))
+    if parent.component_id == child.component_id_parent:
+        flash('Parent and child already set up', 'warning')
+        return redirect(url_for('.admin_component_show_all'))
+
+    # return best message
+    adopted = parent.adopt(child)
+    db.session.commit()
+    if adopted:
+        flash('Joined components, adopting {} additional components'.format(adopted), 'info')
+    else:
+        flash('Joined components', 'info')
+    return redirect(url_for('.admin_component_show_all'))
+
+
+@app.route('/admin/component/join', methods=['POST'])
+@login_required
+def admin_component_join2():
+    """ Change details about the any user """
+
+    # security check
+    if not current_user.is_admin:
+        flash('Unable to join components', 'error')
+        return redirect(url_for('.odrs_index'))
+
+    # set each thing in turn
+    parent = None
+    children = []
+    for key in request.form:
+        if key == 'parent':
+            parent = db.session.query(Component).\
+                        filter(Component.app_id == request.form[key]).first()
+        if key == 'child':
+            for component_id in request.form.getlist(key):
+                child = db.session.query(Component).\
+                            filter(Component.app_id == component_id).first()
+                if child:
+                    children.append(child)
+    if not parent:
+        flash('No parent component found', 'warning')
+        return redirect(url_for('.admin_component_show_all'))
+    if not children:
+        flash('No child components found', 'warning')
+        return redirect(url_for('.admin_component_show_all'))
+
+    # adopt each child
+    adopted = 0
+    for child in children:
+        if parent.component_id == child.component_id:
+            child.component_id_parent = None
+            continue
+        adopted += parent.adopt(child)
+    db.session.commit()
+    if adopted:
+        flash('Joined {} components, '
+              'adopting {} additional components'.format(len(children),
+                                                         adopted), 'info')
+    else:
+        flash('Joined {} components'.format(len(children)), 'info')
+    return redirect(url_for('.admin_component_show_all'))
+
+@app.route('/admin/component/delete/<int:component_id>')
+@login_required
+def admin_component_delete(component_id):
+    """
+    Delete component, and any reviews.
+    """
+    if not current_user.is_admin:
+        flash('Unable to delete component', 'error')
+        return redirect(url_for('.odrs_index'))
+    component = db.session.query(Component).filter(Component.component_id == component_id).first()
+    if not component:
+        flash('Unable to find component', 'error')
+        return redirect(url_for('.admin_component_show_all'))
+
+    flash('Deleted component with {} reviews'.format(len(component.reviews)), 'info')
+    db.session.delete(component)
+    db.session.commit()
+    return redirect(url_for('.admin_component_show_all'))
+
 @app.route('/admin/vote/<review_id>/<val_str>')
 @login_required
 def admin_vote(review_id, val_str):
