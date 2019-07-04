@@ -74,23 +74,24 @@ def _taboo_import(fn):
 
     # add any new ones
     with open(fn, newline='') as csvfile:
-        for locale, value, description in csv.reader(csvfile):
+        for locale, values, description, severity in csv.reader(csvfile):
             locale = locale.strip()
-            value = value.strip()
             description = description.strip()
-            key = locale + ':' + value
-            if key in taboos:
-                continue
-            if value.find(' ') != -1:
-                print('Ignoring', locale, value)
-                continue
-            if value.lower() != value:
-                print('Ignoring', locale, value)
-                continue
-            taboo = Taboo(locale, value, description)
-            taboos[key] = taboo
-            print('Adding', locale, value)
-            db.session.add(taboo)
+            for value in values.split('/'):
+                value = value.strip()
+                key = locale + ':' + value
+                if key in taboos:
+                    continue
+                if value.find(' ') != -1:
+                    print('Ignoring', locale, value)
+                    continue
+                if value.lower() != value:
+                    print('Ignoring', locale, value)
+                    continue
+                taboo = Taboo(locale, value, description, severity=int(severity))
+                taboos[key] = taboo
+                print('Adding', locale, value)
+                db.session.add(taboo)
     db.session.commit()
 
 if __name__ == '__main__':

@@ -54,11 +54,29 @@ class Taboo(db.Model):
     locale = Column(String(8), nullable=False, index=True)
     value = Column(Text, nullable=False)
     description = Column(Text, nullable=True)
+    severity = Column(Integer, default=0)
 
-    def __init__(self, locale, value, description=True):
+    def __init__(self, locale, value, description=None, severity=0):
         self.locale = locale
         self.value = value
         self.description = description
+        self.severity = severity
+
+    def asdict(self):
+        item = {'value': self.value}
+        if self.severity:
+            item['severity'] = self.severity
+        if self.description:
+            item['description'] = self.description
+        return item
+
+    @property
+    def color(self):
+        if self.severity == 3:
+            return 'danger'
+        if self.severity == 2:
+            return 'warning'
+        return 'info'
 
     def __repr__(self):
         return 'Taboo object %s' % self.taboo_id

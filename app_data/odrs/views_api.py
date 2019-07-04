@@ -11,6 +11,8 @@ import json
 import math
 import datetime
 
+from collections import defaultdict
+
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.exc import IntegrityError
 
@@ -18,7 +20,7 @@ from flask import request, Response
 
 from odrs import app, db
 
-from .models import Review, User, Vote, Analytic
+from .models import Review, User, Vote, Analytic, Taboo
 from .models import _vote_exists
 from .util import json_success, json_error, _locale_is_compatible, _eventlog_add, _get_user_key, _get_datestr_from_dt
 from .util import _sanitised_version, _sanitised_summary, _sanitised_description, _get_rating_for_app_id
@@ -436,7 +438,22 @@ def api_rating_for_id(app_id):
     Get the star ratings for a specific application.
     """
     ratings = _get_rating_for_app_id(app_id)
-    dat = json.dumps(ratings, sort_keys=True, indent=4, separators=(',', ': '))
+    dat = json.dumps(ratings, ensure_ascii=False, sort_keys=True, indent=4, separators=(',', ': '))
+    return Response(response=dat,
+                    status=200, \
+                    mimetype='application/json')
+
+@app.route('/1.0/reviews/api/taboo/all')
+def api_taboo_all():
+    """
+    Get the star ratings for a specific application.
+    """
+    items = defaultdict(list)
+    for taboo in db.session.query(Taboo).\
+                order_by(Taboo.locale.asc()).\
+                order_by(Taboo.value.asc()).all():
+        items[taboo.locale].append(taboo.asdict())
+    dat = json.dumps(items, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
                     mimetype='application/json')

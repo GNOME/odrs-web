@@ -215,8 +215,8 @@ class OdrsTest(unittest.TestCase):
         rv = self.app.get('/admin/search?value=inkscape+notgoingtoexist')
         assert b'Somebody Import' in rv.data, rv.data
 
-    def _admin_taboo_add(self, locale='en', value='inkscape', description='ola!'):
-        data = {'locale': locale, 'value': value, 'description': description}
+    def _admin_taboo_add(self, locale='en', value='inkscape', description='ola!', severity=0):
+        data = {'locale': locale, 'value': value, 'description': description, 'severity': severity}
         return self.app.post('/admin/taboo/add', data=data, follow_redirects=True)
 
     def test_admin_taboo(self):
@@ -246,6 +246,21 @@ class OdrsTest(unittest.TestCase):
         assert b'Deleted taboo' in rv.data, rv.data
         rv = self.app.get('/admin/taboo/1/delete', follow_redirects=True)
         assert b'No taboo with ID' in rv.data, rv.data
+
+    def test_api_taboo(self):
+
+        # unauth
+        rv = self.app.get('/1.0/reviews/api/taboo/all')
+        assert b'{}' in rv.data, rv.data
+
+        self.login()
+        rv = self._admin_taboo_add()
+        assert b'Added taboo' in rv.data, rv.data
+        self.logout()
+
+        # unauth
+        rv = self.app.get('/1.0/reviews/api/taboo/all')
+        assert b'inkscape' in rv.data, rv.data
 
     def test_api_submit_when_banned(self):
 

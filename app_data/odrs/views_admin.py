@@ -659,7 +659,7 @@ def admin_taboo_add():
         flash('Unable to add taboo as non-admin', 'error')
         return redirect(url_for('.odrs_index'))
 
-    for key in ['locale', 'value', 'description']:
+    for key in ['locale', 'value', 'description', 'severity']:
         if not key in request.form:
             flash('Unable to add taboo as {} missing'.format(key), 'error')
             return redirect(url_for('.odrs_index'))
@@ -672,7 +672,8 @@ def admin_taboo_add():
     # verify username
     db.session.add(Taboo(request.form['locale'],
                          request.form['value'],
-                         request.form['description']))
+                         request.form['description'],
+                         int(request.form['severity'])))
     db.session.commit()
     flash('Added taboo')
     return redirect(url_for('.admin_taboo_show_all'))
