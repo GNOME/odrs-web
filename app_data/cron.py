@@ -14,7 +14,7 @@ import csv
 
 from odrs import db
 
-from odrs.models import Review, Taboo
+from odrs.models import Review, Taboo, Component
 from odrs.util import _get_rating_for_app_id, _get_taboos_for_locale
 
 def _auto_delete(days=31):
@@ -36,9 +36,8 @@ def _auto_delete(days=31):
 def _regenerate_ratings(fn):
     item = {}
 
-    app_ids = [res[0] for res in db.session.query(Review.app_id).\
-                       order_by(Review.app_id.asc()).\
-                       distinct(Review.app_id).all()]
+    app_ids = [res[0] for res in db.session.query(Component.app_id).\
+                                    order_by(Component.app_id.asc()).all()]
     for app_id in app_ids:
         ratings = _get_rating_for_app_id(app_id, 2)
         if len(ratings) == 0:
