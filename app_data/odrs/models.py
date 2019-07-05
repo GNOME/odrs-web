@@ -162,14 +162,15 @@ class Component(db.Model):
 
     def adopt(self, child):
 
-        # set the child parent
-        child.component_id_parent = self.component_id
-
         # adopt any of the childs existing children
         adopted = 0
         for component in child.children:
             component.component_id_parent = self.component_id
             adopted += 1
+
+        # set the child parent
+        child.component_id_parent = self.component_id
+
         return adopted
 
     def __repr__(self):

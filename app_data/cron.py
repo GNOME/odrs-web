@@ -91,9 +91,9 @@ def _appstream_import(fn):
                 continue
             parent = app_ids[app_id]
             for child in children:
-                parent.adopt(child)
                 print('adding AppStream parent for {} -> {}'.format(child.app_id,
                                                                     parent.app_id))
+                parent.adopt(child)
     db.session.commit()
 
 def _taboo_import(fn):
