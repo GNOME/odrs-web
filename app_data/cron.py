@@ -82,6 +82,8 @@ def _appstream_import(fn):
             children = []
             for provide in component.xpath('provides/id'):
                 child_id = provide.text
+                if child_id == app_id:
+                    continue
                 if child_id not in app_ids:
                     continue
                 if app_ids[child_id].component_id_parent:
