@@ -11,6 +11,9 @@ import json
 import sys
 import datetime
 import csv
+import gzip
+
+from lxml import etree as ET
 
 from odrs import db
 
@@ -61,6 +64,36 @@ def _taboo_check():
             for taboo in matched_taboos:
                 print(review.review_id, review.locale, taboo.value)
             review.reported = 5
+    db.session.commit()
+
+def _appstream_import(fn):
+
+    # get existing components
+    app_ids = {}
+    for component in db.session.query(Component).all():
+        app_ids[component.app_id] = component
+
+    # parse xml
+    with gzip.open(fn, 'rb') as f:
+        for component in ET.fromstring(f.read()).xpath('/components/component'):
+            app_id = component.xpath('id')[0].text
+            if app_id not in app_ids:
+                continue
+            children = []
+            for provide in component.xpath('provides/id'):
+                child_id = provide.text
+                if child_id not in app_ids:
+                    continue
+                if app_ids[child_id].component_id_parent:
+                    continue
+                children.append(app_ids[child_id])
+            if not children:
+                continue
+            parent = app_ids[app_id]
+            for child in children:
+                parent.adopt(child)
+                print('adding AppStream parent for {} -> {}'.format(child.app_id,
+                                                                    parent.app_id))
     db.session.commit()
 
 def _taboo_import(fn):
@@ -114,6 +147,11 @@ if __name__ == '__main__':
             print('Usage: %s taboo-import filename' % sys.argv[0])
             sys.exit(1)
         _taboo_import(sys.argv[2])
+    elif sys.argv[1] == 'appstream-import':
+        if len(sys.argv) < 3:
+            print('Usage: %s taboo-import filename' % sys.argv[0])
+            sys.exit(1)
+        _appstream_import(sys.argv[2])
     else:
         print("cron mode %s not known" % sys.argv[1])
         sys.exit(1)

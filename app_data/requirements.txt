@@ -2,6 +2,7 @@ flask-wtf
 flask-login
 markupsafe
 flask-migrate
+lxml
 PyMySQL
 pylint
 pytest-cov
