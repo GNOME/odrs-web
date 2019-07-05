@@ -113,22 +113,14 @@ def api_submit():
                       'already reviewed')
         return json_error('already reviewed this app')
 
-    # this is basically a clunky UPSERT that works with MySQL
-    stmt = insert(Component).values(app_id=item['app_id'])
-    if db.session.bind.dialect.name != 'sqlite': # pylint: disable=no-member
-        stmt_ondupe = stmt.on_duplicate_key_update(review_cnt=Component.review_cnt + 1)
-    else:
-        stmt_ondupe = stmt
-    try:
-        db.session.execute(stmt_ondupe) # pylint: disable=no-member
-        db.session.commit()
-    except IntegrityError as e:
-        print('ignoring: {}'.format(str(e)))
-
     # component definately exists now!
     component = db.session.query(Component).filter(Component.app_id == item['app_id']).first()
-    if not component:
-        return json_error('cannot create component for {}'.format(item['app_id']))
+    if component:
+        component.review_cnt += 1
+    else:
+        component = Component(item['app_id'])
+        db.session.add(component)
+        db.session.commit()
 
     # create new
     review = Review()
