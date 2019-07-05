@@ -18,7 +18,7 @@ from lxml import etree as ET
 from odrs import db
 
 from odrs.models import Review, Taboo, Component
-from odrs.util import _get_rating_for_app_id, _get_taboos_for_locale
+from odrs.util import _get_rating_for_component, _get_taboos_for_locale
 
 def _auto_delete(days=31):
 
@@ -38,14 +38,12 @@ def _auto_delete(days=31):
 
 def _regenerate_ratings(fn):
     item = {}
-
-    app_ids = [res[0] for res in db.session.query(Component.app_id).\
-                                    order_by(Component.app_id.asc()).all()]
-    for app_id in app_ids:
-        ratings = _get_rating_for_app_id(app_id, 2)
+    for component in db.session.query(Component).\
+                                order_by(Component.app_id.asc()).all():
+        ratings = _get_rating_for_component(component, 2)
         if len(ratings) == 0:
             continue
-        item[app_id] = ratings
+        item[component.app_id] = ratings
 
     # dump to file
     with open(fn, 'w') as outfd:

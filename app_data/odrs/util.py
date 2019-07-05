@@ -59,7 +59,7 @@ def _eventlog_add(user_addr=None,
     db.session.add(Event(user_addr, user_id, app_id, message, important))
     db.session.commit()
 
-def _get_rating_for_app_id(app_id, min_total=1):
+def _get_rating_for_component(component, min_total=1):
     """ Gets the ratings information for the application """
     from odrs import db
     from odrs.models import Review, Component
@@ -68,7 +68,7 @@ def _get_rating_for_app_id(app_id, min_total=1):
     array = [0] * 6
     for rating in db.session.query(Review.rating).\
                         join(Component).\
-                        filter(Component.app_id == app_id).all():
+                        filter(Component.app_id.in_(component.app_ids)).all():
         idx = int(rating[0] / 20)
         if idx > 5:
             continue

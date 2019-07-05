@@ -23,7 +23,7 @@ from odrs import app, db
 from .models import Review, User, Vote, Analytic, Taboo, Component
 from .models import _vote_exists
 from .util import json_success, json_error, _locale_is_compatible, _eventlog_add, _get_user_key, _get_datestr_from_dt
-from .util import _sanitised_version, _sanitised_summary, _sanitised_description, _get_rating_for_app_id
+from .util import _sanitised_version, _sanitised_summary, _sanitised_description, _get_rating_for_component
 from .util import _get_taboos_for_locale
 
 ODRS_REPORTED_CNT = 2
@@ -162,11 +162,14 @@ def api_show_app(app_id, user_hash=None):
     """
     Return details about an application.
     """
-    reviews = db.session.query(Review).\
-                    join(Component).\
-                    filter(Component.app_id == app_id).\
-                    filter(Review.reported < ODRS_REPORTED_CNT).\
-                    order_by(Review.date_created.desc()).all()
+    reviews = []
+    component = db.session.query(Component).filter(Component.app_id == app_id).first()
+    if component:
+        reviews = db.session.query(Review).\
+                        join(Component).\
+                        filter(Component.app_id.in_(component.app_ids)).\
+                        filter(Review.reported < ODRS_REPORTED_CNT).\
+                        order_by(Review.date_created.desc()).all()
     items = [review.asdict(user_hash) for review in reviews]
     dat = json.dumps(items, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
@@ -216,12 +219,9 @@ def api_fetch():
     if 'compat_ids' in item:
         app_ids.extend(item['compat_ids'])
     if component:
-        if component.parent:
-            if component.parent.app_id not in app_ids:
-                app_ids.append(component.parent.app_id)
-        for child in component.children:
-            if child.app_id not in app_ids:
-                app_ids.append(child.app_id)
+        for app_id in component.app_ids:
+            if app_id not in app_ids:
+                app_ids.append(app_id)
     reviews = db.session.query(Review).\
                     join(Component).\
                     filter(Component.app_id.in_(app_ids)).\
@@ -464,7 +464,10 @@ def api_rating_for_id(app_id):
     """
     Get the star ratings for a specific application.
     """
-    ratings = _get_rating_for_app_id(app_id)
+    ratings = []
+    component = db.session.query(Component).filter(Component.app_id == app_id).first()
+    if component:
+        ratings = _get_rating_for_component(component)
     dat = json.dumps(ratings, ensure_ascii=False, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
@@ -491,14 +494,12 @@ def api_ratings():
     Get the star ratings for all known applications.
     """
     item = {}
-    app_ids = [res[0] for res in db.session.query(Component.app_id).\
-                                       order_by(Component.app_id.asc()).\
-                                       distinct(Component.app_id).all()]
-    for app_id in app_ids:
-        ratings = _get_rating_for_app_id(app_id, 2)
+    for component in db.session.query(Component).\
+                                      order_by(Component.app_id.asc()).all():
+        ratings = _get_rating_for_component(component, 2)
         if len(ratings) == 0:
             continue
-        item[app_id] = ratings
+        item[component.app_id] = ratings
 
     dat = json.dumps(item, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,

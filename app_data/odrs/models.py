@@ -173,6 +173,17 @@ class Component(db.Model):
 
         return adopted
 
+    @property
+    def app_ids(self):
+        app_ids = [self.app_id]
+        if self.parent:
+            if self.parent.app_id not in app_ids:
+                app_ids.append(self.parent.app_id)
+        for child in self.children:
+            if child.app_id not in app_ids:
+                app_ids.append(child.app_id)
+        return app_ids
+
     def __repr__(self):
         return 'Component object %s' % self.component_id
 
