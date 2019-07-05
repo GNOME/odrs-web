@@ -274,9 +274,10 @@ class Review(db.Model):
             'review_id': self.review_id,
             'summary': self.summary,
             'user_display': self.user_display,
-            'user_hash': self.user.user_hash,
             'version': self.version,
         }
+        if self.user:
+            item['user_hash'] = self.user.user_hash
         if user_hash:
             item['user_skey'] = _get_user_key(user_hash, self.component.app_id)
         return item
