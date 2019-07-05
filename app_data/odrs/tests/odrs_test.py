@@ -84,6 +84,13 @@ class OdrsTest(unittest.TestCase):
         assert b'Logged out' in rv.data, rv.data
         assert b'/admin/show/reported' not in rv.data, rv.data
 
+    def test_admin_show_review_for_app(self):
+
+        self.review_submit()
+        self.login()
+        rv = self.app.get('/admin/show/app/inkscape.desktop')
+        assert b'n essential part of my daily' in rv.data, rv.data
+
     def test_admin_graphs(self):
 
         self.review_submit()

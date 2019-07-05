@@ -505,7 +505,9 @@ def admin_show_app(app_id):
     """
     Return all the reviews from a user on the server as HTML.
     """
-    reviews = db.session.query(Review).filter(Review.app_id == app_id).all()
+    reviews = db.session.query(Review).\
+                    join(Component).\
+                    filter(Component.app_id == app_id).all()
     return render_template('show-all.html', reviews=reviews)
 
 @app.route('/admin/show/lang/<locale>')

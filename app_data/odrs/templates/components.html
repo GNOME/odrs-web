@@ -38,7 +38,11 @@
       None
 {% endif %}
     </td>
-    <td>{{component.review_cnt}}</td>
+    <td>
+      <a href="{{url_for('.admin_show_app', app_id=component.app_id)}}">
+        {{component.review_cnt}}
+      </a>
+    </td>
     <td>{{component.fetch_cnt}}</td>
     <td>
       P: <input type="radio" name="parent" value="{{component.app_id}}">
@@ -47,7 +51,7 @@
     <td>
       <a class="btn btn-danger btn-block"
          href="{{url_for('.admin_component_delete', component_id=component.component_id)}}">
-         Delete {{component.reviews|length}} reviews</a>
+         Delete</a>
     </td>
   </tr>
 {% endfor %}
