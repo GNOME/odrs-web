@@ -41,6 +41,10 @@ RUN curl https://flathub.org/repo/appstream/x86_64/appstream.xml.gz -o /tmp/apps
 
 RUN python36 /opt/app-root/src/cron.py appstream-import /tmp/appstream.xml.gz
 
+RUN curl https://raw.githubusercontent.com/hughsie/badwords/master/badwords.csv -o /tmp/badwords.csv
+
+RUN LANG=en_US.utf8 python36 /opt/app-root/src/cron.py taboo-import /tmp/badwords.csv
+
 RUN python36 /opt/app-root/src/cron.py ratings /opt/app-root/src/odrs/static/ratings.json
 
 RUN chown -R 1000310000:0 ${ODRS_HOME} && \

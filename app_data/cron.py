@@ -96,6 +96,36 @@ def _appstream_import(fn):
                 parent.adopt(child)
     db.session.commit()
 
+def _taboo_import_item(taboos, locale, value, description, severity):
+    key = locale + ':' + value
+    if key in taboos:
+        taboo = taboos[key]
+        is_dirty = False
+        if taboo.description != description:
+            print('Modifying {} description from "{}" to "{}"'.format(key,
+                                                                      taboo.description,
+                                                                      description))
+            taboo.description = description
+            is_dirty = True
+        if taboo.severity != severity:
+            print('Modifying {} severity from "{}" to "{}"'.format(key,
+                                                                   taboo.severity,
+                                                                   severity))
+            taboo.severity = severity
+            is_dirty = True
+        return is_dirty
+    if value.find(' ') != -1:
+        print('Ignoring', locale, value)
+        return False
+    if value.lower() != value:
+        print('Ignoring', locale, value)
+        return False
+    taboo = Taboo(locale, value, description, severity=severity)
+    taboos[key] = taboo
+    print('Adding {}'.format(key))
+    db.session.add(taboo)
+    return True
+
 def _taboo_import(fn):
 
     # get all the taboos in one database call
@@ -105,26 +135,20 @@ def _taboo_import(fn):
         taboos[key] = taboo
 
     # add any new ones
+    is_dirty = False
     with open(fn, newline='') as csvfile:
         for locale, values, description, severity in csv.reader(csvfile):
             locale = locale.strip()
             description = description.strip()
+            severity = int(severity)
             for value in values.split('/'):
                 value = value.strip()
-                key = locale + ':' + value
-                if key in taboos:
-                    continue
-                if value.find(' ') != -1:
-                    print('Ignoring', locale, value)
-                    continue
-                if value.lower() != value:
-                    print('Ignoring', locale, value)
-                    continue
-                taboo = Taboo(locale, value, description, severity=int(severity))
-                taboos[key] = taboo
-                print('Adding', locale, value)
-                db.session.add(taboo)
+                is_dirty = _taboo_import_item(taboos, locale, value, description, severity) or is_dirty
     db.session.commit()
+
+    # if dirty, check all the existing reviews
+    if is_dirty:
+        _taboo_check()
 
 if __name__ == '__main__':
 
