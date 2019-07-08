@@ -20,6 +20,59 @@ from odrs import db
 from odrs.models import Review, Taboo, Component
 from odrs.util import _get_rating_for_component, _get_taboos_for_locale
 
+def _fsck_components():
+
+    # get all existing components
+    components = {}
+    for component in db.session.query(Component).\
+                        filter(Component.app_id != '').\
+                        order_by(Component.app_id.asc()).all():
+        components[component.app_id] = component
+
+    # guessed, thanks Canonical :/
+    for app_id in components:
+        if not app_id.startswith('io.snapcraft.'):
+            continue
+        if components[app_id].component_id_parent:
+            continue
+        name, _ = app_id[13:].rsplit('-', maxsplit=1)
+        parent = components.get(name + '.desktop')
+        if not parent:
+            continue
+        print('adding snapcraft parent for {} -> {}'.format(components[app_id].app_id,
+                                                            parent.app_id))
+        parent.adopt(components[app_id])
+
+    # upstream drops the .desktop sometimes
+    for app_id in components:
+        if components[app_id].component_id_parent:
+            continue
+        app_id_new = app_id.replace('.desktop', '')
+        if app_id == app_id_new:
+            continue
+        parent = components.get(app_id_new)
+        if not parent:
+            continue
+        print('adding parent for {} -> {}'.format(components[app_id].app_id,
+                                                  parent.app_id))
+        parent.adopt(components[app_id])
+
+    # API change :/
+    for app_id in components:
+        if not app_id.endswith('.shell-extension'):
+            continue
+        if components[app_id].component_id_parent:
+            continue
+        app_id_new = app_id.replace('.shell-extension', '')
+        app_id_new = app_id_new.replace('@', '_')
+        parent = components.get(app_id_new)
+        if not parent:
+            continue
+        print('adding shell parent for {} -> {}'.format(components[app_id].app_id,
+                                                        parent.app_id))
+        parent.adopt(components[app_id])
+    db.session.commit()
+
 def _auto_delete(days=31):
 
     since = datetime.datetime.now() - datetime.timedelta(days=days)
@@ -35,6 +88,10 @@ def _auto_delete(days=31):
     for review in reviews:
         db.session.delete(review)
     db.session.commit()
+
+def _fsck():
+    _auto_delete()
+    _fsck_components()
 
 def _regenerate_ratings(fn):
     item = {}
@@ -153,7 +210,7 @@ def _taboo_import(fn):
 if __name__ == '__main__':
 
     if len(sys.argv) < 2:
-        print('Usage: %s ratings|auto-delete|taboo-check|taboo-import' % sys.argv[0])
+        print('Usage: %s ratings|fsck|taboo-check|taboo-import' % sys.argv[0])
         sys.exit(1)
 
     # create the ratings data
@@ -162,8 +219,8 @@ if __name__ == '__main__':
             print('Usage: %s ratings filename' % sys.argv[0])
             sys.exit(1)
         _regenerate_ratings(sys.argv[2])
-    elif sys.argv[1] == 'auto-delete':
-        _auto_delete()
+    elif sys.argv[1] == 'fsck':
+        _fsck()
     elif sys.argv[1] == 'taboo-check':
         _taboo_check()
     elif sys.argv[1] == 'taboo-import':

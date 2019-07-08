@@ -37,6 +37,8 @@ RUN LANG=en_US.utf8 \
     SQLALCHEMY_TRACK_MODIFICATIONS=False \
     flask db upgrade
 
+RUN python36 /opt/app-root/src/cron.py fsck
+
 RUN curl https://flathub.org/repo/appstream/x86_64/appstream.xml.gz -o /tmp/appstream.xml.gz
 
 RUN python36 /opt/app-root/src/cron.py appstream-import /tmp/appstream.xml.gz

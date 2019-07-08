@@ -22,20 +22,6 @@ def upgrade():
                         order_by(Component.app_id.asc()).all():
         components[component.app_id] = component
 
-    # guessed, thanks Canonical! :/
-    for app_id in components:
-        if not app_id.startswith('io.snapcraft.'):
-            continue
-        if components[app_id].component_id_parent:
-            continue
-        name, _ = app_id[13:].rsplit('-', maxsplit=1)
-        parent = components.get(name + '.desktop')
-        if not parent:
-            continue
-        print('adding snapcraft parent for {} -> {}'.format(components[app_id].app_id,
-                                                            parent.app_id))
-        parent.adopt(components[app_id])
-
     # from appstream-glib
     mapping = {
         'baobab.desktop': 'org.gnome.baobab.desktop',
@@ -153,19 +139,6 @@ def upgrade():
             continue
         print('adding legacy parent for {} -> {}'.format(components[app_id].app_id,
                                                          components[app_id_new].app_id))
-        components[app_id_new].adopt(components[app_id])
-
-    # upstream drops the .desktop sometimes
-    for app_id in components:
-        if components[app_id].component_id_parent:
-            continue
-        app_id_new = app_id.replace('.desktop', '')
-        if app_id == app_id_new:
-            continue
-        if not app_id_new in components:
-            continue
-        print('adding parent for {} -> {}'.format(components[app_id].app_id,
-                                                  components[app_id_new].app_id))
         components[app_id_new].adopt(components[app_id])
 
     # done
