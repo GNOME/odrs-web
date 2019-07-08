@@ -107,10 +107,8 @@ class OdrsTest(unittest.TestCase):
         assert b'Chart.js' in rv.data, rv.data
         assert b'0, 1' in rv.data, rv.data
 
-        rv = self.app.get('/admin/distros')
-        assert b'Chart.js' in rv.data, rv.data
-
         rv = self.app.get('/admin/stats')
+        assert b'Chart.js' in rv.data, rv.data
         assert b'Active reviews</td>\n    <td>1</td>' in rv.data, rv.data
         assert b'Haters Gonna Hate' in rv.data, rv.data
 
@@ -638,8 +636,7 @@ class OdrsTest(unittest.TestCase):
                 '/admin/show/reported',
                 '/admin/show/unmoderated',
                 '/admin/stats',
-                '/admin/moderators/all',
-                '/admin/distros']
+                '/admin/moderators/all']
         for uri in uris:
             rv = self.app.get(uri)
             assert b'favicon.ico' in rv.data, rv.data

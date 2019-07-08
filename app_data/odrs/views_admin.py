@@ -242,23 +242,7 @@ def admin_show_stats():
                         order_by(User.karma.asc()).\
                         limit(10).all()
 
-    return render_template('stats.html',
-                           users_awesome=users_awesome,
-                           users_haters=users_haters,
-                           results_stats=stats,
-                           results_viewed=viewed,
-                           results_submitted=submitted)
-
-@app.route('/admin/distros')
-@login_required
-def admin_distros():
-    """
-    Return the statistics page as HTML.
-    """
-    # security check
-    if not current_user.is_admin:
-        flash('Unable to show distros as non-admin', 'error')
-        return redirect(url_for('.odrs_index'))
+    # distros
     rs = db.session.execute("SELECT DISTINCT(distro), COUNT(distro) AS total " # pylint: disable=no-member
                             "FROM reviews GROUP BY distro ORDER BY total DESC "
                             "LIMIT 8;")
@@ -271,7 +255,14 @@ def admin_distros():
                 name = name[:-len(suffix)]
         labels.append(name)
         data.append(s[1])
-    return render_template('distros.html', labels=labels, data=data)
+
+    return render_template('stats.html',
+                           users_awesome=users_awesome,
+                           users_haters=users_haters,
+                           results_stats=stats,
+                           results_viewed=viewed,
+                           results_submitted=submitted,
+                           labels=labels, data=data)
 
 @app.route('/admin/review/<review_id>')
 @login_required
