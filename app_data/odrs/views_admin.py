@@ -232,7 +232,19 @@ def admin_show_stats():
                                     order_by(Component.review_cnt.desc()).\
                                     limit(50).all()
 
+    # users
+    users_awesome = db.session.query(User).\
+                        filter(User.karma != 0).\
+                        order_by(User.karma.desc()).\
+                        limit(10).all()
+    users_haters = db.session.query(User).\
+                        filter(User.karma != 0).\
+                        order_by(User.karma.asc()).\
+                        limit(10).all()
+
     return render_template('stats.html',
+                           users_awesome=users_awesome,
+                           users_haters=users_haters,
                            results_stats=stats,
                            results_viewed=viewed,
                            results_submitted=submitted)
@@ -518,24 +530,6 @@ def admin_show_lang(locale):
     """
     reviews = db.session.query(Review).filter(Review.locale == locale).all()
     return render_template('show-all.html', reviews=reviews)
-
-@app.route('/admin/users/all')
-@login_required
-def admin_users_all():
-    """
-    Return all the users as HTML.
-    """
-    users_awesome = db.session.query(User).\
-                        filter(User.karma != 0).\
-                        order_by(User.karma.desc()).\
-                        limit(10).all()
-    users_haters = db.session.query(User).\
-                        filter(User.karma != 0).\
-                        order_by(User.karma.asc()).\
-                        limit(10).all()
-    return render_template('users.html',
-                           users_awesome=users_awesome,
-                           users_haters=users_haters)
 
 @app.route('/admin/moderators/all')
 @login_required

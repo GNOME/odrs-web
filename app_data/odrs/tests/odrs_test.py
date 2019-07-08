@@ -112,8 +112,6 @@ class OdrsTest(unittest.TestCase):
 
         rv = self.app.get('/admin/stats')
         assert b'Active reviews</td>\n    <td>1</td>' in rv.data, rv.data
-
-        rv = self.app.get('/admin/users/all')
         assert b'Haters Gonna Hate' in rv.data, rv.data
 
     def test_admin_unreport(self):
@@ -639,7 +637,7 @@ class OdrsTest(unittest.TestCase):
                 '/admin/user_ban/1',
                 '/admin/show/reported',
                 '/admin/show/unmoderated',
-                '/admin/users/all',
+                '/admin/stats',
                 '/admin/moderators/all',
                 '/admin/distros']
         for uri in uris:
