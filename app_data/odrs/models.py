@@ -348,7 +348,6 @@ class Moderator(db.Model):
         self.display_name = display_name
         self.is_enabled = False
         self.is_admin = False
-        self.user_id = 0
         self.locales = None
         self.locales = password
 
