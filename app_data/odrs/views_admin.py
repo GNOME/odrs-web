@@ -847,6 +847,7 @@ def admin_user_modify_by_admin(moderator_id):
 
     # set each thing in turn
     mod.is_enabled = 'is_enabled' in request.form
+    mod.is_admin = 'is_admin' in request.form
     for key in ['display_name',
                 'password',
                 'user_hash',

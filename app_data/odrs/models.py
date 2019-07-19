@@ -346,7 +346,7 @@ class Moderator(db.Model):
     def __init__(self, username=None, password=None, display_name=None):
         self.username = username
         self.display_name = display_name
-        self.is_enabled = False
+        self.is_enabled = True
         self.is_admin = False
         self.locales = None
         self.locales = password

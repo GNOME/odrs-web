@@ -13,7 +13,7 @@
     </tr>
     <tr>
       <td>User Hash:</td>
-      <td><input type="text" class="form-control" name="user_hash" value="{{u.user_hash}}" required></td>
+      <td><input type="text" class="form-control" name="user_hash" value="{{u.user_hash}}"></td>
     </tr>
     <tr>
       <td>Languages Spoken<br/>(e.g. <code>en,fr,pl</code> or <code>*</code>):</td>
@@ -29,11 +29,8 @@
     <tr>
       <td>Parameters:</td>
       <td>
-{% if u.is_enabled %}
-        <input class="checkbox" type="checkbox" name="is_enabled" value="1" checked>Account enabled</input>
-{% else %}
-        <input class="checkbox" type="checkbox" name="is_enabled" value="1"/>Account enabled</input>
-{% endif %}
+        <input class="checkbox" type="checkbox" name="is_enabled" value="1" {{ 'checked' if u.is_enabled }}>Account enabled</input>
+        <input class="checkbox" type="checkbox" name="is_admin" value="1" {{ 'checked' if u.is_admin }}>Is admin account</input>
      </td>
     </tr>
 {% endif %}
