@@ -126,7 +126,11 @@ def api_submit():
     review = Review()
     review.locale = item['locale']
     review.summary = _sanitised_summary(item['summary'])
+    if len(review.summary) < 2:
+        return json_error('summary is too short')
     review.description = _sanitised_description(item['description'])
+    if len(review.description) < 2:
+        return json_error('description is too short')
     review.user_id = user.user_id
     review.version = _sanitised_version(item['version'])
     review.distro = item['distro']
