@@ -4,6 +4,7 @@
 {% block content %}
 
 <form class="form" name="myform" action="{{url_for('admin_modify', review_id=r.review_id)}}" method="POST">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}"/>
 
 <div class="card">
   <div class="card-body">

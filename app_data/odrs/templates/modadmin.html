@@ -6,6 +6,7 @@
 <h1>Details of user ‘{{u.username}}’</h1>
 
 <form method="post" action="{{url_for('admin_user_modify_by_admin', moderator_id=u.moderator_id)}}">
+  <input type="hidden" name="csrf_token" value="{{csrf_token()}}"/>
   <table>
     <tr>
       <td>Display Name:</td>
@@ -38,6 +39,7 @@
   <button type="submit" class="btn btn-primary btn-large" class="submit">Modify</button>
 {% if u.username != 'admin' and current_user.is_admin %}
   <form method="get" action="{{url_for('admin_moderate_delete', moderator_id=u.moderator_id)}}">
+    <input type="hidden" name="csrf_token" value="{{csrf_token()}}"/>
 {% endif %}
     <button class="btn btn-danger btn-large">Delete</button>
   </form>

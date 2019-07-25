@@ -36,6 +36,7 @@ class OdrsTest(unittest.TestCase):
                 "SQLALCHEMY_TRACK_MODIFICATIONS = False",
                 "SECRET_KEY = 'not-secret4'",
                 "ODRS_REVIEWS_SECRET = '1'",
+                "WTF_CSRF_CHECK_DEFAULT = False",
                 "DEBUG = True",
                 ]))
 

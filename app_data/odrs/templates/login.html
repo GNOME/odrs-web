@@ -5,6 +5,7 @@
 
 <div class="col-sm-8 col-md-6 col-centered">
   <form class="form" method="POST" action="">
+    <input type="hidden" name="csrf_token" value="{{csrf_token()}}"/>
     <h1>User Login</h1>
     <div class="form-group">
     <label for="username" class="control-label">Username:</label>

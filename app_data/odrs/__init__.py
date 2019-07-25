@@ -9,10 +9,11 @@
 
 import os
 
-from flask import Flask, flash, render_template, g
+from flask import Flask, flash, render_template, g, redirect, url_for
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from werkzeug.local import LocalProxy
 
 from .dbutils import drop_db, init_db
@@ -31,6 +32,8 @@ for key in ['SQLALCHEMY_DATABASE_URI',
 db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
+
+csrf = CSRFProtect(app)
 
 @app.cli.command('initdb')
 def initdb_command():
@@ -58,6 +61,11 @@ def error_page_not_found(msg=None):
     """ Error handler: File not found """
     flash(msg)
     return render_template('error.html'), 404
+
+@app.errorhandler(CSRFError)
+def error_csrf(e):
+    flash(str(e), 'danger')
+    return redirect(url_for('.odrs_index'))
 
 from odrs import views
 from odrs import views_api
