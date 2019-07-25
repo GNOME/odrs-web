@@ -639,16 +639,16 @@ class OdrsTest(unittest.TestCase):
                 '/admin/stats',
                 '/admin/moderators/all']
         for uri in uris:
-            rv = self.app.get(uri)
+            rv = self.app.get(uri, follow_redirects=True)
             assert b'favicon.ico' in rv.data, rv.data
-            assert b'Permission denied' in rv.data, (uri, rv.data)
+            assert b'Please log in to access this page' in rv.data, (uri, rv.data)
 
         # POST only
         uris = ['/admin/modify/1']
         for uri in uris:
-            rv = self.app.post(uri)
+            rv = self.app.post(uri, follow_redirects=True)
             assert b'favicon.ico' in rv.data, rv.data
-            assert b'Permission denied' in rv.data, rv.data
+            assert b'Please log in to access this page' in rv.data, rv.data
 
 if __name__ == '__main__':
     unittest.main()

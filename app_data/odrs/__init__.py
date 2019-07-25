@@ -40,8 +40,8 @@ def initdb_command():
 def dropdb_command():
     drop_db(db)
 
-lm = LoginManager()
-lm.init_app(app)
+lm = LoginManager(app)
+lm.login_view = 'odrs_login'
 
 @app.teardown_appcontext
 def shutdown_session(unused_exception=None):
