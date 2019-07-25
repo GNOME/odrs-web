@@ -52,6 +52,7 @@ class OdrsTest(unittest.TestCase):
         self.login()
         rv = self.app.post('/admin/moderator/1/modify_by_admin', data=dict(
             is_enabled=True,
+            is_admin=True,
             locales='en',
             user_hash=self.user_hash,
         ), follow_redirects=True)
