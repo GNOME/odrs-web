@@ -192,7 +192,7 @@ def api_fetch():
     for key in ['app_id', 'user_hash', 'locale', 'distro', 'limit', 'version']:
         if not key in item:
             return json_error('invalid data, expected %s' % key)
-        if not item[key]:
+        if not item[key] and item[key] != 0:
             return json_error('missing data, expected %s' % key)
 
     # check format
