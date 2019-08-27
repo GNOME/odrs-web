@@ -268,8 +268,14 @@ def api_fetch():
 
     # sort and cut to limit
     items_new.sort(key=lambda item: item['score'], reverse=True)
-    if item['limit'] > 0:
-        items_new = items_new[:item['limit']]
+
+    if item['limit'] == 0:
+        limit = 50
+    else:
+        limit = item.get('limit', -1)
+
+    start = item.get('start', 0)
+    items_new = items_new[start : start+limit]
 
     dat = json.dumps(items_new, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
