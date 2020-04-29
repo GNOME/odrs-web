@@ -264,7 +264,7 @@ def admin_show_stats():
                            results_submitted=submitted,
                            labels=labels, data=data)
 
-@app.route('/admin/review/<review_id>')
+@app.route('/admin/review/<int:review_id>')
 @login_required
 def admin_show_review(review_id):
     """
@@ -287,7 +287,7 @@ def admin_show_review(review_id):
                            vote_exists=vote,
                            matched_taboos=matched_taboos)
 
-@app.route('/admin/modify/<review_id>', methods=['POST'])
+@app.route('/admin/modify/<int:review_id>', methods=['POST'])
 @login_required
 def admin_modify(review_id):
     """ Change details about a review """
@@ -335,7 +335,7 @@ def admin_user_ban(user_hash):
     flash('Banned user and deleted {} reviews'.format(nr_delete))
     return redirect(url_for('.odrs_show_reported'))
 
-@app.route('/admin/unreport/<review_id>')
+@app.route('/admin/unreport/<int:review_id>')
 @login_required
 def admin_unreport(review_id):
     """ Unreport a perfectly valid review """
@@ -348,7 +348,7 @@ def admin_unreport(review_id):
     flash('Review unreported')
     return redirect(url_for('.admin_show_review', review_id=review_id))
 
-@app.route('/admin/unremove/<review_id>')
+@app.route('/admin/unremove/<int:review_id>')
 @login_required
 def admin_unremove(review_id):
     """ Unreport a perfectly valid review """
@@ -361,7 +361,7 @@ def admin_unremove(review_id):
     flash('Review unremoved')
     return redirect(url_for('.admin_show_review', review_id=review_id))
 
-@app.route('/admin/englishify/<review_id>')
+@app.route('/admin/englishify/<int:review_id>')
 @login_required
 def admin_englishify(review_id):
     """ Marks a review as writen in English """
@@ -377,7 +377,7 @@ def admin_englishify(review_id):
     db.session.commit()
     return redirect(url_for('.admin_show_review', review_id=review_id))
 
-@app.route('/admin/anonify/<review_id>')
+@app.route('/admin/anonify/<int:review_id>')
 @login_required
 def admin_anonify(review_id):
     """ Removes the username from the review """
@@ -584,7 +584,7 @@ def admin_moderator_add():
     flash('Added user')
     return redirect(url_for('.admin_moderator_show_all'))
 
-@app.route('/admin/moderator/<moderator_id>/admin')
+@app.route('/admin/moderator/<int:moderator_id>/admin')
 @login_required
 def odrs_moderator_show(moderator_id):
     """
@@ -599,7 +599,7 @@ def odrs_moderator_show(moderator_id):
         return redirect(url_for('.admin_moderator_show_all'))
     return render_template('modadmin.html', u=mod)
 
-@app.route('/admin/moderator/<moderator_id>/delete')
+@app.route('/admin/moderator/<int:moderator_id>/delete')
 @login_required
 def admin_moderate_delete(moderator_id):
     """ Delete a moderator """
@@ -667,7 +667,7 @@ def admin_taboo_add():
     flash('Added taboo')
     return redirect(url_for('.admin_taboo_show_all'))
 
-@app.route('/admin/taboo/<taboo_id>/delete')
+@app.route('/admin/taboo/<int:taboo_id>/delete')
 @login_required
 def admin_taboo_delete(taboo_id):
     """ Delete an taboo """
@@ -802,7 +802,7 @@ def admin_component_delete(component_id):
     db.session.commit()
     return redirect(url_for('.admin_component_show_all'))
 
-@app.route('/admin/vote/<review_id>/<val_str>')
+@app.route('/admin/vote/<int:review_id>/<val_str>')
 @login_required
 def admin_vote(review_id, val_str):
     """ Up or downvote an existing review by @val karma points """
@@ -830,7 +830,7 @@ def admin_vote(review_id, val_str):
     flash('Recorded vote')
     return redirect(url_for('.admin_show_review', review_id=review_id))
 
-@app.route('/admin/moderator/<moderator_id>/modify_by_admin', methods=['POST'])
+@app.route('/admin/moderator/<int:moderator_id>/modify_by_admin', methods=['POST'])
 @login_required
 def admin_user_modify_by_admin(moderator_id):
     """ Change details about the any user """
