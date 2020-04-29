@@ -361,6 +361,8 @@ class Moderator(db.Model):
         self.password_hash = generate_password_hash(password)
 
     def verify_password(self, password):
+        if not self.password_hash:
+            return False
         # on success, upgrade the old hashing function to the new secure one
         if len(self.password_hash) == 40:
             if self.password_hash != _password_hash(password):
