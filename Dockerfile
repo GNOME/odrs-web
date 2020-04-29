@@ -39,7 +39,7 @@ RUN LANG=en_US.utf8 \
 
 RUN python3 /opt/app-root/src/cron.py fsck
 
-RUN curl https://flathub.org/repo/appstream/x86_64/appstream.xml.gz -o /tmp/appstream.xml.gz
+RUN curl https://dl.flathub.org/repo/appstream/x86_64/appstream.xml.gz -o /tmp/appstream.xml.gz
 
 RUN python3 /opt/app-root/src/cron.py appstream-import /tmp/appstream.xml.gz
 
