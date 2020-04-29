@@ -349,7 +349,8 @@ class Moderator(db.Model):
         self.is_enabled = True
         self.is_admin = False
         self.locales = None
-        self.locales = password
+        if password:
+            self.password = password
 
     @property
     def password(self):

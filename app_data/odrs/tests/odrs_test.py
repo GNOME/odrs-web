@@ -185,8 +185,14 @@ class OdrsTest(unittest.TestCase):
         # duplicate
         rv = self._admin_moderator_add()
         assert b'Already a entry with that username' in rv.data, rv.data
+        self.logout()
+
+        # test this actually works
+        self.login(username='dave@dave.com', password='foobarbaz123.')
+        self.logout()
 
         # remove
+        self.login()
         rv = self.app.get('admin/moderator/2/delete', follow_redirects=True)
         assert b'Deleted user' in rv.data, rv.data
 
