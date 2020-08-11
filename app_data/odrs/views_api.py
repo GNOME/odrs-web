@@ -292,9 +292,12 @@ def api_fetch():
     items_new = items_new[start : start+limit]
 
     dat = json.dumps(items_new, sort_keys=True, indent=4, separators=(',', ': '))
-    return Response(response=dat,
-                    status=200, \
-                    mimetype='application/json')
+    response = Response(response=dat,
+                        status=200, \
+                        mimetype='application/json')
+    response.cache_control = 'private'
+    response.add_etag()
+    return response.make_conditional(request)
 
 @app.route('/1.0/reviews/api/moderate/<user_hash>')
 @app.route('/1.0/reviews/api/moderate/<user_hash>/<locale>')
@@ -518,6 +521,9 @@ def api_ratings():
         item[component.app_id] = ratings
 
     dat = json.dumps(item, sort_keys=True, indent=4, separators=(',', ': '))
-    return Response(response=dat,
-                    status=200, \
-                    mimetype='application/json')
+    response = Response(response=dat,
+                        status=200, \
+                        mimetype='application/json')
+    response.cache_control.public = True
+    response.add_etag()
+    return response.make_conditional(request)
