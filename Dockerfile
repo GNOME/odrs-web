@@ -35,6 +35,8 @@ RUN curl https://raw.githubusercontent.com/hughsie/badwords/master/badwords.csv 
 RUN LANG=en_US.utf8 python3 /opt/app-root/src/cron.py taboo-import /tmp/badwords.csv
 
 RUN python3 /opt/app-root/src/cron.py ratings /opt/app-root/src/odrs/static/ratings.json
+RUN gzip -k /opt/app-root/src/odrs/static/ratings.json
+RUN brotli -k /opt/app-root/src/odrs/static/ratings.json
 
 RUN chown -R 1000310000:0 ${ODRS_HOME} && \
     chmod -R 664 ${ODRS_HOME} && \
