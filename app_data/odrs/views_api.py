@@ -34,17 +34,7 @@ def _get_client_address():
         return request.headers.getlist('X-Forwarded-For')[0]
     return request.remote_addr
 
-def _get_review_score(review, item):
-    """ Gets a review score given certain parameters """
-    ku = review.karma_up
-    kd = review.karma_down
-
-    # hardcode some penalties
-    if review.version != item['version']:
-        kd = kd + 1
-    if review.distro != item['distro']:
-        kd = kd + 1
-
+def _wilson(ku, kd):
     # algorithm from http://www.evanmiller.org/how-not-to-sort-by-average-rating.html
     wilson = 0
     if ku > 0 or kd > 0:
@@ -53,6 +43,29 @@ def _get_review_score(review, item):
                   (ku + kd)) / (1 + 3.8416 / (ku + kd))
         wilson *= 100
     return int(wilson)
+
+def _get_review_score(review, item):
+    """ Gets a review score given certain parameters """
+    ku = review.karma_up
+    kd = review.karma_down
+
+    created = datetime.datetime.fromtimestamp(review.date_created)
+    months_old = (datetime.datetime.now() - created).days // 30
+
+    # If the review is very new, provide a temporary visibility boost.
+    # The floor of 4 is arbitrary and may need adjustment in the future.
+    ku = max(ku, 4 - months_old)
+
+    # For every year that has passed and for a mismatched version or distro, we
+    # add a penalty. Penalties will reduce the final score.
+    penalties = months_old // 12
+    if review.version != item['version']:
+        penalties += 1
+    if review.distro != item['distro']:
+        penalties += 1
+
+    w = _wilson(ku, kd)
+    return max(0, w - penalties * 10)
 
 def _check_str(val):
     """ Return with success if the summary and description """
