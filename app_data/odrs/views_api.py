@@ -480,7 +480,7 @@ def api_rating_for_id(app_id):
 @app.route('/1.0/reviews/api/taboo/all')
 def api_taboo_all():
     """
-    Get the star ratings for a specific application.
+    Get all registered forbidden words.
     """
     items = defaultdict(list)
     for taboo in db.session.query(Taboo).\
