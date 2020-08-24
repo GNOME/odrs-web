@@ -7,7 +7,7 @@ PYTEST=$(VENV)/bin/pytest
 FLASK=$(VENV)/bin/flask
 
 setup: requirements.txt
-	virtualenv ./env
+	virtualenv --python=python3 ./env
 	$(VENV)/bin/pip install -r requirements.txt
 
 clean:
@@ -19,7 +19,7 @@ run:
 	ODRS_REVIEWS_SECRET=1 \
 	ODRS_CONFIG=example.cfg \
 	FLASK_APP=odrs/__init__.py \
-	HOME=/home/hughsie/Code/odrs-web/app_data \
+	HOME=$(CURDIR) \
 	$(VENV)/bin/flask run
 
 dbup:
