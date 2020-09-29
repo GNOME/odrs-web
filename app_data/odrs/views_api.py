@@ -192,7 +192,7 @@ def api_fetch():
     for key in ['app_id', 'user_hash', 'locale', 'distro', 'limit', 'version']:
         if not key in item:
             return json_error('invalid data, expected %s' % key)
-        if not item[key]:
+        if not item[key] and item[key] != 0:
             return json_error('missing data, expected %s' % key)
 
     # check format
@@ -268,8 +268,14 @@ def api_fetch():
 
     # sort and cut to limit
     items_new.sort(key=lambda item: item['score'], reverse=True)
-    if item['limit'] > 0:
-        items_new = items_new[:item['limit']]
+
+    if item['limit'] == 0:
+        limit = 50
+    else:
+        limit = item.get('limit', -1)
+
+    start = item.get('start', 0)
+    items_new = items_new[start : start+limit]
 
     dat = json.dumps(items_new, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,

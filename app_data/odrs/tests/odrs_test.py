@@ -416,7 +416,9 @@ class OdrsTest(unittest.TestCase):
                       locale='en_US',
                       distro='Fedora',
                       compat_ids=None,
-                      version='1.2.3'):
+                      version='1.2.3',
+                      limit=5,
+                      start=0):
         if not user_hash:
             user_hash = self.user_hash
         # fetch some reviews
@@ -424,15 +426,23 @@ class OdrsTest(unittest.TestCase):
                 'user_hash': user_hash,
                 'locale': locale,
                 'distro': distro,
-                'limit': 5,
+                'limit': limit,
+                'start': start,
                 'version': version}
         if compat_ids:
             data['compat_ids'] = compat_ids
         return self.app.post('/1.0/reviews/api/fetch', data=json.dumps(data), follow_redirects=True)
 
     def review_fetch(self):
-        rv = self._review_fetch(app_id='inkscape.desktop')
+        rv = self._review_fetch(app_id='inkscape.desktop', start=0, limit=5)
         assert b'An essential part of my daily workflow' in rv.data, rv.data
+        assert len(rv) == 5
+
+        rv = self._review_fetch(app_id='inkscape.desktop', start=0, limit=3)
+        assert len(rv) == 3
+
+        rv = self._review_fetch(app_id='inkscape.desktop', start=2, limit=3)
+        assert len(rv) == 3
 
     def test_api_dumping_all(self):
 
