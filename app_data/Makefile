@@ -1,5 +1,5 @@
 # Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
-# SPDX-License-Identifier: GPL-2.0+
+# SPDX-License-Identifier: GPL-3.0+
 
 VENV=./env
 PYTHON=$(VENV)/bin/python
