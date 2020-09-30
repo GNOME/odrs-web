@@ -49,8 +49,7 @@ def _get_review_score(review, item):
     ku = review.karma_up
     kd = review.karma_down
 
-    created = datetime.datetime.fromtimestamp(review.date_created)
-    months_old = (datetime.datetime.now() - created).days // 30
+    months_old = (datetime.datetime.now() - review.date_created).days // 30
 
     # If the review is very new, provide a temporary visibility boost.
     # The floor of 4 is arbitrary and may need adjustment in the future.
