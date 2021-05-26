@@ -43,7 +43,7 @@ can be used on the new instance.
 
 ## I have a question
 
-Email me or grab me on IRC (`hughsie@freenode`).
+Email me or grab me on IRC (`hughsie@libera.chat`).
 
 ## How to build the docker image?
 
