@@ -262,7 +262,7 @@ def api_fetch():
         # return all results
         item_new = review.asdict(request_item['user_hash'])
         item_new['score'] = _get_review_score(review, request_item)
-        item_new['user_skey'] = _get_user_key(request_item['user_hash'], request_item['app_id'])
+        item_new['user_skey'] = _get_user_key(item_new['user_hash'], item_new['app_id'])
 
         # the UI can hide the vote buttons on reviews already voted on
         if _vote_exists(review.review_id, user.user_id):
@@ -276,7 +276,7 @@ def api_fetch():
         item_new['score'] = 0
         item_new['app_id'] = request_item['app_id']
         item_new['user_hash'] = request_item['user_hash']
-        item_new['user_skey'] = _get_user_key(request_item['user_hash'], request_item['app_id'])
+        item_new['user_skey'] = _get_user_key(item_new['user_hash'], item_new['app_id'])
         items_new.append(item_new)
 
     # sort and cut to limit
