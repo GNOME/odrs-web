@@ -42,3 +42,21 @@ check: $(PYTEST)
 		--cov=odrs \
 		--cov-report=html
 	$(PYTHON) ./pylint_test.py
+
+blacken:
+	find migrations odrs -name '*.py' -exec ./env/bin/black {} \;
+
+codespell: $(CODESPELL)
+	$(CODESPELL) --write-changes --builtin en-GB_to_en-US --skip \
+	.git,\
+	.mypy_cache,\
+	.coverage,\
+	*.pyc,\
+	*.png,\
+	*.jpg,\
+	*.js,\
+	*.doctree,\
+	*.pdf,\
+	*.gz,\
+	*.ico,\
+	env
