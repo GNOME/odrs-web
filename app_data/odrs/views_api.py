@@ -80,73 +80,73 @@ def api_submit():
     Submits a new review.
     """
     try:
-        item = json.loads(request.data.decode('utf8'))
+        request_item = json.loads(request.data.decode('utf8'))
     except ValueError as e:
         return json_error(str(e))
     required_fields = ['app_id', 'locale', 'summary', 'description',
                        'user_hash', 'version', 'distro', 'rating',
                        'user_display']
     for key in required_fields:
-        if not key in item:
+        if not key in request_item:
             return json_error('invalid data, expected %s' % key)
-        if not item[key]:
+        if not request_item[key]:
             return json_error('missing data, expected %s' % key)
 
     # check format
-    if not len(item['user_hash']) == 40:
+    if not len(request_item['user_hash']) == 40:
         return json_error('the user_hash is invalid')
 
     # check fields for markup and length
-    if len(item['summary']) > 70:
+    if len(request_item['summary']) > 70:
         return json_error('summary is too long')
-    if len(item['description']) > 3000:
+    if len(request_item['description']) > 3000:
         return json_error('description is too long')
     for key in ['summary', 'description']:
-        if not _check_str(item[key]):
+        if not _check_str(request_item[key]):
             return json_error('%s is not a valid string' % key)
 
     # check user has not been banned
-    user = db.session.query(User).filter(User.user_hash == item['user_hash']).first()
+    user = db.session.query(User).filter(User.user_hash == request_item['user_hash']).first()
     if user:
         if user.is_banned:
             return json_error('account has been disabled due to abuse')
     else:
-        user = User(item['user_hash'])
+        user = User(request_item['user_hash'])
         db.session.add(user)
 
     # user has already reviewed
     if db.session.query(Review).\
             join(Component).\
-            filter(Component.app_id == item['app_id']).\
+            filter(Component.app_id == request_item['app_id']).\
             filter(Review.user_id == user.user_id).first():
         _eventlog_add(_get_client_address(),
                       user.user_id,
-                      item['app_id'],
+                      request_item['app_id'],
                       'already reviewed')
         return json_error('already reviewed this app')
 
     # component definately exists now!
-    component = db.session.query(Component).filter(Component.app_id == item['app_id']).first()
+    component = db.session.query(Component).filter(Component.app_id == request_item['app_id']).first()
     if component:
         component.review_cnt += 1
     else:
-        component = Component(item['app_id'])
+        component = Component(request_item['app_id'])
         db.session.add(component)
         db.session.commit()
 
     # create new
     review = Review()
-    review.locale = item['locale']
-    review.summary = _sanitised_summary(item['summary'])
+    review.locale = request_item['locale']
+    review.summary = _sanitised_summary(request_item['summary'])
     if len(review.summary) < 2:
         return json_error('summary is too short')
-    review.description = _sanitised_description(item['description'])
+    review.description = _sanitised_description(request_item['description'])
     if len(review.description) < 2:
         return json_error('description is too short')
     review.user_id = user.user_id
-    review.version = _sanitised_version(item['version'])
-    review.distro = item['distro']
-    review.rating = item['rating']
+    review.version = _sanitised_version(request_item['version'])
+    review.distro = request_item['distro']
+    review.rating = request_item['rating']
     review.user_addr = _get_client_address()
     review.component_id = component.component_id
 
@@ -156,8 +156,8 @@ def api_submit():
                            'Live System User',
                            'user',
                            'Unknown']
-    if item['user_display'] not in user_display_ignore:
-        review.user_display = item['user_display']
+    if request_item['user_display'] not in user_display_ignore:
+        review.user_display = request_item['user_display']
 
     # contains taboos
     if review.matches_taboos(_get_taboos_for_locale(review.locale)):
@@ -198,22 +198,22 @@ def api_fetch():
     Return details about an application.
     """
     try:
-        item = json.loads(request.data.decode('utf8'))
+        request_item = json.loads(request.data.decode('utf8'))
     except ValueError as e:
         return json_error(str(e))
     for key in ['app_id', 'user_hash', 'locale', 'distro', 'limit', 'version']:
-        if not key in item:
+        if not key in request_item:
             return json_error('invalid data, expected %s' % key)
-        if not item[key] and item[key] != 0:
+        if not request_item[key] and request_item[key] != 0:
             return json_error('missing data, expected %s' % key)
 
     # check format
-    if not len(item['user_hash']) == 40:
+    if not len(request_item['user_hash']) == 40:
         return json_error('the user_hash is invalid')
 
     # increments the fetch count on one specific application
     datestr = _get_datestr_from_dt(datetime.date.today())
-    stmt = insert(Analytic).values(datestr=datestr, app_id=item['app_id'])
+    stmt = insert(Analytic).values(datestr=datestr, app_id=request_item['app_id'])
     if db.session.bind.dialect.name != 'sqlite': # pylint: disable=no-member
         stmt_ondupe = stmt.on_duplicate_key_update(fetch_cnt=Analytic.fetch_cnt + 1)
     else:
@@ -225,15 +225,15 @@ def api_fetch():
         print('ignoring: {}'.format(str(e)))
 
     # increment the counter for the stats
-    component = db.session.query(Component).filter(Component.app_id == item['app_id']).first()
+    component = db.session.query(Component).filter(Component.app_id == request_item['app_id']).first()
     if component:
         component.fetch_cnt += 1
         db.session.commit()
 
     # also add any compat IDs
-    app_ids = [item['app_id']]
-    if 'compat_ids' in item:
-        app_ids.extend(item['compat_ids'])
+    app_ids = [request_item['app_id']]
+    if 'compat_ids' in request_item:
+        app_ids.extend(request_item['compat_ids'])
     if component:
         for app_id in component.app_ids:
             if app_id not in app_ids:
@@ -244,9 +244,9 @@ def api_fetch():
                     filter(Review.reported < ODRS_REPORTED_CNT).all()
 
     # if user does not exist then create
-    user = db.session.query(User).filter(User.user_hash == item['user_hash']).first()
+    user = db.session.query(User).filter(User.user_hash == request_item['user_hash']).first()
     if not user:
-        user = User(user_hash=item['user_hash'])
+        user = User(user_hash=request_item['user_hash'])
         db.session.add(user)
         db.session.commit()
 
@@ -255,13 +255,13 @@ def api_fetch():
     for review in reviews:
 
         # the user isn't going to be able to read this
-        if not _locale_is_compatible(review.locale, item['locale']):
+        if not _locale_is_compatible(review.locale, request_item['locale']):
             continue
 
         # return all results
-        item_new = review.asdict(item['user_hash'])
-        item_new['score'] = _get_review_score(review, item)
-        item_new['user_skey'] = _get_user_key(item['user_hash'], item['app_id'])
+        item_new = review.asdict(request_item['user_hash'])
+        item_new['score'] = _get_review_score(review, request_item)
+        item_new['user_skey'] = _get_user_key(item_new['user_hash'], item_new['app_id'])
 
         # the UI can hide the vote buttons on reviews already voted on
         if _vote_exists(review.review_id, user.user_id):
@@ -273,20 +273,20 @@ def api_fetch():
     if len(items_new) == 0:
         item_new = {}
         item_new['score'] = 0
-        item_new['app_id'] = item['app_id']
-        item_new['user_hash'] = item['user_hash']
-        item_new['user_skey'] = _get_user_key(item['user_hash'], item['app_id'])
+        item_new['app_id'] = request_item['app_id']
+        item_new['user_hash'] = request_item['user_hash']
+        item_new['user_skey'] = _get_user_key(item_new['user_hash'], item_new['app_id'])
         items_new.append(item_new)
 
     # sort and cut to limit
     items_new.sort(key=lambda item: item['score'], reverse=True)
 
-    if item['limit'] == 0:
+    if request_item['limit'] == 0:
         limit = 50
     else:
-        limit = item.get('limit', -1)
+        limit = request_item.get('limit', -1)
 
-    start = item.get('start', 0)
+    start = request_item.get('start', 0)
     items_new = items_new[start : start+limit]
 
     dat = json.dumps(items_new, sort_keys=True, indent=4, separators=(',', ': '))
@@ -336,25 +336,25 @@ def _vote(val):
     Up or downvote an existing review by @val karma points.
     """
     try:
-        item = json.loads(request.data.decode('utf8'))
+        request_item = json.loads(request.data.decode('utf8'))
     except ValueError as e:
         return json_error(str(e))
     for key in ['review_id', 'app_id', 'user_hash', 'user_skey']:
-        if not key in item:
+        if not key in request_item:
             return json_error('invalid data, required %s' % key)
-        if item[key] is None:
+        if request_item[key] is None:
             return json_error('missing data, expected %s' % key)
 
     # check format
-    if not len(item['user_hash']) == 40:
+    if not len(request_item['user_hash']) == 40:
         return json_error('the user_hash is invalid')
-    if not len(item['user_skey']) == 40:
+    if not len(request_item['user_skey']) == 40:
         return json_error('the user_skey is invalid')
 
     # get user
-    user = db.session.query(User).filter(User.user_hash == item['user_hash']).first()
+    user = db.session.query(User).filter(User.user_hash == request_item['user_hash']).first()
     if not user:
-        user = User(item['user_hash'])
+        user = User(request_item['user_hash'])
         db.session.add(user)
     else:
 
@@ -366,15 +366,15 @@ def _vote(val):
         if val < 0 and user.karma < -50:
             return json_error('all negative karma used up')
 
-    if item['user_skey'] != _get_user_key(item['user_hash'], item['app_id']):
+    if request_item['user_skey'] != _get_user_key(request_item['user_hash'], request_item['app_id']):
         _eventlog_add(_get_client_address(), user.user_id, None,
-                      'invalid user_skey of %s' % item['user_skey'], important=True)
-        #print('expected user_skey of %s' % _get_user_key(item['user_hash'], item['app_id']))
+                      'invalid user_skey of %s' % request_item['user_skey'], important=True)
+        #print('expected user_skey of %s' % _get_user_key(request_item['user_hash'], request_item['app_id']))
         return json_error('invalid user_skey')
 
     # the user already has a review
-    if _vote_exists(item['review_id'], user.user_id):
-        _eventlog_add(_get_client_address(), user.user_id, item['app_id'],
+    if _vote_exists(request_item['review_id'], user.user_id):
+        _eventlog_add(_get_client_address(), user.user_id, request_item['app_id'],
                       'duplicate vote')
         return json_error('already voted on this app')
 
@@ -383,10 +383,10 @@ def _vote(val):
 
     review = db.session.query(Review).\
                 join(Component).\
-                filter(Component.app_id == item['app_id']).first()
+                filter(Component.app_id == request_item['app_id']).first()
     if not review:
         _eventlog_add(_get_client_address(), user.user_id, None,
-                      'invalid review ID of %s' % item['app_id'], important=True)
+                      'invalid review ID of %s' % request_item['app_id'], important=True)
         return json_error('invalid review ID')
 
     # update review
@@ -400,12 +400,12 @@ def _vote(val):
     db.session.commit()
 
     # add the vote to the database
-    db.session.add(Vote(user.user_id, val, review_id=item['review_id']))
+    db.session.add(Vote(user.user_id, val, review_id=request_item['review_id']))
     db.session.commit()
-    _eventlog_add(_get_client_address(), user.user_id, item['app_id'],
+    _eventlog_add(_get_client_address(), user.user_id, request_item['app_id'],
                   'voted %i on review' % val)
 
-    return json_success('voted #%i %i' % (item['review_id'], val))
+    return json_success('voted #%i %i' % (request_item['review_id'], val))
 
 @app.route('/1.0/reviews/api/upvote', methods=['POST'])
 def api_upvote():
@@ -441,45 +441,45 @@ def api_remove():
     Remove a review.
     """
     try:
-        item = json.loads(request.data.decode('utf8'))
+        request_item = json.loads(request.data.decode('utf8'))
     except ValueError as e:
         return json_error(str(e))
     for key in ['review_id', 'app_id', 'user_hash', 'user_skey']:
-        if not key in item:
+        if not key in request_item:
             return json_error('invalid data, required %s' % key)
-        if not item[key]:
+        if not request_item[key]:
             return json_error('missing data, expected %s' % key)
 
     # check format
-    if not len(item['user_hash']) == 40:
+    if not len(request_item['user_hash']) == 40:
         return json_error('the user_hash is invalid')
-    if not len(item['user_skey']) == 40:
+    if not len(request_item['user_skey']) == 40:
         return json_error('the user_skey is invalid')
 
     # the user already has a review
-    user = db.session.query(User).filter(User.user_hash == item['user_hash']).first()
+    user = db.session.query(User).filter(User.user_hash == request_item['user_hash']).first()
     if not user:
         return json_error('no review')
     review = db.session.query(Review).\
-                filter(Review.review_id == item['review_id']).\
+                filter(Review.review_id == request_item['review_id']).\
                 filter(Review.user_id == user.user_id).first()
     if not review:
         return json_error('no review')
-    if review.component.app_id != item['app_id']:
+    if review.component.app_id != request_item['app_id']:
         return json_error('the app_id is invalid')
 
-    if item['user_skey'] != _get_user_key(item['user_hash'], item['app_id']):
+    if request_item['user_skey'] != _get_user_key(request_item['user_hash'], request_item['app_id']):
         _eventlog_add(_get_client_address(), user.user_id, None,
-                      'invalid user_skey of %s' % item['user_skey'], important=True)
+                      'invalid user_skey of %s' % request_item['user_skey'], important=True)
         return json_error('invalid user_skey')
 
     db.session.delete(review)
     db.session.commit()
     _eventlog_add(_get_client_address(),
                   user.user_id,
-                  item['app_id'],
+                  request_item['app_id'],
                   'removed review')
-    return json_success('removed review #%i' % item['review_id'])
+    return json_success('removed review #%i' % request_item['review_id'])
 
 @app.route('/1.0/reviews/api/ratings/<app_id>')
 def api_rating_for_id(app_id):
