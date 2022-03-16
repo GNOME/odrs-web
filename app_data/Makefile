@@ -46,8 +46,8 @@ check: $(PYTEST)
 blacken:
 	find migrations odrs -name '*.py' -exec ./env/bin/black {} \;
 
-codespell: $(CODESPELL)
-	$(CODESPELL) --write-changes --builtin en-GB_to_en-US --skip \
+codespell:
+	codespell --write-changes --builtin en-GB_to_en-US --skip \
 	.git,\
 	.mypy_cache,\
 	.coverage,\
@@ -59,4 +59,5 @@ codespell: $(CODESPELL)
 	*.pdf,\
 	*.gz,\
 	*.ico,\
+	*.csv,\
 	env
