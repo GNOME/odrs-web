@@ -296,19 +296,6 @@ def api_fetch():
                     status=200, \
                     mimetype='application/json')
 
-@app.route('/1.0/reviews/api/all/<user_hash>')
-@app.route('/1.0/reviews/api/all')
-def api_all(user_hash=None):
-    """
-    Return all the reviews on the server as a JSON object.
-    """
-    reviews = db.session.query(Review).filter(Review.reported < ODRS_REPORTED_CNT).all()
-    items = [review.asdict(user_hash) for review in reviews]
-    dat = json.dumps(items, sort_keys=True, indent=4, separators=(',', ': '))
-    return Response(response=dat,
-                    status=200, \
-                    mimetype='application/json')
-
 @app.route('/1.0/reviews/api/moderate/<user_hash>')
 @app.route('/1.0/reviews/api/moderate/<user_hash>/<locale>')
 def api_moderate(user_hash, locale=None):

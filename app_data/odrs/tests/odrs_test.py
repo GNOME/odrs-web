@@ -328,10 +328,6 @@ class OdrsTest(unittest.TestCase):
         assert b'deleted 1 reviews' in rv.data, rv.data
         self.logout()
 
-        # check review was actually deleted
-        rv = self.app.get('/1.0/reviews/api/all')
-        assert rv.data == b'[]', rv.data
-
         # try to submit another review
         rv = self._review_submit(app_id='gimp.desktop')
         assert b'account has been disabled due to abuse' in rv.data, rv.data
@@ -372,7 +368,6 @@ class OdrsTest(unittest.TestCase):
         # all these are viewable without being logged in
         uris = ['/',
                 '/privacy',
-                #'/1.0/reviews/api/all',
                 ]
         for uri in uris:
             rv = self.app.get(uri, follow_redirects=True)
@@ -430,14 +425,6 @@ class OdrsTest(unittest.TestCase):
     def review_fetch(self):
         rv = self._review_fetch(app_id='inkscape.desktop')
         assert b'An essential part of my daily workflow' in rv.data, rv.data
-
-    def test_api_dumping_all(self):
-
-        rv = self.app.get('/1.0/reviews/api/all')
-        assert rv.data == b'[]', rv.data
-        self.review_submit()
-        rv = self.app.get('/1.0/reviews/api/all')
-        assert b'Somebody Important' in rv.data, rv.data
 
     def test_api_moderate_locale(self):
 
