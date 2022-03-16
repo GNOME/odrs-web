@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # pylint: disable=invalid-name,missing-docstring,wrong-import-order,wrong-import-position
+# pylint: disable=import-outside-toplevel
 #
 # Copyright (C) 2015-2019 Richard Hughes <richard@hughsie.com>
 #

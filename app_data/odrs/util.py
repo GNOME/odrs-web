@@ -3,6 +3,8 @@
 #
 # Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
 #
+# pylint: disable=import-outside-toplevel
+#
 # SPDX-License-Identifier: GPL-3.0+
 
 import json
