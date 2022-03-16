@@ -11,8 +11,6 @@ import json
 import math
 import datetime
 
-from collections import defaultdict
-
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.exc import IntegrityError
 
@@ -20,7 +18,7 @@ from flask import request, Response
 
 from odrs import app, db, csrf
 
-from .models import Review, User, Vote, Analytic, Taboo, Component
+from .models import Review, User, Vote, Analytic, Component
 from .models import _vote_exists
 from .util import json_success, json_error, _locale_is_compatible, _eventlog_add, _get_user_key, _get_datestr_from_dt
 from .util import _sanitised_version, _sanitised_summary, _sanitised_description, _get_rating_for_component
@@ -488,21 +486,6 @@ def api_rating_for_id(app_id):
     if component:
         ratings = _get_rating_for_component(component)
     dat = json.dumps(ratings, ensure_ascii=False, sort_keys=True, indent=4, separators=(',', ': '))
-    return Response(response=dat,
-                    status=200, \
-                    mimetype='application/json')
-
-@app.route('/1.0/reviews/api/taboo/all')
-def api_taboo_all():
-    """
-    Get all registered forbidden words.
-    """
-    items = defaultdict(list)
-    for taboo in db.session.query(Taboo).\
-                order_by(Taboo.locale.asc()).\
-                order_by(Taboo.value.asc()).all():
-        items[taboo.locale].append(taboo.asdict())
-    dat = json.dumps(items, sort_keys=True, indent=4, separators=(',', ': '))
     return Response(response=dat,
                     status=200, \
                     mimetype='application/json')
