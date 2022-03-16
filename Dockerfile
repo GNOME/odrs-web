@@ -3,6 +3,7 @@ FROM centos/httpd-24-centos7
 USER root 
 
 RUN yum install -y gcc make \
+    brotli \
     mariadb \
     mariadb-devel \
     python36-devel \
