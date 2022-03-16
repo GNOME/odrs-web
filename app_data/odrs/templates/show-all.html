@@ -36,9 +36,13 @@
 {% else %}
     <td><i>Unknown</i></td>
 {% endif %}
-    <td>{{format_truncate(r.summary, 30)}}</td>
     <td>
-      <a class="btn btn-info" href="{{url_for('.admin_show_review', review_id=r.review_id)}}">Details</a>
+      <p>{{format_truncate(r.summary, 30)}}</p>
+      <p>{{format_truncate(r.description, 30)}}</p>
+    </td>
+    <td>
+      <a class="btn btn-info btn-block" href="{{url_for('.admin_show_review', review_id=r.review_id)}}">Details</a>
+      <a class="btn btn-danger btn-block" href="{{url_for('.admin_delete_force', review_id=r.review_id)}}">Delete</a>
     </td>
   </tr>
 {% endfor %}

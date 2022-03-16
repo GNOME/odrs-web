@@ -400,7 +400,7 @@ def admin_delete_force(review_id):
     db.session.delete(review)
     db.session.commit()
     flash('Deleted review')
-    return redirect(url_for('.admin_show_all'))
+    return redirect(url_for('.odrs_show_reported'))
 
 @app.route('/admin/delete/<review_id>')
 @login_required
