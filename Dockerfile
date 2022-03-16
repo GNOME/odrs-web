@@ -5,13 +5,7 @@ USER root
 RUN yum install -y gcc make \
     mariadb \
     mariadb-devel \
-    python36-click \
-    python36-cryptography \
-    python36-dateutil \
     python36-devel \
-    python36-jinja2 \
-    python36-markupsafe \
-    python36-pip \
     python36-PyMySQL \
     rh-python36-mod_wsgi \
     uwsgi-plugin-python36
@@ -19,18 +13,11 @@ RUN yum install -y gcc make \
 ENV ODRS_HOME=/opt/app-root/src \
     LANG=C
 
-RUN pip3 install --prefix=/usr \
-    flask-login \
-    flask-migrate \
-    flask-wtf \
-    lxml \
-    mysqlclient \
-    PyMySQL \
-    sqlalchemy
-
 WORKDIR ${ODRS_HOME}
 
 COPY app_data ${ODRS_HOME}
+
+RUN pip3 install --prefix=/usr -r ${ODRS_HOME}/requirements.txt
 
 RUN LANG=en_US.utf8 \
     FLASK_APP=odrs/__init__.py \
