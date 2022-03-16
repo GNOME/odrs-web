@@ -295,7 +295,7 @@ def api_fetch():
     response = Response(response=dat,
                         status=200, \
                         mimetype='application/json')
-    response.cache_control = 'private'
+    response.cache_control.private = True
     response.add_etag()
     return response.make_conditional(request)
 
