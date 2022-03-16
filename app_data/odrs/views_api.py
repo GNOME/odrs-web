@@ -18,7 +18,7 @@ from sqlalchemy.exc import IntegrityError
 
 from flask import request, Response
 
-from odrs import app, db
+from odrs import app, db, csrf
 
 from .models import Review, User, Vote, Analytic, Taboo, Component
 from .models import _vote_exists
@@ -75,6 +75,7 @@ def _check_str(val):
     return True
 
 @app.route('/1.0/reviews/api/submit', methods=['POST'])
+@csrf.exempt
 def api_submit():
     """
     Submits a new review.
@@ -193,6 +194,7 @@ def api_show_app(app_id, user_hash=None):
                     mimetype='application/json')
 
 @app.route('/1.0/reviews/api/fetch', methods=['POST'])
+@csrf.exempt
 def api_fetch():
     """
     Return details about an application.
@@ -408,6 +410,7 @@ def _vote(val):
     return json_success('voted #%i %i' % (request_item['review_id'], val))
 
 @app.route('/1.0/reviews/api/upvote', methods=['POST'])
+@csrf.exempt
 def api_upvote():
     """
     Upvote an existing review by one karma point.
@@ -415,6 +418,7 @@ def api_upvote():
     return _vote(1)
 
 @app.route('/1.0/reviews/api/downvote', methods=['POST'])
+@csrf.exempt
 def api_downvote():
     """
     Downvote an existing review by one karma point.
@@ -422,6 +426,7 @@ def api_downvote():
     return _vote(-1)
 
 @app.route('/1.0/reviews/api/dismiss', methods=['POST'])
+@csrf.exempt
 def api_dismiss():
     """
     Dismiss a review without rating it up or down.
@@ -429,6 +434,7 @@ def api_dismiss():
     return _vote(0)
 
 @app.route('/1.0/reviews/api/report', methods=['POST'])
+@csrf.exempt
 def api_report():
     """
     Report a review for abuse.
@@ -436,6 +442,7 @@ def api_report():
     return _vote(-5)
 
 @app.route('/1.0/reviews/api/remove', methods=['POST'])
+@csrf.exempt
 def api_remove():
     """
     Remove a review.
