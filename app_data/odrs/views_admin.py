@@ -451,32 +451,6 @@ def admin_search(max_results=19):
     return render_template('show-all.html',
                            reviews=reviews)
 
-@app.route('/admin/show/unmoderated')
-@login_required
-def odrs_show_unmoderated():
-    """
-    Return all the reviews on the server as HTML.
-    """
-    if not current_user.user:
-        flash('No user_hash for current user')
-        return redirect(url_for('.odrs_index'))
-
-    # filter by the languages the moderator understands
-    reviews = []
-    langs = _get_langs_for_user(current_user)
-    for r in db.session.query(Review).all():
-        lang = r.locale.split('_')[0]
-        if langs and lang not in langs:
-            continue
-        if _vote_exists(r.review_id, current_user.user.user_id):
-            continue
-        if len(reviews) > 20:
-            break
-        reviews.append(r)
-    return render_template('show-all.html',
-                           pagination=None,
-                           reviews=reviews)
-
 @app.route('/admin/show/reported')
 @app.route('/admin/show/reported/<int:limit>')
 @login_required

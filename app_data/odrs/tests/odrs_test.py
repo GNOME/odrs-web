@@ -203,9 +203,6 @@ class OdrsTest(unittest.TestCase):
         rv = self.app.get('/admin/show/all')
         assert b'An essential ' in rv.data, rv.data
 
-        rv = self.app.get('/admin/show/unmoderated')
-        assert b'An essential ' in rv.data, rv.data
-
         rv = self.app.get('/admin/show/lang/en_US')
         assert b'An essential ' in rv.data, rv.data
         rv = self.app.get('/admin/show/lang/fr_FR')
@@ -642,7 +639,6 @@ class OdrsTest(unittest.TestCase):
                 '/admin/stats',
                 '/admin/user_ban/1',
                 '/admin/show/reported',
-                '/admin/show/unmoderated',
                 '/admin/stats',
                 '/admin/moderators/all']
         for uri in uris:
