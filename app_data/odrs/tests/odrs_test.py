@@ -336,10 +336,8 @@ class OdrsTest(unittest.TestCase):
         assert b"Added taboo" in rv.data, rv.data
 
         # submit something, and ensure it's flagged
-        self.review_submit()
-        rv = self.app.get("/admin/review/1")
-        assert b"Somebody Important" in rv.data, rv.data
-        assert b"Contains taboo" in rv.data, rv.data
+        rv = self._review_submit()
+        assert b"review contains taboo word" in rv.data, rv.data
 
         # delete
         rv = self.app.get("/admin/taboo/1/delete", follow_redirects=True)

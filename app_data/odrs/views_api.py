@@ -201,7 +201,7 @@ def api_submit():
 
     # contains taboos
     if review.matches_taboos(_get_taboos_for_locale(review.locale)):
-        review.reported = 5
+        return json_error("review contains taboo word")
 
     # log and add
     _eventlog_add(_get_client_address(), review.user_id, component.app_id, "reviewed")
