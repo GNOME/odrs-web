@@ -75,17 +75,25 @@ def _fsck_components():
 
 def _auto_delete(days=31):
 
+    # delete all reviews with taboo, otherwise the moderatorators get overwhelmed
+    for review in (
+        db.session.query(Review)
+        .filter(Review.reported == 5)
+        .order_by(Review.date_created.asc())
+        .limit(1000)
+    ):
+        db.session.delete(review)
+    db.session.commit()
+
+    # clean up all old deleted reviews
     since = datetime.datetime.now() - datetime.timedelta(days=days)
-    reviews = db.session.query(Review).\
-                    filter(Review.date_deleted != None).\
-                    filter(Review.date_deleted < since).\
-                    order_by(Review.date_created.asc()).\
-                    all()
-    if len(reviews) > 1000:
-        print('too many reviews to delete: {}'.format(len(reviews)))
-        return
-    print('Deleting {} reviews...'.format(len(reviews)))
-    for review in reviews:
+    for review in (
+        db.session.query(Review)
+        .filter(Review.date_deleted != None)
+        .filter(Review.date_deleted < since)
+        .order_by(Review.date_created.asc())
+        .limit(1000)
+    ):
         db.session.delete(review)
     db.session.commit()
 
