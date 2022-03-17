@@ -288,7 +288,6 @@ def api_fetch():
         .join(Component)
         .filter(Component.app_id.in_(app_ids))
         .filter(Review.reported < ODRS_REPORTED_CNT)
-        .all()
     )
 
     # if user does not exist then create
@@ -363,7 +362,7 @@ def api_moderate(user_hash, locale=None):
     user = db.session.query(User).filter(User.user_hash == user_hash).first()
     if not user:
         return json_error("no user for {}".format(user_hash))
-    for review in db.session.query(Review).all():
+    for review in db.session.query(Review):
         if locale and not _locale_is_compatible(review.locale, locale):
             continue
         if _vote_exists(review.review_id, user.user_id):
@@ -597,7 +596,7 @@ def api_ratings():
     Get the star ratings for all known applications.
     """
     item = {}
-    for component in db.session.query(Component).order_by(Component.app_id.asc()).all():
+    for component in db.session.query(Component).order_by(Component.app_id.asc()):
         ratings = _get_rating_for_component(component, 2)
         if len(ratings) == 0:
             continue

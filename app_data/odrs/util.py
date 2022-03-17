@@ -76,7 +76,6 @@ def _get_rating_for_component(component, min_total=1):
         db.session.query(Review.rating)
         .join(Component)
         .filter(Component.app_id.in_(component.app_ids))
-        .all()
     ):
         idx = int(rating[0] / 20)
         if idx > 5:

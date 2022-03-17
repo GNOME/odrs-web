@@ -29,7 +29,6 @@ def _fsck_components():
         db.session.query(Component)
         .filter(Component.app_id != "")
         .order_by(Component.app_id.asc())
-        .all()
     ):
         components[component.app_id] = component
 
@@ -119,7 +118,7 @@ def _fsck():
 
 def _regenerate_ratings(fn):
     item = {}
-    for component in db.session.query(Component).order_by(Component.app_id.asc()).all():
+    for component in db.session.query(Component).order_by(Component.app_id.asc()):
         ratings = _get_rating_for_component(component, 2)
         if len(ratings) == 0:
             continue
@@ -134,7 +133,7 @@ def _taboo_check():
 
     # this is moderately expensive, so cache for each locale
     taboos = {}
-    for review in db.session.query(Review).filter(Review.reported < 5).all():
+    for review in db.session.query(Review).filter(Review.reported < 5):
         if review.locale not in taboos:
             taboos[review.locale] = _get_taboos_for_locale(review.locale)
         matched_taboos = review.matches_taboos(taboos[review.locale])
@@ -149,7 +148,7 @@ def _appstream_import(fn):
 
     # get existing components
     app_ids = {}
-    for component in db.session.query(Component).all():
+    for component in db.session.query(Component):
         app_ids[component.app_id] = component
 
     # parse xml
@@ -220,7 +219,7 @@ def _taboo_import(fn):
 
     # get all the taboos in one database call
     taboos = {}
-    for taboo in db.session.query(Taboo).all():
+    for taboo in db.session.query(Taboo):
         key = taboo.locale + ":" + taboo.value
         taboos[key] = taboo
 
