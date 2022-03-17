@@ -44,7 +44,7 @@ check: $(PYTEST)
 	$(PYTHON) ./pylint_test.py
 
 blacken:
-	find migrations odrs -name '*.py' -exec ./env/bin/black {} \;
+	find . -path ./env -prune -o -name '*.py' -exec ./env/bin/black --quiet {} \;
 
 codespell:
 	codespell --write-changes --builtin en-GB_to_en-US --skip \

@@ -8,17 +8,18 @@
 import sys
 import os
 
+
 def subst_inplace(fn):
-    with open(fn, 'r') as f:
+    with open(fn, "r") as f:
         blob = f.read()
-    for key in ['SQLALCHEMY_DATABASE_URI',
-                'ODRS_REVIEWS_SECRET']:
-        search = '%%{ENV:%s}' % format(key)
-        blob = blob.replace(search, os.environ.get(key, 'INVALID'))
-    with open(fn, 'w') as f:
+    for key in ["SQLALCHEMY_DATABASE_URI", "ODRS_REVIEWS_SECRET"]:
+        search = "%%{ENV:%s}" % format(key)
+        blob = blob.replace(search, os.environ.get(key, "INVALID"))
+    with open(fn, "w") as f:
         f.write(blob)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     for argv in sys.argv[1:]:
-        print('Processing', argv)
+        print("Processing", argv)
         subst_inplace(argv)
