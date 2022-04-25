@@ -1,7 +1,7 @@
 FROM registry.access.redhat.com/ubi8/python-38
 
 USER 0
-ADD app_data /tmp/src
+ADD . /tmp/src/
 RUN /usr/bin/fix-permissions /tmp/src
 
 USER 1001

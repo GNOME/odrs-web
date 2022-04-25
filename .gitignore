@@ -1,4 +1,3 @@
-backup
-*.pyc
-ratings.json
-secret.txt
+.coverage
+env
+htmlcov
