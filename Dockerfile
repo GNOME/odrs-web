@@ -8,7 +8,8 @@ USER 1001
 RUN /usr/libexec/s2i/assemble
 
 ENV ODRS_HOME=/opt/app-root/src \
-    LANG=C
+    LANG=C \
+    APP_MODULE=odrs:app
 
 ADD entrypoint /entrypoint
 CMD /entrypoint
