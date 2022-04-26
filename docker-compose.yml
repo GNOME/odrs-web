@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  odrs:
+    image: odrs
+    build:
+      dockerfile: Dockerfile
+      context: .
+    restart: unless-stopped
+    user: root
+    environment:
+      - ODRS_REVIEWS_SECRET=1
+      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://odrs:odrspasswd@db/odrs?charset=utf8mb4
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    volumes:
+      - .:/opt/app-root/src:z
+
+  db:
+    image: docker.io/library/mariadb:10.2
+    ports:
+      - "3306:3306"
+    environment:
+      - MARIADB_DATABASE=odrs
+      - MARIADB_USER=odrs
+      - MARIADB_PASSWORD=odrspasswd
+      - MARIADB_ROOT_PASSWORD=rootpasswd
+
+  nginx:
+    image: docker.io/nginxinc/nginx-unprivileged:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8000:8000"

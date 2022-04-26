@@ -1,4 +1,6 @@
-backup
-*.pyc
-ratings.json
-secret.txt
+**/__pycache__
+.bash_history
+.coverage
+env
+htmlcov
+odrs/static/ratings.json*
