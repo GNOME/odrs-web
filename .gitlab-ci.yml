@@ -14,4 +14,8 @@ odrs:
     - .kaniko-root
   variables:
     OCI_TAG: "latest"
+  environment:
+    name: production
+    url: https://odrs.gnome.org
   when: manual
+
