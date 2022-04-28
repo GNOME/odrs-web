@@ -13,7 +13,6 @@ odrs:
   extends:
     - .kaniko-root
   variables:
-    CI_PROJECT_NAME: "odrs"
     OCI_TAG: "latest"
   environment:
     name: production
