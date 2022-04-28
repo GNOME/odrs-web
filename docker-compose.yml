@@ -1,5 +1,8 @@
 version: "3"
 
+volumes:
+  ratings:
+
 services:
   odrs:
     image: odrs
@@ -17,6 +20,7 @@ services:
       - db
     volumes:
       - .:/opt/app-root/src:z
+      - ratings:/tmp/ratings
 
   db:
     image: docker.io/library/mariadb:10.2
@@ -32,5 +36,6 @@ services:
     image: docker.io/nginxinc/nginx-unprivileged:latest
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
+      - ratings:/tmp/ratings
     ports:
       - "8000:8000"

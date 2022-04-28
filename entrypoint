@@ -14,9 +14,13 @@ curl https://raw.githubusercontent.com/hughsie/badwords/master/badwords.csv -o /
 python /opt/app-root/src/cron.py taboo-import /tmp/badwords.csv
 
 while true; do
-  python /opt/app-root/src/cron.py ratings /opt/app-root/src/odrs/static/ratings.json
-  gzip -k -f /opt/app-root/src/odrs/static/ratings.json
-  brotli -k /opt/app-root/src/odrs/static/ratings.json
+  python /opt/app-root/src/cron.py ratings /tmp/ratings/ratings.json
+
+  cp /tmp/ratings/ratings.json /tmp/ratings/ratings.json.bak
+  gzip /tmp/ratings/ratings.json
+  mv /tmp/ratings/ratings.json.bak /tmp/ratings/ratings.json
+
+  brotli -k /tmp/ratings/ratings.json
   sleep 43200
 done &
 
