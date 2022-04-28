@@ -6,13 +6,14 @@ odrs-dev:
   extends:
     - .kaniko-root
   variables:
-    CI_PROJECT_NAME: "odrs"
+    CI_CUSTOM_IMAGE_NAM: "odrs"
     OCI_TAG: "dev"
 
 odrs:
   extends:
     - .kaniko-root
   variables:
+    CI_CUSTOM_IMAGE_NAM: "odrs"
     OCI_TAG: "latest"
   when: manual
 
@@ -20,7 +21,7 @@ nginx:
   extends:
     - .kaniko-root
   variables:
-    CI_PROJECT_NAME: "odrs"
+    CI_CUSTOM_IMAGE_NAM: "odrs"
     OCI_TAG: "nginx"
     DOCKERFILE: "Dockerfile.nginx"
   when: manual
