@@ -1,0 +1,2 @@
+FROM docker.io/nginxinc/nginx-unprivileged
+ADD nginx.conf /etc/nginx/nginx.conf
