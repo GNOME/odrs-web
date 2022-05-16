@@ -31,8 +31,8 @@
         </div>
         <div class="navbar-collapse collapse" id="navbar-wrapper">
           <ul class="nav navbar-nav">
-            <li><a href="{{url_for('.admin_show_all')}}">All Reviews</a></li>
 {% if g.user is defined %}
+            <li><a href="{{url_for('.admin_show_all')}}">All Reviews</a></li>
             <li><a href="{{url_for('.odrs_show_reported', limit=2)}}">Reported</a></li>
 {% if g.user.is_admin %}
             <li><a href="{{url_for('.admin_show_stats')}}">Statistics</a></li>
