@@ -6,8 +6,11 @@ A Flask web service for submitting application reviews
 
 The easiest way is to run `docker compose up` in the root directory. This will
 bring up a local ODRS instance with all needed services. Gunicorn can be
-directly accessed at http://localhost:8080, while nginx used for production
-traffic listens at http://localhost:8000.
+directly accessed at http://localhost:8080, while nginx that would be used for
+production traffic listens at http://localhost:8000.
+
+The entrypoint script creates a default admin user with login `admin@test.com`
+and password `Pa$$w0rd`.
 
 ## Deployment
 
