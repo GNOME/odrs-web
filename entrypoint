@@ -1,9 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
-export FLASK_APP=odrs/__init__.py 
+export FLASK_APP=odrs:app
 export SQLALCHEMY_TRACK_MODIFICATIONS=False
+
 flask db upgrade
+flask initdb
 
 while true; do python3 /opt/app-root/src/cron.py fsck ; sleep 43200 ; done &
 
