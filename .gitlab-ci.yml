@@ -2,26 +2,55 @@ include:
   - project: 'Infrastructure/openshift-images/ci-templates'
     file: '/kaniko.yml'
 
-odrs-dev:
+stages:
+  - test
+  - deploy
+
+build-image:
+  stage: test
+  extends:
+    - .kaniko-root
+  variables:
+    CI_COMMIT_REF_PROTECTED: "false"
+
+tests:
+  stage: test
+  image: registry.access.redhat.com/ubi8/python-39
+  script:
+    - pip install -r requirements.txt
+    - ODRS_REVIEWS_SECRET=not-secret4 python odrs/tests/util_test.py
+    - python odrs/tests/odrs_test.py
+
+deploy-dev:
+  stage: deploy
   extends:
     - .kaniko-root
   variables:
     CI_CUSTOM_IMAGE_NAME: "odrs"
     OCI_TAG: "dev"
+  rules:
+  - if: $CI_COMMIT_REF_NAME == "master"
+    when: always
 
-odrs:
+deploy-prod:
+  stage: deploy
   extends:
     - .kaniko-root
   variables:
     CI_CUSTOM_IMAGE_NAME: "odrs"
     OCI_TAG: "latest"
-  when: manual
+  rules:
+  - if: $CI_COMMIT_REF_NAME == "master"
+    when: manual
 
-nginx:
+deploy-prod-nginx:
+  stage: deploy
   extends:
     - .kaniko-root
   variables:
     CI_CUSTOM_IMAGE_NAME: "odrs"
     OCI_TAG: "nginx"
     DOCKERFILE: "Dockerfile.nginx"
-  when: manual
+  rules:
+  - if: $CI_COMMIT_REF_NAME == "master"
+    when: manual
