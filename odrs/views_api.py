@@ -18,7 +18,7 @@ from flask import request, Response
 
 from odrs import app, db, csrf
 
-from .models import Review, User, Vote, Analytic, Component
+from .models import Review, User, Vote, Component
 from .models import _vote_exists
 from .util import (
     json_success,
@@ -251,29 +251,6 @@ def api_fetch():
     # check format
     if not len(request_item["user_hash"]) == 40:
         return json_error("the user_hash is invalid")
-
-    # increments the fetch count on one specific application
-    datestr = _get_datestr_from_dt(datetime.date.today())
-    stmt = insert(Analytic).values(datestr=datestr, app_id=request_item["app_id"])
-    if db.session.bind.dialect.name != "sqlite":  # pylint: disable=no-member
-        stmt_ondupe = stmt.on_duplicate_key_update(fetch_cnt=Analytic.fetch_cnt + 1)
-    else:
-        stmt_ondupe = stmt
-    try:
-        db.session.execute(stmt_ondupe)  # pylint: disable=no-member
-        db.session.commit()
-    except IntegrityError as e:
-        print("ignoring: {}".format(str(e)))
-
-    # increment the counter for the stats
-    component = (
-        db.session.query(Component)
-        .filter(Component.app_id == request_item["app_id"])
-        .first()
-    )
-    if component:
-        component.fetch_cnt += 1
-        db.session.commit()
 
     # also add any compat IDs
     app_ids = [request_item["app_id"]]
