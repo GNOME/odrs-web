@@ -252,6 +252,12 @@ def api_fetch():
     if not len(request_item["user_hash"]) == 40:
         return json_error("the user_hash is invalid")
 
+    component = (
+        db.session.query(Component)
+        .filter(Component.app_id == request_item["app_id"])
+        .first()
+    )
+
     # also add any compat IDs
     app_ids = [request_item["app_id"]]
     if "compat_ids" in request_item:
