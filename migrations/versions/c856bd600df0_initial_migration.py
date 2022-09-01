@@ -22,7 +22,11 @@ def upgrade():
     sa.Column('datestr', sa.Integer(), nullable=False),
     sa.Column('app_id', sa.String(length=128), nullable=False),
     sa.Column('fetch_cnt', sa.Integer(), nullable=True),
+    sa.Column("date_appid", sa.String(length=128), nullable=False),
+    sa.Column('analytic_id', sa.BigInteger(), nullable=False),
     sa.PrimaryKeyConstraint('datestr', 'app_id'),
+    sa.PrimaryKeyConstraint('analytic_id'),
+    sa.UniqueConstraint('analytic_id'),
     mysql_character_set='utf8mb4'
     )
     op.create_index('datestr', 'analytics', ['datestr', 'app_id'], unique=True)

@@ -21,6 +21,8 @@ from sqlalchemy import (
     Boolean,
     Index,
     ForeignKey,
+    UniqueConstraint,
+    BigInteger
 )
 from sqlalchemy.orm import relationship
 
@@ -51,6 +53,7 @@ class Analytic(db.Model):
     datestr = Column(Integer, default=0, primary_key=True)
     app_id = Column(String(128), primary_key=True)
     fetch_cnt = Column(Integer, default=1)
+    analytic_id = Column(BigInteger, primary_key=True, autoincrement=True, unique=True)
 
     def __init__(self):
         self.datestr = None
