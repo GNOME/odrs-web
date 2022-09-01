@@ -8,11 +8,13 @@ stages:
 
 build-image:
   stage: test
-  needs: []
   extends:
     - .kaniko-root
   variables:
     CI_COMMIT_REF_PROTECTED: "false"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_PIPELINE_SOURCE == 'push'
 
 tests:
   stage: test
@@ -22,6 +24,9 @@ tests:
     - pip install -r requirements.txt
     - ODRS_REVIEWS_SECRET=not-secret4 python odrs/tests/util_test.py
     - python odrs/tests/odrs_test.py
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_PIPELINE_SOURCE == 'push'
 
 deploy-dev:
   stage: deploy
