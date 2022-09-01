@@ -50,8 +50,8 @@ class Analytic(db.Model):
         {"mysql_character_set": "utf8mb4"},
     )
 
-    datestr = Column(Integer, default=0, primary_key=True)
-    app_id = Column(String(128), primary_key=True)
+    datestr = Column(Integer, default=0)
+    app_id = Column(String(128))
     fetch_cnt = Column(Integer, default=1)
     analytic_id = Column(BigInteger, primary_key=True, autoincrement=True, unique=True)
 
