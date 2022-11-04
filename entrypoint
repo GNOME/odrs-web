@@ -23,7 +23,8 @@ while true; do
   mv /tmp/ratings/ratings.json.bak /tmp/ratings/ratings.json
 
   brotli -k /tmp/ratings/ratings.json
-  sleep 43200
+
+  sleep 86400
 done &
 
 exec /usr/libexec/s2i/run
