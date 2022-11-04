@@ -23,6 +23,7 @@ while true; do
   mv /tmp/ratings/ratings.json.bak /tmp/ratings/ratings.json
 
   brotli -k /tmp/ratings/ratings.json
+  python /opt/app-root/src/cdn-refresh.py || true
 
   sleep 86400
 done &
