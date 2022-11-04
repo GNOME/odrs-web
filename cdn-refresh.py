@@ -8,11 +8,11 @@ import requests
 
 token = os.environ["CDN77_TOKEN"]
 if not token:
-    sys.exit(1)
+    sys.exit()
 
 cdn_id = os.environ["CDN77_ID"]
 if not cdn_id:
-    sys.exit(1)
+    sys.exit()
 
 base_url = f"https://api.cdn77.com/v3/cdn/{cdn_id}"
 headers = {
