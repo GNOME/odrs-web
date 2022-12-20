@@ -1,6 +1,6 @@
 include:
   - project: 'Infrastructure/openshift-images/ci-templates'
-    file: '/kaniko.yml'
+    file: '/buildah.yml'
 
 stages:
   - test
@@ -9,7 +9,7 @@ stages:
 build-image:
   stage: test
   extends:
-    - .kaniko-root
+    - .buildah
   variables:
     CI_COMMIT_REF_PROTECTED: "false"
   rules:
@@ -31,10 +31,10 @@ tests:
 deploy-dev:
   stage: deploy
   extends:
-    - .kaniko-root
+    - .buildah
   variables:
-    CI_CUSTOM_IMAGE_NAME: "odrs"
-    OCI_TAG: "dev"
+    OCI_IMAGE_NAME: "odrs"
+    OCI_IMAGE_TAG: "dev"
   rules:
   - if: $CI_COMMIT_REF_NAME == "master"
     when: on_success
@@ -42,10 +42,10 @@ deploy-dev:
 deploy-prod:
   stage: deploy
   extends:
-    - .kaniko-root
+    - .buildah
   variables:
-    CI_CUSTOM_IMAGE_NAME: "odrs"
-    OCI_TAG: "latest"
+    OCI_IMAGE_NAME: "odrs"
+    OCI_IMAGE_TAG: "latest"
   rules:
   - if: $CI_COMMIT_REF_NAME == "master"
     when: manual
@@ -53,10 +53,10 @@ deploy-prod:
 deploy-prod-nginx:
   stage: deploy
   extends:
-    - .kaniko-root
+    - .buildah
   variables:
-    CI_CUSTOM_IMAGE_NAME: "odrs"
-    OCI_TAG: "nginx"
+    OCI_IMAGE_NAME: "odrs"
+    OCI_IMAGE_TAG: "nginx"
     DOCKERFILE: "Dockerfile.nginx"
   rules:
   - if: $CI_COMMIT_REF_NAME == "master"
