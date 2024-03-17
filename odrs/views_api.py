@@ -207,7 +207,12 @@ def api_submit():
     _eventlog_add(_get_client_address(), review.user_id, component.app_id, "reviewed")
     db.session.add(review)
     db.session.commit()
-    return json_success()
+
+    items = {}
+    items["success"] = True
+    items["review_id"] = review.review_id
+    dat = json.dumps(items, sort_keys=True, indent=4, separators=(",", ": "))
+    return Response(response=dat, status=200, mimetype="application/json")
 
 
 @app.route("/1.0/reviews/api/app/<app_id>/<user_hash>")
