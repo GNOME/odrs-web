@@ -199,6 +199,10 @@ def api_submit():
     if request_item["user_display"] not in user_display_ignore:
         review.user_display = request_item["user_display"]
 
+    # review doesn't have valid rating
+    if not 1 <= review.rating <= 100:
+        return json_error("review contains invalid rating '%d', expected 1 to 100" % review.rating)
+
     # contains taboos
     if review.matches_taboos(_get_taboos_for_locale(review.locale)):
         return json_error("review contains taboo word")
