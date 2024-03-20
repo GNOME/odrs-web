@@ -21,6 +21,7 @@ from sqlalchemy import (
     Boolean,
     Index,
     ForeignKey,
+    CheckConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -212,7 +213,10 @@ class Review(db.Model):
 
     # sqlalchemy metadata
     __tablename__ = "reviews"
-    __table_args__ = {"mysql_character_set": "utf8mb4"}
+    __table_args__ = (
+        CheckConstraint("rating >=0 and rating <= 100", name="rating_constraint"),
+        {"mysql_character_set": "utf8mb4"}
+    )
 
     review_id = Column(Integer, primary_key=True, nullable=False, unique=True)
     date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
