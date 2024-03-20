@@ -573,11 +573,7 @@ def api_rating_for_id(app_id):
     return Response(response=dat, status=200, mimetype="application/json")
 
 
-@app.route("/1.0/reviews/api/ratings")
-def api_ratings():
-    """
-    Get the star ratings for all known applications.
-    """
+def _api_ratings(compact):
     item = {}
     for component in db.session.query(Component).order_by(Component.app_id.asc()):
         ratings = _get_rating_for_component(component, 2)
@@ -585,8 +581,30 @@ def api_ratings():
             continue
         item[component.app_id] = ratings
 
-    dat = json.dumps(item, sort_keys=True, indent=4, separators=(",", ": "))
+    if compact:
+        separators = (",", ":")
+        indent = None
+    else:
+        separators = (",", ": ")
+        indent = 4
+
+    dat = json.dumps(item, sort_keys=True, indent=indent, separators=separators)
     response = Response(response=dat, status=200, mimetype="application/json")
     response.cache_control.public = True
     response.add_etag()
     return response.make_conditional(request)
+
+@app.route("/1.0/reviews/api/ratings")
+def api_ratings():
+    """
+    Get the star ratings for all known applications.
+    """
+    return _api_ratings(False)
+
+@app.route("/1.0/reviews/api/ratings_compact")
+def api_ratings_compact():
+    """
+    Get the star ratings for all known applications in compact JSON
+    output
+    """
+    return _api_ratings(True)
