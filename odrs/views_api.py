@@ -271,6 +271,7 @@ def api_fetch():
         .join(Component)
         .filter(Component.app_id.in_(app_ids))
         .filter(Review.reported < ODRS_REPORTED_CNT)
+        .order_by(Review.date_created.desc())
     )
 
     # if user does not exist then create
