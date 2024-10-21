@@ -32,9 +32,11 @@ deploy-dev:
   stage: deploy
   extends:
     - .buildah
+  tags:
+    - aarch64
   variables:
     OCI_IMAGE_NAME: "odrs"
-    OCI_IMAGE_TAG: "dev"
+    OCI_IMAGE_TAG: "aarch64-dev"
   rules:
   - if: $CI_COMMIT_REF_NAME == "master"
     when: on_success
@@ -43,9 +45,11 @@ deploy-prod:
   stage: deploy
   extends:
     - .buildah
+  tags:
+    - aarch64
   variables:
     OCI_IMAGE_NAME: "odrs"
-    OCI_IMAGE_TAG: "latest"
+    OCI_IMAGE_TAG: "aarch64-latest"
   rules:
   - if: $CI_COMMIT_REF_NAME == "master"
     when: manual
@@ -54,9 +58,11 @@ deploy-prod-nginx:
   stage: deploy
   extends:
     - .buildah
+  tags:
+    - aarch64
   variables:
     OCI_IMAGE_NAME: "odrs"
-    OCI_IMAGE_TAG: "nginx"
+    OCI_IMAGE_TAG: "aarch64-nginx"
     DOCKERFILE: "Dockerfile.nginx"
   rules:
   - if: $CI_COMMIT_REF_NAME == "master"
