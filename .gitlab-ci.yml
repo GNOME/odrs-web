@@ -53,17 +53,3 @@ deploy-prod:
   rules:
   - if: $CI_COMMIT_REF_NAME == "master"
     when: manual
-
-deploy-prod-nginx:
-  stage: deploy
-  extends:
-    - .buildah
-  tags:
-    - aarch64
-  variables:
-    OCI_IMAGE_NAME: "odrs"
-    OCI_IMAGE_TAG: "aarch64-nginx"
-    DOCKERFILE: "Dockerfile.nginx"
-  rules:
-  - if: $CI_COMMIT_REF_NAME == "master"
-    when: manual

@@ -1,3 +1,0 @@
-FROM docker.io/nginxinc/nginx-unprivileged
-ADD odrs/static /tmp/var/static
-ADD nginx.conf /etc/nginx/nginx.conf
