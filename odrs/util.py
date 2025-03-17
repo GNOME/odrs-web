@@ -78,7 +78,7 @@ def _query_reviews_for_app(app_ids):
     cutoff_days = ODRS_CUTOFF_YEARS * 365
     cutoff = datetime.date.today() - datetime.timedelta(days=cutoff_days)
 
-    # get all ratings for app
+    # Note that fields here should probably be indexed for performance.
     return (
         db.session.query(Review)
             .join(Component)
