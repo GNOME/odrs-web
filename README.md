@@ -19,7 +19,7 @@ Submit a review:
 curl -w '\n' -X POST http://localhost:8080/1.0/reviews/api/submit --json '{"app_id": "org.example.app", "locale": "en_US", "summary": "Good App", "description": "Loved it", "user_hash": "a17fed27eaa842282862ff7c1b9c8395a26ac322", "version": "1.0", "distro": "debian", "rating": 100, "user_display": "Happy User"}'
 ```
 
-Query reviews:
+Query ratings:
 ```shell
 curl -w '\n' http://localhost:8080/1.0/reviews/api/ratings/org.example.app
 ```
