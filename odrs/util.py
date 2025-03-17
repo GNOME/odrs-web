@@ -16,7 +16,7 @@ from sqlalchemy.orm import load_only
 
 from flask import Response
 
-ODRS_CUTOFF_YEARS = 8
+ODRS_CUTOFF_YEARS = 5
 ODRS_REPORTED_CNT = 2
 
 
