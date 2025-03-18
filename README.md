@@ -24,6 +24,17 @@ Query ratings:
 curl -w '\n' http://localhost:8080/1.0/reviews/api/ratings/org.example.app
 ```
 
+### Generating migration files
+
+If you modify the database models, you'll need to generate migration files.
+
+```shell
+env 'SQLALCHEMY_DATABASE_URI=mysql+mysqldb://odrs:odrspasswd@127.0.0.1:3306/odrs?charset=utf8mb4' flask --app odrs/ db migrate
+```
+
+This will drop a new file in `migrations/versions/`.
+Rename it to add a little description.
+
 ## Deployment
 
 New commits to the master branch are automatically deployed to the testing
