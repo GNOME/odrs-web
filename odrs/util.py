@@ -7,12 +7,17 @@
 #
 # SPDX-License-Identifier: GPL-3.0+
 
+import datetime
 import json
 import hashlib
 
 from sqlalchemy import or_
+from sqlalchemy.orm import load_only
 
 from flask import Response
+
+ODRS_CUTOFF_YEARS = 5
+ODRS_REPORTED_CNT = 2
 
 
 def json_success(msg=None, errcode=200):
@@ -65,19 +70,34 @@ def _eventlog_add(
     db.session.commit()
 
 
-def _get_rating_for_component(component, min_total=1):
-    """Gets the ratings information for the application"""
+def _query_reviews_for_app(app_ids):
+    """Return all valid reviews for the given app IDs"""
     from odrs import db
     from odrs.models import Review, Component
 
+    cutoff_days = ODRS_CUTOFF_YEARS * 365
+    cutoff = datetime.date.today() - datetime.timedelta(days=cutoff_days)
+
+    # Note that fields here should probably be indexed for performance.
+    return (
+        db.session.query(Review)
+            .join(Component)
+            .filter(Component.app_id.in_(app_ids))
+            .filter(Review.reported < ODRS_REPORTED_CNT)
+            .filter(Review.date_created > cutoff)
+    )
+
+def _get_rating_for_component(component, min_total=1):
+    """Gets the ratings information for the application"""
+    from odrs.models import Review
+
     # get all ratings for app
     array = [0] * 6
-    for rating in (
-        db.session.query(Review.rating)
-        .join(Component)
-        .filter(Component.app_id.in_(component.app_ids))
+    for review in (
+        _query_reviews_for_app(component.app_ids)
+        .options(load_only(Review.rating))
     ):
-        idx = int(rating[0] / 20)
+        idx = int(review.rating / 20)
         if idx > 5:
             continue
         array[idx] += 1

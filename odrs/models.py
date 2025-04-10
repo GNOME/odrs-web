@@ -219,7 +219,7 @@ class Review(db.Model):
     )
 
     review_id = Column(Integer, primary_key=True, nullable=False, unique=True)
-    date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    date_created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, index=True)
     date_deleted = Column(DateTime)
     component_id = Column(
         Integer, ForeignKey("components.component_id"), nullable=False
@@ -235,7 +235,7 @@ class Review(db.Model):
     rating = Column(Integer, default=0)
     karma_up = Column(Integer, default=0)
     karma_down = Column(Integer, default=0)
-    reported = Column(Integer, default=0)
+    reported = Column(Integer, default=0, index=True)
 
     user = relationship("User", back_populates="reviews")
     component = relationship(

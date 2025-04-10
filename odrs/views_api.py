@@ -33,10 +33,9 @@ from .util import (
     _sanitised_summary,
     _sanitised_description,
     _get_rating_for_component,
+    _query_reviews_for_app,
 )
 from .util import _get_taboos_for_locale
-
-ODRS_REPORTED_CNT = 2
 
 
 def _get_client_address():
@@ -229,10 +228,7 @@ def api_show_app(app_id, user_hash=None):
     component = db.session.query(Component).filter(Component.app_id == app_id).first()
     if component:
         reviews = (
-            db.session.query(Review)
-            .join(Component)
-            .filter(Component.app_id.in_(component.app_ids))
-            .filter(Review.reported < ODRS_REPORTED_CNT)
+            _query_reviews_for_app(component.app_ids)
             .order_by(Review.date_created.desc())
             .all()
         )
@@ -268,18 +264,12 @@ def api_fetch():
     )
 
     # also add any compat IDs
-    app_ids = [request_item["app_id"]]
-    if "compat_ids" in request_item:
-        app_ids.extend(request_item["compat_ids"])
+    app_ids = {request_item["app_id"]}
+    app_ids.update(request_item.get("compat_ids", []))
     if component:
-        for app_id in component.app_ids:
-            if app_id not in app_ids:
-                app_ids.append(app_id)
+        app_ids.update(component.app_ids)
     reviews = (
-        db.session.query(Review)
-        .join(Component)
-        .filter(Component.app_id.in_(app_ids))
-        .filter(Review.reported < ODRS_REPORTED_CNT)
+        _query_reviews_for_app(app_ids)
         .order_by(Review.date_created.desc())
     )
 
