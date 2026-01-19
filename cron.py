@@ -15,7 +15,7 @@ import gzip
 
 from lxml import etree as ET
 
-from odrs import db
+from odrs import app, db
 
 from odrs.models import Review, Taboo, Component
 from odrs.util import _get_rating_for_component, _get_taboos_for_locale
@@ -244,34 +244,32 @@ def _taboo_import(fn):
 
 
 if __name__ == "__main__":
-
-    if len(sys.argv) < 2:
-        print("Usage: %s ratings|fsck|taboo-check|taboo-import" % sys.argv[0])
-        sys.exit(1)
-
-    # create the ratings data
-    if sys.argv[1] == "ratings":
-        if len(sys.argv) < 3:
-            print("Usage: %s ratings filename" % sys.argv[0])
+    with app.app_context():
+        if len(sys.argv) < 2:
+            print("Usage: %s ratings|fsck|taboo-check|taboo-import" % sys.argv[0])
             sys.exit(1)
-        _regenerate_ratings(sys.argv[2])
-    elif sys.argv[1] == "fsck":
-        _fsck()
-    elif sys.argv[1] == "taboo-check":
-        _taboo_check()
-    elif sys.argv[1] == "taboo-import":
-        if len(sys.argv) < 3:
-            print("Usage: %s taboo-import filename" % sys.argv[0])
-            sys.exit(1)
-        _taboo_import(sys.argv[2])
-    elif sys.argv[1] == "appstream-import":
-        if len(sys.argv) < 3:
-            print("Usage: %s taboo-import filename" % sys.argv[0])
-            sys.exit(1)
-        _appstream_import(sys.argv[2])
-    else:
-        print("cron mode %s not known" % sys.argv[1])
-        sys.exit(1)
 
-    # success
-    sys.exit(0)
+        if sys.argv[1] == "ratings":
+            if len(sys.argv) < 3:
+                print("Usage: %s ratings filename" % sys.argv[0])
+                sys.exit(1)
+            _regenerate_ratings(sys.argv[2])
+        elif sys.argv[1] == "fsck":
+            _fsck()
+        elif sys.argv[1] == "taboo-check":
+            _taboo_check()
+        elif sys.argv[1] == "taboo-import":
+            if len(sys.argv) < 3:
+                print("Usage: %s taboo-import filename" % sys.argv[0])
+                sys.exit(1)
+            _taboo_import(sys.argv[2])
+        elif sys.argv[1] == "appstream-import":
+            if len(sys.argv) < 3:
+                print("Usage: %s taboo-import filename" % sys.argv[0])
+                sys.exit(1)
+            _appstream_import(sys.argv[2])
+        else:
+            print("cron mode %s not known" % sys.argv[1])
+            sys.exit(1)
+
+        sys.exit(0)
