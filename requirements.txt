@@ -35,6 +35,6 @@ SQLAlchemy==2.0.36
 toml==0.10.2
 tomli==1.2.3
 wcwidth==0.2.5
-Werkzeug==3.1.0
+Werkzeug==3.1.5
 wrapt==1.13.3
 WTForms==3.0.0
