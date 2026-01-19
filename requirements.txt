@@ -2,7 +2,7 @@ alembic==1.7.7
 astroid==2.9.3
 attrs==21.4.0
 click==8.0.4
-Flask==2.0.3
+Flask==2.2.5
 Flask-Login==0.5.0
 Flask-Migrate==3.1.0
 Flask-SQLAlchemy==2.5.1
@@ -14,9 +14,9 @@ isort==5.10.1
 itsdangerous==2.0.1
 Jinja2==3.1.6
 lazy-object-proxy==1.7.1
-lxml==4.8.0
+lxml==4.9.1
 Mako==1.2.2
-MarkupSafe==2.0.1
+MarkupSafe==2.1.5
 mccabe==0.6.1
 more-itertools==8.12.0
 mysqlclient==2.1.0
@@ -35,6 +35,6 @@ SQLAlchemy==1.4.32
 toml==0.10.2
 tomli==1.2.3
 wcwidth==0.2.5
-Werkzeug==2.0.3
+Werkzeug==3.1.0
 wrapt==1.13.3
 WTForms==3.0.0
