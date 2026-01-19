@@ -213,60 +213,60 @@ def admin_show_stats():
 
     # get the total number of reviews
     rs = db.session.execute(  # pylint: disable=no-member
-        "SELECT COUNT(*) FROM reviews;"
+        text("SELECT COUNT(*) FROM reviews;")
     )
     stats["Active reviews"] = rs.fetchone()[0]
 
     # unique reviewers
     rs = db.session.execute(  # pylint: disable=no-member
-        "SELECT COUNT(DISTINCT(user_id)) FROM reviews;"
+        text("SELECT COUNT(DISTINCT(user_id)) FROM reviews;")
     )
     stats["Unique reviewers"] = rs.fetchone()[0]
 
     # total votes
     rs = db.session.execute(  # pylint: disable=no-member
-        "SELECT COUNT(*) FROM votes WHERE val = 1;"
+        text("SELECT COUNT(*) FROM votes WHERE val = 1;")
     )
     stats["User upvotes"] = rs.fetchone()[0]
     rs = db.session.execute(  # pylint: disable=no-member
-        "SELECT COUNT(*) FROM votes WHERE val = -1;"
+        text("SELECT COUNT(*) FROM votes WHERE val = -1;")
     )
     stats["User downvotes"] = rs.fetchone()[0]
 
     # unique voters
     rs = db.session.execute(  # pylint: disable=no-member
-        "SELECT COUNT(DISTINCT(user_id)) FROM votes;"
+        text("SELECT COUNT(DISTINCT(user_id)) FROM votes;")
     )
     stats["Unique voters"] = rs.fetchone()[0]
 
     # unique languages
     rs = db.session.execute(  # pylint: disable=no-member
-        "SELECT COUNT(DISTINCT(locale)) FROM reviews;"
+        text("SELECT COUNT(DISTINCT(locale)) FROM reviews;")
     )
     stats["Unique languages"] = rs.fetchone()[0]
 
     # unique distros
     rs = db.session.execute(  # pylint: disable=no-member
-        "SELECT COUNT(DISTINCT(distro)) FROM reviews;"
+        text("SELECT COUNT(DISTINCT(distro)) FROM reviews;")
     )
     stats["Unique distros"] = rs.fetchone()[0]
 
     # unique apps
     rs = db.session.execute(  # pylint: disable=no-member
-        "SELECT COUNT(*) FROM components;"
+        text("SELECT COUNT(*) FROM components;")
     )
     stats["Unique apps reviewed"] = rs.fetchone()[0]
 
     # unique distros
     rs = db.session.execute(  # pylint: disable=no-member
-        "SELECT COUNT(*) FROM reviews WHERE reported > 0;"
+        text("SELECT COUNT(*) FROM reviews WHERE reported > 0;")
     )
     stats["Reported reviews"] = rs.fetchone()[0]
 
     # star reviews
     for star in range(1, 6):
         rs = db.session.execute(  # pylint: disable=no-member
-            "SELECT COUNT(*) FROM reviews WHERE rating = {};".format(star * 20)
+            text("SELECT COUNT(*) FROM reviews WHERE rating = :rating;").bindparams(rating=star * 20)
         )
         stats["%i star reviews" % star] = rs.fetchone()[0]
 
@@ -306,9 +306,11 @@ def admin_show_stats():
 
     # distros
     rs = db.session.execute(  # pylint: disable=no-member
-        "SELECT DISTINCT(distro), COUNT(distro) AS total "
-        "FROM reviews GROUP BY distro ORDER BY total DESC "
-        "LIMIT 8;"
+        text(
+            "SELECT DISTINCT(distro), COUNT(distro) AS total "
+            "FROM reviews GROUP BY distro ORDER BY total DESC "
+            "LIMIT 8;"
+        )
     )
     labels = []
     data = []

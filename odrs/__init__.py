@@ -28,8 +28,17 @@ if "ODRS_REVIEWS_SECRET" in os.environ:
 for key in ["SQLALCHEMY_DATABASE_URI", "SQLALCHEMY_TRACK_MODIFICATIONS"]:
     if key in os.environ:
         app.config[key] = os.environ[key]
+if "SQLALCHEMY_DATABASE_URI" not in app.config:
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 
-db = SQLAlchemy(app)
+db = SQLAlchemy()
+
+
+def init_app():
+    db.init_app(app)
+
+
+init_app()
 
 migrate = Migrate(app, db)
 

@@ -23,35 +23,21 @@ from odrs.util import _get_user_key
 class OdrsTest(unittest.TestCase):
     def setUp(self):
 
-        # create new database
-        self.db_fd, self.db_filename = tempfile.mkstemp()
-        self.db_uri = "sqlite:///" + self.db_filename
         self.user_hash = "deadbeef348c0f88529f3bfd937ec1a5d90aefc7"
-
-        # write out custom settings file
-        self.cfg_fd, self.cfg_filename = tempfile.mkstemp()
-        with open(self.cfg_filename, "w") as cfgfile:
-            cfgfile.write(
-                "\n".join(
-                    [
-                        "SQLALCHEMY_DATABASE_URI = '%s'" % self.db_uri,
-                        "SQLALCHEMY_TRACK_MODIFICATIONS = False",
-                        "SECRET_KEY = 'not-secret4'",
-                        "ODRS_REVIEWS_SECRET = '1'",
-                        "WTF_CSRF_CHECK_DEFAULT = False",
-                        "DEBUG = True",
-                    ]
-                )
-            )
 
         # create instance
         import odrs
         from odrs import db
-        from odrs.dbutils import init_db
+        from odrs.dbutils import init_db, drop_db
+
+        odrs.app.config["SECRET_KEY"] = "not-secret4"
+        odrs.app.config["ODRS_REVIEWS_SECRET"] = "1"
+        odrs.app.config["WTF_CSRF_CHECK_DEFAULT"] = False
+        odrs.app.config["DEBUG"] = True
 
         self.app = odrs.app.test_client()
-        odrs.app.config.from_pyfile(self.cfg_filename)
         with odrs.app.app_context():
+            drop_db(db)
             init_db(db)
 
         # assign user_hash to this account
@@ -70,10 +56,7 @@ class OdrsTest(unittest.TestCase):
         self.logout()
 
     def tearDown(self):
-        os.close(self.db_fd)
-        os.unlink(self.db_filename)
-        os.close(self.cfg_fd)
-        os.unlink(self.cfg_filename)
+        pass
 
     def _login(self, username, password="Pa$$w0rd"):
         return self.app.post(
