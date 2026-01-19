@@ -28,19 +28,6 @@ tests:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_PIPELINE_SOURCE == 'push'
 
-deploy-dev:
-  stage: deploy
-  extends:
-    - .buildah
-  tags:
-    - aarch64
-  variables:
-    OCI_IMAGE_NAME: "odrs"
-    OCI_IMAGE_TAG: "aarch64-dev"
-  rules:
-  - if: $CI_COMMIT_REF_NAME == "master"
-    when: on_success
-
 deploy-prod:
   stage: deploy
   extends:
@@ -52,4 +39,4 @@ deploy-prod:
     OCI_IMAGE_TAG: "aarch64-latest"
   rules:
   - if: $CI_COMMIT_REF_NAME == "master"
-    when: manual
+    when: on_success
