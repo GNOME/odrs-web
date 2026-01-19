@@ -30,6 +30,7 @@ for key in ["SQLALCHEMY_DATABASE_URI", "SQLALCHEMY_TRACK_MODIFICATIONS"]:
         app.config[key] = os.environ[key]
 if "SQLALCHEMY_DATABASE_URI" not in app.config:
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+app.config["WTF_CSRF_SSL_STRICT"] = False
 
 db = SQLAlchemy()
 
