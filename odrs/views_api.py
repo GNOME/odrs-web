@@ -573,33 +573,117 @@ def api_rating_for_id(app_id):
     return Response(response=dat, status=200, mimetype="application/json")
 
 
-def _api_ratings(compact):
-    item = {}
-    for component in db.session.query(Component).order_by(Component.app_id.asc()):
-        ratings = _get_rating_for_component(component, 2)
-        if len(ratings) == 0:
-            continue
-        item[component.app_id] = ratings
+def _api_ratings(cache_result=True):
+    """Fetch all app ratings in 2 lightweight queries: bulk aggregation + minimal component rows."""
+    from sqlalchemy import func
+    # Import alias: avoid conflict with 'Review' used elsewhere in this module (schemas, etc.)
+    from odrs.models import Component, Review as ReviewModel, db
 
-    if compact:
-        separators = (",", ":")
-        indent = None
-    else:
-        separators = (",", ": ")
-        indent = 4
+    # 1. Fetch raw statistics from the database in ONE query
+    # Review has component_id, not app_id; join Component to get app_id
+    bucket_expr = ReviewModel.rating / 20
+    stats_query = (
+        db.session.query(
+            Component.app_id,
+            bucket_expr.label('bucket'),
+            func.count(ReviewModel.review_id),
+        )
+        .join(Component, ReviewModel.component_id == Component.component_id)
+        .group_by(Component.app_id, bucket_expr)
+        .all()
+    )
 
-    dat = json.dumps(item, sort_keys=True, indent=indent, separators=separators)
-    response = Response(response=dat, status=200, mimetype="application/json")
-    response.cache_control.public = True
-    response.add_etag()
-    return response.make_conditional(request)
+    # 2. Organize raw stats into a dictionary: { 'app_id': [0, 0, 0, 0, 0, 0] }
+    raw_lookup = {}
+    for r_app_id, bucket, count in stats_query:
+        if r_app_id not in raw_lookup:
+            raw_lookup[r_app_id] = [0] * 6
+
+        # specific handling to ensure bucket matches 0-5 index
+        # Cast to int to be safe (Decimal/Float handling)
+        idx = int(bucket) if bucket is not None else 0
+        if 0 <= idx <= 5:
+            raw_lookup[r_app_id][idx] = count
+
+    # 3. Fetch only (component_id, app_id, component_id_parent) - no ORM, no relationships
+    component_rows = (
+        db.session.query(
+            Component.component_id,
+            Component.app_id,
+            Component.component_id_parent,
+        )
+        .all()
+    )
+
+    # 4. Build parent -> [child component_ids], id -> app_id, id -> parent_id
+    children_map = {}
+    id_to_app_id = {}
+    id_to_parent = {}
+    for comp_id, app_id, parent_id in component_rows:
+        id_to_app_id[comp_id] = app_id
+        id_to_parent[comp_id] = parent_id
+        if parent_id is not None:
+            children_map.setdefault(parent_id, []).append(comp_id)
+
+    # 5. Compute subtree app_ids iteratively (children before parents) to avoid recursion
+    from collections import deque
+    remaining_children = {
+        cid: len(children_map.get(cid, ())) for cid in id_to_app_id
+    }
+    queue = deque(cid for cid in id_to_app_id if remaining_children[cid] == 0)
+    post_order = []
+    while queue:
+        comp_id = queue.popleft()
+        post_order.append(comp_id)
+        parent_id = id_to_parent.get(comp_id)
+        if parent_id is not None and parent_id in remaining_children:
+            remaining_children[parent_id] -= 1
+            if remaining_children[parent_id] == 0:
+                queue.append(parent_id)
+    subtree_cache = {}
+    for comp_id in post_order:
+        result = {id_to_app_id[comp_id]}
+        for child_id in children_map.get(comp_id, ()):
+            result.update(subtree_cache[child_id])
+        subtree_cache[comp_id] = result
+
+    # Nodes not in post_order (e.g. cycles or broken parent refs) get just their own app_id
+    for comp_id in id_to_app_id:
+        if comp_id not in subtree_cache:
+            subtree_cache[comp_id] = {id_to_app_id[comp_id]}
+
+    # 6. Map raw data to components in memory
+    ratings = {}
+    for comp_id, app_id, _ in component_rows:
+        ids_to_check = subtree_cache[comp_id]
+        app_stats = [0] * 6
+        found_data = False
+        for aid in ids_to_check:
+            if aid in raw_lookup:
+                found_data = True
+                for i in range(6):
+                    app_stats[i] += raw_lookup[aid][i]
+        total = sum(app_stats)
+        if found_data and total >= 1:
+            item = {"total": total}
+            for i in range(6):
+                item["star{}".format(i)] = app_stats[i]
+            ratings[app_id] = item
+
+    return ratings
+
 
 @app.route("/1.0/reviews/api/ratings")
 def api_ratings():
     """
     Get the star ratings for all known applications.
     """
-    return _api_ratings(False)
+    ratings = _api_ratings(False)
+    dat = json.dumps(
+        ratings, ensure_ascii=False, sort_keys=True, indent=4, separators=(",", ": ")
+    )
+    return Response(response=dat, status=200, mimetype="application/json")
+
 
 @app.route("/1.0/reviews/api/ratings_compact")
 def api_ratings_compact():
@@ -607,4 +691,8 @@ def api_ratings_compact():
     Get the star ratings for all known applications in compact JSON
     output
     """
-    return _api_ratings(True)
+    ratings = _api_ratings(True)
+    dat = json.dumps(
+        ratings, ensure_ascii=False, sort_keys=True, indent=4, separators=(",", ": ")
+    )
+    return Response(response=dat, status=200, mimetype="application/json")

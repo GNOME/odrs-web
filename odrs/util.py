@@ -87,31 +87,43 @@ def _query_reviews_for_app(app_ids):
             .filter(Review.date_created > cutoff)
     )
 
+from sqlalchemy import func
+
 def _get_rating_for_component(component, min_total=1):
     """Gets the ratings information for the application"""
     from odrs.models import Review
+    from odrs import db
 
-    # get all ratings for app
-    array = [0] * 6
-    for review in (
+    # Let the database do the aggregation.
+    # This returns a list of tuples like [(0, 15), (1, 40)...]
+    # instead of thousands of Review objects.
+    stats = (
         _query_reviews_for_app(component.app_ids)
-        .options(load_only(Review.rating))
-    ):
-        idx = int(review.rating / 20)
-        if idx > 5:
-            continue
-        array[idx] += 1
+        .with_entities(
+            (Review.rating / 20).label('idx'),
+            func.count(Review.review_id).label('count')
+        )
+        .group_by('idx')
+        .all()
+    )
 
-    # nothing found
-    if sum(array) < min_total:
+    array = [0] * 6
+    for idx, count in stats:
+        # Cast to int to ensure it maps to our list index correctly
+        if idx is not None:
+            i = int(idx)
+            if 0 <= i <= 5:
+                array[i] = count
+
+    total = sum(array)
+    if total < min_total:
         return []
 
     # return as dict
-    item = {"total": sum(array)}
-    for idx in range(6):
-        item["star{}".format(idx)] = array[idx]
+    item = {"total": total}
+    for i in range(6):
+        item["star{}".format(i)] = array[i]
     return item
-
 
 def _password_hash(value):
     """Generate a legacy salted hash of the password string"""
