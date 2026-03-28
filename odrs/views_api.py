@@ -34,6 +34,8 @@ from .util import (
     _sanitised_description,
     _get_rating_for_component,
     _query_reviews_for_app,
+    ODRS_CUTOFF_YEARS,
+    ODRS_REPORTED_CNT,
 )
 from .util import _get_taboos_for_locale
 
@@ -581,6 +583,8 @@ def _api_ratings(cache_result=True):
 
     # 1. Fetch raw statistics from the database in ONE query
     # Review has component_id, not app_id; join Component to get app_id
+    cutoff_days = ODRS_CUTOFF_YEARS * 365
+    cutoff = datetime.date.today() - datetime.timedelta(days=cutoff_days)
     bucket_expr = ReviewModel.rating / 20
     stats_query = (
         db.session.query(
@@ -589,6 +593,8 @@ def _api_ratings(cache_result=True):
             func.count(ReviewModel.review_id),
         )
         .join(Component, ReviewModel.component_id == Component.component_id)
+        .filter(ReviewModel.reported < ODRS_REPORTED_CNT)
+        .filter(ReviewModel.date_created > cutoff)
         .group_by(Component.app_id, bucket_expr)
         .all()
     )
