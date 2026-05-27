@@ -19,7 +19,7 @@ build-image:
 tests:
   stage: test
   needs: []
-  image: registry.access.redhat.com/ubi8/python-39
+  image: registry.access.redhat.com/ubi8/python-311
   script:
     - pip install -r requirements.txt
     - ODRS_REVIEWS_SECRET=not-secret4 python odrs/tests/util_test.py
