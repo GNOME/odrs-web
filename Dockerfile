@@ -1,7 +1,7 @@
 FROM registry.access.redhat.com/hi/python:3.13-builder AS builder
 
 USER 0
-RUN ["dnf", "install", "-y", "mysql-devel", "libxml2-devel", "libxslt-devel"]
+RUN ["dnf", "install", "-y", "gcc", "python3.13-devel", "pkgconf-pkg-config", "mariadb-connector-c-devel", "libxml2-devel", "libxslt-devel"]
 RUN ["dnf", "clean", "all"]
 RUN ["python3", "-m", "venv", "/opt/venv"]
 ENV PATH="/opt/venv/bin:$PATH"
@@ -12,6 +12,10 @@ RUN ["pip3", "install", "--no-cache-dir", "-r", "/tmp/requirements.txt"]
 FROM registry.access.redhat.com/hi/python:3.13
 
 COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /usr/lib64/libmariadb.so.3 /usr/lib64/
+COPY --from=builder /usr/lib64/libxml2.so.16 /usr/lib64/
+COPY --from=builder /usr/lib64/libxslt.so.1 /usr/lib64/
+COPY --from=builder /usr/lib64/libexslt.so.0 /usr/lib64/
 COPY --chown=65532:65532 . /opt/app-root/src
 
 ENV PATH="/opt/venv/bin:$PATH" \
