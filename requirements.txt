@@ -27,7 +27,7 @@ py==1.11.0
 pylint==2.15.0
 PyMySQL==1.1.1
 pyparsing==3.0.7
-pytest==8.4.2
+pytest==9.0.3
 python-dateutil==2.8.2
 requests
 six==1.16.0
