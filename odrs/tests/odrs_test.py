@@ -13,6 +13,7 @@ import json
 import sys
 import unittest
 import tempfile
+import datetime
 
 # allows us to run this from the project root
 sys.path.append(os.path.realpath("."))
@@ -437,18 +438,23 @@ class OdrsTest(unittest.TestCase):
         distro="Fedora",
         compat_ids=None,
         version="1.2.3",
+        anonymous=False,
+        limit=5,
+        start=0,
     ):
         if not user_hash:
             user_hash = self.user_hash
         # fetch some reviews
         data = {
             "app_id": app_id,
-            "user_hash": user_hash,
             "locale": locale,
             "distro": distro,
-            "limit": 5,
+            "limit": limit,
+            "start": start,
             "version": version,
         }
+        if not anonymous:
+            data["user_hash"] = user_hash
         if compat_ids:
             data["compat_ids"] = compat_ids
         return self.app.post(
@@ -469,6 +475,266 @@ class OdrsTest(unittest.TestCase):
         rv = self.app.get("/1.0/reviews/api/moderate/{}/fr_FR".format(self.user_hash))
         assert rv.data == b"[]", rv.data
 
+    def test_api_fetch_anonymous(self):
+        from odrs import app, db
+        from odrs.models import Event, User, Vote
+
+        self.review_submit()
+        self.assertEqual(self.review_upvote().status_code, 200)
+        with app.app_context():
+            counts = [db.session.query(model).count() for model in (User, Vote, Event)]
+
+        rv = self._review_fetch(anonymous=True)
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.mimetype, "application/json")
+        items = rv.get_json()
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["summary"], "An essential part of my daily workflow")
+        # Author identity remains public; reader-specific fields are omitted.
+        self.assertEqual(items[0]["user_hash"], self.user_hash)
+        self.assertNotIn("user_skey", items[0])
+        self.assertNotIn("vote_id", items[0])
+        self.assertNotIn("user_addr", items[0])
+
+        for options in (
+            {"app_id": "not-going-to-exist.desktop"},
+            {"locale": "fr_FR"},
+            {"start": 5},
+        ):
+            with self.subTest(options=options):
+                rv = self._review_fetch(anonymous=True, **options)
+                self.assertEqual(rv.status_code, 200)
+                self.assertEqual(rv.get_json(), [])
+
+        with app.app_context():
+            self.assertEqual(
+                [db.session.query(model).count() for model in (User, Vote, Event)],
+                counts,
+            )
+
+        # Anonymous requests must not affect a later personalized response.
+        rv = self._review_fetch()
+        self.assertTrue(rv.cache_control.private)
+        item = rv.get_json()[0]
+        self.assertEqual(item["vote_id"], 1)
+        self.assertEqual(
+            item["user_skey"], _get_user_key(self.user_hash, "inkscape.desktop")
+        )
+
+    def test_api_fetch_anonymous_filters_and_pagination(self):
+        from odrs import app, db
+        from odrs.models import Review
+        from odrs.util import ODRS_CUTOFF_YEARS, ODRS_REPORTED_CNT
+
+        # Only the two English, recent, unreported reviews should be returned.
+        for index, locale in enumerate(("en_US", "en_GB", "fr_FR", "en_US", "en_US")):
+            rv = self._review_submit(user_hash=str(index) * 40, locale=locale)
+            self.assertEqual(rv.status_code, 200)
+        with app.app_context():
+            reviews = db.session.query(Review).order_by(Review.review_id).all()
+            reviews[0].karma_up = 100
+            reviews[3].reported = ODRS_REPORTED_CNT
+            reviews[4].date_created = datetime.datetime.now() - datetime.timedelta(
+                days=ODRS_CUTOFF_YEARS * 365 + 1
+            )
+            db.session.commit()
+
+        items = self._review_fetch(anonymous=True, limit=0).get_json()
+        self.assertEqual([item["review_id"] for item in items], [1, 2])
+        self.assertGreater(items[0]["score"], items[1]["score"])
+        personalized = self._review_fetch(limit=0).get_json()
+        for item in personalized:
+            item.pop("user_skey")
+        self.assertEqual(items, personalized)
+        self.assertEqual(
+            self._review_fetch(anonymous=True, start=1, limit=1).get_json(),
+            items[1:2],
+        )
+
+    def test_api_fetch_anonymous_compat_id(self):
+        from odrs import app, db
+        from odrs.models import Component
+
+        self.review_submit()
+        expected = self._review_fetch(anonymous=True).get_json()
+        rv = self._review_fetch(
+            anonymous=True, app_id="alias.desktop", compat_ids=["inkscape.desktop"]
+        )
+        self.assertEqual(rv.get_json(), expected)
+
+        # Server-side component aliases work without a reader identity too.
+        with app.app_context():
+            parent = db.session.query(Component).filter_by(app_id="inkscape.desktop").one()
+            child = Component("alias.desktop")
+            child.parent = parent
+            db.session.add(child)
+            db.session.commit()
+        rv = self._review_fetch(anonymous=True, app_id="alias.desktop")
+        self.assertEqual(rv.get_json(), expected)
+
+    def test_api_fetch_invalid_user_hash(self):
+        from odrs import app, db
+        from odrs.models import User
+
+        data = {
+            "app_id": "inkscape.desktop",
+            "locale": "en_US",
+            "distro": "Fedora",
+            "limit": 5,
+            "version": "1.2.3",
+        }
+        with app.app_context():
+            count = db.session.query(User).count()
+        for value in (
+            None, "", False, True, 0, 1, 1.5, [], {}, "a" * 39, "a" * 41,
+            ["a"] * 40, {str(i): "a" for i in range(40)},
+        ):
+            with self.subTest(user_hash=value):
+                rv = self.app.post(
+                    "/1.0/reviews/api/fetch", json=dict(data, user_hash=value)
+                )
+                self.assertEqual(rv.status_code, 400)
+                self.assertFalse(rv.get_json()["success"])
+                self.assertEqual(rv.get_json()["msg"], "the user_hash is invalid")
+        with app.app_context():
+            self.assertEqual(db.session.query(User).count(), count)
+
+    def test_api_fetch_invalid_body(self):
+        for value in (None, False, 1, "app_id", [], ["app_id"], {}):
+            with self.subTest(body=value):
+                rv = self.app.post("/1.0/reviews/api/fetch", data=json.dumps(value))
+                self.assertEqual(rv.status_code, 400)
+                self.assertFalse(rv.get_json()["success"])
+
+    def test_api_write_requires_user_hash(self):
+        self.review_submit()
+        self.assertEqual(self._review_fetch(anonymous=True).status_code, 200)
+        data = {
+            "review_id": 1,
+            "app_id": "inkscape.desktop",
+            "locale": "en_US",
+            "distro": "Fedora",
+            "version": "1.2.3",
+            "summary": "A useful app",
+            "description": "I use this app every day.",
+            "rating": 100,
+            "user_display": "A Reader",
+            "user_skey": _get_user_key(self.user_hash, "inkscape.desktop"),
+        }
+        for endpoint in ("submit", "upvote", "downvote", "report", "dismiss", "remove"):
+            with self.subTest(endpoint=endpoint):
+                rv = self.app.post("/1.0/reviews/api/" + endpoint, json=data)
+                self.assertEqual(rv.status_code, 400)
+                self.assertFalse(rv.get_json()["success"])
+                self.assertIn("user_hash", rv.get_json()["msg"])
+        item = self._review_fetch().get_json()[0]
+        self.assertEqual(item["karma_up"], 0)
+        self.assertEqual(item["karma_down"], 0)
+        self.assertEqual(item["reported"], 0)
+        self.assertNotIn("vote_id", item)
+
+    def test_api_fetch_new_user(self):
+        from odrs import app, db
+        from odrs.models import User
+
+        user_hash = "1" * 40
+        with app.app_context():
+            self.assertIsNone(db.session.query(User).filter_by(user_hash=user_hash).first())
+        rv = self._review_fetch(user_hash=user_hash)
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(
+            rv.get_json(),
+            [{
+                "app_id": "inkscape.desktop",
+                "score": 0,
+                "user_hash": user_hash,
+                "user_skey": _get_user_key(user_hash, "inkscape.desktop"),
+            }],
+        )
+        with app.app_context():
+            self.assertEqual(db.session.query(User).filter_by(user_hash=user_hash).count(), 1)
+        self.review_submit()
+        rv = self._review_fetch(user_hash=user_hash)
+        self.assertNotIn("vote_id", rv.get_json()[0])
+        self.assertEqual(
+            rv.get_json()[0]["user_skey"], _get_user_key(user_hash, "inkscape.desktop")
+        )
+        self.assertEqual(self.review_upvote(user_hash=user_hash).status_code, 200)
+        self.assertEqual(self._review_fetch(user_hash=user_hash).get_json()[0]["vote_id"], 1)
+
+    def test_api_fetch_anonymous_then_write(self):
+        self.review_submit()
+        review = self._review_fetch(anonymous=True).get_json()[0]
+        self.assertNotIn("user_skey", review)
+        data = {
+            "app_id": review["app_id"],
+            "review_id": review["review_id"],
+            "user_hash": self.user_hash,
+        }
+        # Reading anonymously is not sufficient to obtain a write key.
+        other_user_key = self._review_fetch(user_hash="1" * 40).get_json()[0]["user_skey"]
+        other_app_key = self._review_fetch(app_id="gimp.desktop").get_json()[0]["user_skey"]
+        for endpoint in ("upvote", "downvote", "report", "dismiss", "remove"):
+            for key in (None, other_user_key, other_app_key):
+                with self.subTest(endpoint=endpoint, key=key):
+                    payload = dict(data)
+                    if key is not None:
+                        payload["user_skey"] = key
+                    rv = self.app.post("/1.0/reviews/api/" + endpoint, json=payload)
+                    self.assertEqual(rv.status_code, 400)
+                    self.assertFalse(rv.get_json()["success"])
+                    self.assertIn("user_skey", rv.get_json()["msg"])
+
+        # Fetch only when interacting, and use the actual server-issued key.
+        item = self._review_fetch().get_json()[0]
+        self.assertEqual(item["karma_up"], 0)
+        self.assertEqual(item["karma_down"], 0)
+        self.assertEqual(item["reported"], 0)
+        self.assertNotIn("vote_id", item)
+        data["user_skey"] = item["user_skey"]
+        rv = self.app.post("/1.0/reviews/api/upvote", json=data)
+        self.assertEqual(rv.status_code, 200)
+        self.assertTrue(rv.get_json()["success"])
+
+        # Anonymous responses omit vote markers, but do not reset vote tracking.
+        self.assertNotIn("vote_id", self._review_fetch(anonymous=True).get_json()[0])
+        rv = self.app.post("/1.0/reviews/api/upvote", json=data)
+        self.assertEqual(rv.status_code, 400)
+        self.assertEqual(rv.get_json()["msg"], "already voted on this app")
+        item = self._review_fetch().get_json()[0]
+        self.assertEqual(item["karma_up"], 1)
+        self.assertEqual(item["vote_id"], 1)
+
+        rv = self.app.post("/1.0/reviews/api/remove", json=data)
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(self._review_fetch(anonymous=True).get_json(), [])
+
+    def test_api_fetch_anonymous_preserves_bans(self):
+        self.review_submit(user_hash="2" * 40)
+        self.login()
+        rv = self.app.get(
+            "/admin/user_ban/{}".format(self.user_hash), follow_redirects=True
+        )
+        self.assertIn(b"Banned user", rv.data)
+        self.logout()
+
+        self.assertEqual(len(self._review_fetch(anonymous=True).get_json()), 1)
+        item = self._review_fetch().get_json()[0]
+        data = {
+            "app_id": item["app_id"],
+            "review_id": item["review_id"],
+            "user_hash": self.user_hash,
+            "user_skey": item["user_skey"],
+        }
+        for endpoint in ("upvote", "downvote", "report", "dismiss"):
+            with self.subTest(endpoint=endpoint):
+                rv = self.app.post("/1.0/reviews/api/" + endpoint, json=data)
+                self.assertEqual(rv.status_code, 400)
+                self.assertEqual(rv.get_json()["msg"], "account has been disabled due to abuse")
+        rv = self._review_submit(app_id="gimp.desktop")
+        self.assertEqual(rv.status_code, 400)
+        self.assertEqual(rv.get_json()["msg"], "account has been disabled due to abuse")
+
     def test_api_fetch_no_results(self):
 
         # get the skey back for an app with no reviews
@@ -484,6 +750,10 @@ class OdrsTest(unittest.TestCase):
         rv = self._review_fetch(app_id="foo.desktop", compat_ids=["inkscape.desktop"])
         assert b"An essential part of my daily workflow" in rv.data, rv.data
         assert b"user_skey" in rv.data, rv.data
+        self.assertEqual(rv.get_json()[0]["app_id"], "inkscape.desktop")
+        self.assertEqual(
+            rv.get_json()[0]["user_skey"], _get_user_key(self.user_hash, "inkscape.desktop")
+        )
 
     def review_upvote(self, user_hash=None):
         if not user_hash:
