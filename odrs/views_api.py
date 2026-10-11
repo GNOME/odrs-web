@@ -243,21 +243,25 @@ def api_show_app(app_id, user_hash=None):
 @csrf.exempt
 def api_fetch():
     """
-    Return details about an application.
+    Return reviews, optionally personalized for a supplied user_hash.
     """
     try:
         request_item = json.loads(request.data.decode("utf8"))
     except ValueError as e:
         return json_error(str(e))
-    for key in ["app_id", "user_hash", "locale", "distro", "limit", "version"]:
+    if not isinstance(request_item, dict):
+        return json_error("invalid data, expected an object")
+    for key in ["app_id", "locale", "distro", "limit", "version"]:
         if not key in request_item:
             return json_error("invalid data, expected %s" % key)
         if not request_item[key] and request_item[key] != 0:
             return json_error("missing data, expected %s" % key)
 
-    # check format
-    if not len(request_item["user_hash"]) == 40:
-        return json_error("the user_hash is invalid")
+    # Only omission requests anonymous results; reject malformed identifiers.
+    user_hash = request_item.get("user_hash")
+    if "user_hash" in request_item:
+        if not isinstance(user_hash, str) or len(user_hash) != 40:
+            return json_error("the user_hash is invalid")
 
     component = (
         db.session.query(Component)
@@ -275,16 +279,15 @@ def api_fetch():
         .order_by(Review.date_created.desc())
     )
 
-    # if user does not exist then create
-    user = (
-        db.session.query(User)
-        .filter(User.user_hash == request_item["user_hash"])
-        .first()
-    )
-    if not user:
-        user = User(user_hash=request_item["user_hash"])
-        db.session.add(user)
-        db.session.commit()
+    # Preserve registration and vote tracking for clients supplying an ID.
+    # Anonymous readers do not need a user record.
+    user = None
+    if user_hash is not None:
+        user = db.session.query(User).filter(User.user_hash == user_hash).first()
+        if not user:
+            user = User(user_hash=user_hash)
+            db.session.add(user)
+            db.session.commit()
 
     # add score for review using secret sauce
     items_new = []
@@ -294,28 +297,23 @@ def api_fetch():
         if not _locale_is_compatible(review.locale, request_item["locale"]):
             continue
 
-        # return all results
-        item_new = review.asdict(request_item["user_hash"])
+        # asdict only includes a user_skey when a user_hash is supplied.
+        item_new = review.asdict(user_hash)
         item_new["score"] = _get_review_score(review, request_item)
-        item_new["user_skey"] = _get_user_key(
-            request_item["user_hash"], item_new["app_id"]
-        )
 
         # the UI can hide the vote buttons on reviews already voted on
-        if _vote_exists(review.review_id, user.user_id):
+        if user is not None and _vote_exists(review.review_id, user.user_id):
             item_new["vote_id"] = 1
 
         items_new.append(item_new)
 
-    # fake something so the user can get the user_skey
-    if len(items_new) == 0:
+    # Only identified readers need a placeholder to obtain their user_skey.
+    if len(items_new) == 0 and user_hash is not None:
         item_new = {}
         item_new["score"] = 0
         item_new["app_id"] = request_item["app_id"]
-        item_new["user_hash"] = request_item["user_hash"]
-        item_new["user_skey"] = _get_user_key(
-            request_item["user_hash"], item_new["app_id"]
-        )
+        item_new["user_hash"] = user_hash
+        item_new["user_skey"] = _get_user_key(user_hash, item_new["app_id"])
         items_new.append(item_new)
 
     # sort and cut to limit
