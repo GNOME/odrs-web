@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2015-2019 Richard Hughes <richard@hughsie.com>
 #

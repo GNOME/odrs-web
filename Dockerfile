@@ -1,7 +1,7 @@
-FROM registry.access.redhat.com/hi/python:3.13-builder AS builder
+FROM registry.access.redhat.com/hi/python:3.14-builder AS builder
 
 USER 0
-RUN ["dnf", "install", "-y", "gcc", "python3.13-devel"]
+RUN ["dnf", "install", "-y", "gcc", "python3.14-devel"]
 RUN ["dnf", "clean", "all"]
 RUN ["python3", "-m", "venv", "/opt/venv"]
 ENV PATH="/opt/venv/bin:$PATH"
@@ -9,7 +9,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY requirements.txt /tmp/requirements.txt
 RUN ["pip3", "install", "--no-cache-dir", "-r", "/tmp/requirements.txt"]
 
-FROM registry.access.redhat.com/hi/python:3.13
+FROM registry.access.redhat.com/hi/python:3.14
 
 COPY --from=builder /opt/venv /opt/venv
 COPY --chown=65532:65532 . /opt/app-root/src

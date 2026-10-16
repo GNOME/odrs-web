@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 #
 # pylint: disable=invalid-name,missing-docstring,wrong-import-order,wrong-import-position
 # pylint: disable=import-outside-toplevel

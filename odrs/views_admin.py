@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 #
 # pylint: disable=invalid-name,missing-docstring,chained-comparison,singleton-comparison
 #
@@ -404,7 +403,7 @@ def admin_user_ban(user_hash):
     for review in user.reviews:
         db.session.delete(review)
     db.session.commit()
-    flash("Banned user and deleted {} reviews".format(nr_delete))
+    flash(f"Banned user and deleted {nr_delete} reviews")
     return redirect(url_for(".odrs_show_reported"))
 
 
@@ -508,9 +507,9 @@ def admin_show_all(page=1):
 def _review_filter_keys(keys):
     cond = []
     for key in keys:
-        cond.append(Review.user_display.like("%{}%".format(key)))
-        cond.append(Review.summary.like("%{}%".format(key)))
-        cond.append(Review.description.like("%{}%".format(key)))
+        cond.append(Review.user_display.like(f"%{key}%"))
+        cond.append(Review.summary.like(f"%{key}%"))
+        cond.append(Review.description.like(f"%{key}%"))
     return or_(*cond)
 
 
@@ -618,7 +617,7 @@ def admin_moderator_add():
 
     for key in ["username_new", "password_new", "display_name"]:
         if not key in request.form:
-            flash("Unable to add moderator as {} missing".format(key), "error")
+            flash(f"Unable to add moderator as {key} missing", "error")
             return redirect(url_for(".odrs_index"))
     if (
         db.session.query(Moderator)
@@ -670,7 +669,7 @@ def odrs_moderator_show(moderator_id):
         .first()
     )
     if not mod:
-        flash("No entry with moderator ID {}".format(moderator_id), "warning")
+        flash(f"No entry with moderator ID {moderator_id}", "warning")
         return redirect(url_for(".admin_moderator_show_all"))
     return render_template("modadmin.html", u=mod)
 
@@ -692,7 +691,7 @@ def admin_moderate_delete(moderator_id):
         .first()
     )
     if not mod:
-        flash("No entry with moderator ID {}".format(moderator_id), "warning")
+        flash(f"No entry with moderator ID {moderator_id}", "warning")
         return redirect(url_for(".admin_moderator_show_all"))
     db.session.delete(mod)
     db.session.commit()
@@ -735,7 +734,7 @@ def admin_taboo_add():
 
     for key in ["locale", "value", "description", "severity"]:
         if not key in request.form:
-            flash("Unable to add taboo as {} missing".format(key), "error")
+            flash(f"Unable to add taboo as {key} missing", "error")
             return redirect(url_for(".odrs_index"))
     if (
         db.session.query(Taboo)
@@ -773,7 +772,7 @@ def admin_taboo_delete(taboo_id):
     # check whether exists in database
     taboo = db.session.query(Taboo).filter(Taboo.taboo_id == taboo_id).first()
     if not taboo:
-        flash("No taboo with ID {}".format(taboo_id), "warning")
+        flash(f"No taboo with ID {taboo_id}", "warning")
         return redirect(url_for(".admin_taboo_show_all"))
     db.session.delete(taboo)
     db.session.commit()
@@ -838,7 +837,7 @@ def admin_component_join(component_id_parent, component_id_child):
     db.session.commit()
     if adopted:
         flash(
-            "Joined components, adopting {} additional components".format(adopted),
+            f"Joined components, adopting {adopted} additional components",
             "info",
         )
     else:
@@ -897,7 +896,7 @@ def admin_component_join2():
             "info",
         )
     else:
-        flash("Joined {} components".format(len(children)), "info")
+        flash(f"Joined {len(children)} components", "info")
     return redirect(url_for(".admin_component_show_all"))
 
 
@@ -919,7 +918,7 @@ def admin_component_delete(component_id):
         flash("Unable to find component", "error")
         return redirect(url_for(".admin_component_show_all"))
 
-    flash("Deleted component with {} reviews".format(len(component.reviews)), "info")
+    flash(f"Deleted component with {len(component.reviews)} reviews", "info")
     db.session.delete(component)
     db.session.commit()
     return redirect(url_for(".admin_component_show_all"))

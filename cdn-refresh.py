@@ -21,12 +21,12 @@ headers = {
 }
 
 data = '{"paths":["/1.0/reviews/api/ratings"]}'
-purge = requests.post(f"{base_url}/job/purge", headers=headers, data=data)
+purge = requests.post(f"{base_url}/job/purge", headers=headers, data=data, timeout=30)
 
 if purge_id := purge.json().get("id"):
-    purge_status = requests.get(f"{base_url}/job/{purge_id}", headers=headers)
+    purge_status = requests.get(f"{base_url}/job/{purge_id}", headers=headers, timeout=30)
     while purge_status.json().get("state") != "done":
         time.sleep(1)
-        purge_status = requests.get(f"{base_url}/job/{purge_id}", headers=headers)
+        purge_status = requests.get(f"{base_url}/job/{purge_id}", headers=headers, timeout=30)
 
-prefetch = requests.post(f"{base_url}/job/prefetch", headers=headers, data=data)
+prefetch = requests.post(f"{base_url}/job/prefetch", headers=headers, data=data, timeout=30)

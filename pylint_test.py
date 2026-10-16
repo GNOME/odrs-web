@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
 #
@@ -9,33 +8,24 @@ import os
 import sys
 
 from glob import glob
-from pylint import epylint
+from pylint.lint import Run
 
 
 def main():
 
     # find python files
     filenames = [y for x in os.walk(".") for y in glob(os.path.join(x[0], "*.py"))]
-    rc = 0
-    argv = []
+    argv = ["-j", "8", "--rcfile", "contrib/pylintrc"]
+    files = []
     for fn in sorted(filenames):
         if fn.find("migrations/") != -1:
             continue
         if fn.startswith("./env"):
             continue
         print("Checking %s" % fn)
-        argv.append(fn)
+        files.append(fn)
 
-    # run with 8 parallel tasks
-    argv.append("-j 8")
-    argv.append("--rcfile contrib/pylintrc")
-    (pylint_stdout, pylint_stderr) = epylint.py_run(" ".join(argv), return_std=True)
-    stderr = pylint_stderr.read()
-    stdout = pylint_stdout.read()
-    if stderr or stdout:
-        print(stderr, stdout)
-        rc = 1
-    return rc
+    return Run(argv + files, exit=False).linter.msg_status
 
 
 if __name__ == "__main__":

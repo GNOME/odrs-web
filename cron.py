@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 #
 # pylint: disable=singleton-comparison
 #
@@ -210,7 +209,7 @@ def _taboo_import_item(taboos, locale, value, description, severity):
         return False
     taboo = Taboo(locale, value, description, severity=severity)
     taboos[key] = taboo
-    print("Adding {}".format(key))
+    print(f"Adding {key}")
     db.session.add(taboo)
     return True
 

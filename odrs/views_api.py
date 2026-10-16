@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 #
 # pylint: disable=invalid-name,missing-docstring
 #
@@ -10,9 +9,9 @@
 import json
 import math
 import datetime
+from collections import deque
 
-from sqlalchemy.dialects.mysql import insert
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 
 from flask import request, Response
 
@@ -26,7 +25,6 @@ from .util import (
     _locale_is_compatible,
     _eventlog_add,
     _get_user_key,
-    _get_datestr_from_dt,
 )
 from .util import (
     _sanitised_version,
@@ -344,7 +342,7 @@ def api_moderate(user_hash, locale=None):
     items = []
     user = db.session.query(User).filter(User.user_hash == user_hash).first()
     if not user:
-        return json_error("no user for {}".format(user_hash))
+        return json_error(f"no user for {user_hash}")
     for review in db.session.query(Review):
         if locale and not _locale_is_compatible(review.locale, locale):
             continue
@@ -573,26 +571,23 @@ def api_rating_for_id(app_id):
     return Response(response=dat, status=200, mimetype="application/json")
 
 
-def _api_ratings(cache_result=True):
+def _api_ratings():
     """Fetch all app ratings in 2 lightweight queries: bulk aggregation + minimal component rows."""
-    from sqlalchemy import func
-    # Import alias: avoid conflict with 'Review' used elsewhere in this module (schemas, etc.)
-    from odrs.models import Component, Review as ReviewModel, db
 
     # 1. Fetch raw statistics from the database in ONE query
     # Review has component_id, not app_id; join Component to get app_id
     cutoff_days = ODRS_CUTOFF_YEARS * 365
     cutoff = datetime.date.today() - datetime.timedelta(days=cutoff_days)
-    bucket_expr = ReviewModel.rating / 20
+    bucket_expr = Review.rating / 20
     stats_query = (
         db.session.query(
             Component.app_id,
             bucket_expr.label('bucket'),
-            func.count(ReviewModel.review_id),
+            func.count(Review.review_id),
         )
-        .join(Component, ReviewModel.component_id == Component.component_id)
-        .filter(ReviewModel.reported < ODRS_REPORTED_CNT)
-        .filter(ReviewModel.date_created > cutoff)
+        .join(Component, Review.component_id == Component.component_id)
+        .filter(Review.reported < ODRS_REPORTED_CNT)
+        .filter(Review.date_created > cutoff)
         .group_by(Component.app_id, bucket_expr)
         .all()
     )
@@ -630,7 +625,6 @@ def _api_ratings(cache_result=True):
             children_map.setdefault(parent_id, []).append(comp_id)
 
     # 5. Compute subtree app_ids iteratively (children before parents) to avoid recursion
-    from collections import deque
     remaining_children = {
         cid: len(children_map.get(cid, ())) for cid in id_to_app_id
     }
@@ -671,7 +665,7 @@ def _api_ratings(cache_result=True):
         if found_data and total >= 1:
             item = {"total": total}
             for i in range(6):
-                item["star{}".format(i)] = app_stats[i]
+                item[f"star{i}"] = app_stats[i]
             ratings[app_id] = item
 
     return ratings
@@ -682,7 +676,7 @@ def api_ratings():
     """
     Get the star ratings for all known applications.
     """
-    ratings = _api_ratings(False)
+    ratings = _api_ratings()
     dat = json.dumps(
         ratings, ensure_ascii=False, sort_keys=True, indent=4, separators=(",", ": ")
     )
@@ -695,7 +689,7 @@ def api_ratings_compact():
     Get the star ratings for all known applications in compact JSON
     output
     """
-    ratings = _api_ratings(True)
+    ratings = _api_ratings()
     dat = json.dumps(
         ratings, ensure_ascii=False, sort_keys=True, indent=4, separators=(",", ": ")
     )

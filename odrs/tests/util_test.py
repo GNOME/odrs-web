@@ -1,11 +1,10 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
 #
 # SPDX-License-Identifier: GPL-3.0+
 #
-# pylint: disable=no-self-use,protected-access,wrong-import-position
+# pylint: disable=protected-access,wrong-import-position
 
 import os
 import sys

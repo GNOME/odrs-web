@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
 #
@@ -12,7 +11,6 @@ import os
 import json
 import sys
 import unittest
-import tempfile
 import datetime
 
 # allows us to run this from the project root
@@ -337,7 +335,7 @@ class OdrsTest(unittest.TestCase):
         # add user to the ban list
         self.login()
         rv = self.app.get(
-            "/admin/user_ban/{}".format(self.user_hash), follow_redirects=True
+            f"/admin/user_ban/{self.user_hash}", follow_redirects=True
         )
         assert b"Banned user" in rv.data, rv.data
         assert b"deleted 1 reviews" in rv.data, rv.data
@@ -467,12 +465,12 @@ class OdrsTest(unittest.TestCase):
 
     def test_api_moderate_locale(self):
 
-        rv = self.app.get("/1.0/reviews/api/moderate/{}/en_GB".format(self.user_hash))
+        rv = self.app.get(f"/1.0/reviews/api/moderate/{self.user_hash}/en_GB")
         assert rv.data == b"[]", rv.data
         self.review_submit()
-        rv = self.app.get("/1.0/reviews/api/moderate/{}/en_GB".format(self.user_hash))
+        rv = self.app.get(f"/1.0/reviews/api/moderate/{self.user_hash}/en_GB")
         assert b"Somebody Important" in rv.data, rv.data
-        rv = self.app.get("/1.0/reviews/api/moderate/{}/fr_FR".format(self.user_hash))
+        rv = self.app.get(f"/1.0/reviews/api/moderate/{self.user_hash}/fr_FR")
         assert rv.data == b"[]", rv.data
 
     def test_api_fetch_anonymous(self):
@@ -925,7 +923,7 @@ class OdrsTest(unittest.TestCase):
 
         # get the review back with skey
         rv = self.app.get(
-            "/1.0/reviews/api/app/inkscape.desktop/{}".format(self.user_hash)
+            f"/1.0/reviews/api/app/inkscape.desktop/{self.user_hash}"
         )
         assert b"An essential part of my daily workflow" in rv.data, rv.data
         assert b"user_skey" in rv.data, rv.data

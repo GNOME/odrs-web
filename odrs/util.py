@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
 #
@@ -11,8 +10,7 @@ import datetime
 import json
 import hashlib
 
-from sqlalchemy import or_
-from sqlalchemy.orm import load_only
+from sqlalchemy import func, or_
 
 from flask import Response
 
@@ -55,7 +53,7 @@ def _get_user_key(user_hash, app_id):
             + app_id.encode("utf-8")
         ).hexdigest()
     except UnicodeEncodeError as e:
-        print("invalid input: %s,%s: %s" % (user_hash, app_id, str(e)))
+        print("invalid input: {},{}: {}".format(user_hash, app_id, str(e)))
     return key
 
 
@@ -87,12 +85,9 @@ def _query_reviews_for_app(app_ids):
             .filter(Review.date_created > cutoff)
     )
 
-from sqlalchemy import func
-
 def _get_rating_for_component(component, min_total=1):
     """Gets the ratings information for the application"""
     from odrs.models import Review
-    from odrs import db
 
     # Let the database do the aggregation.
     # This returns a list of tuples like [(0, 15), (1, 40)...]
@@ -122,7 +117,7 @@ def _get_rating_for_component(component, min_total=1):
     # return as dict
     item = {"total": total}
     for i in range(6):
-        item["star{}".format(i)] = array[i]
+        item[f"star{i}"] = array[i]
     return item
 
 def _password_hash(value):
